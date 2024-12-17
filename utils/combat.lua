@@ -22,11 +22,11 @@ function Combat.SetControlToon()
         if #Config:GetSetting('OutsideAssistList') > 0 then
             local maSpawn = Core.GetMainAssistSpawn()
 
-            if maSpawn.ID() > 0 and not maSpawn.Dead() then
-                -- make sure they are still in our XT.
-                Targeting.AddXTByName(2, maSpawn.DisplayName())
-                return
-            end
+            -- if maSpawn.ID() > 0 and not maSpawn.Dead() then
+            --     -- make sure they are still in our XT.
+            --     Targeting.AddXTByName(2, maSpawn.DisplayName())
+            --     return
+            -- end
 
             for _, name in ipairs(Config:GetSetting('OutsideAssistList')) do
                 Logger.log_verbose("Testing %s for control", name)
