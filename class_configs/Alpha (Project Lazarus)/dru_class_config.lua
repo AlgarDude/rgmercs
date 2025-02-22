@@ -737,13 +737,13 @@ local _ClassConfig = {
         },
     },
     ['HealRotations']     = {
-        ["BigHealPoint"] = {
+        ['BigHealPoint'] = {
             {
                 name = "QuickGroupHeal",
                 type = "Spell",
                 cond = function(self, spell, target)
                     if not Targeting.GroupedWithTarget(target) then return false end
-                    return Casting.SpellReady(spell) and (target.ID() or 0) == Core.GetMainAssistId()
+                    return Targeting.TargetIsMA(target)
                 end,
             },
             {
@@ -751,91 +751,62 @@ local _ClassConfig = {
                 type = "AA",
                 cond = function(self, aaName, target)
                     if not Targeting.GroupedWithTarget(target) then return false end
-                    return Casting.AAReady(aaName) and (target.ID() or 0) == Core.GetMainAssistId()
+                    return Targeting.TargetIsMA(target)
                 end,
             },
             {
                 name = "Convergence of Spirits",
                 type = "AA",
-                cond = function(self, aaName, target)
-                    return Casting.AAReady(aaName)
-                end,
             },
             {
                 name = "Blessing of Tunare",
                 type = "AA",
                 cond = function(self, aaName, target)
-                    return Casting.AAReady(aaName) and (target.ID() or 0) == Core.GetMainAssistId()
+                    return Targeting.TargetIsMA(target)
                 end,
             },
             {
                 name = "VP2Hammer",
                 type = "Item",
-                cond = function(self, itemName)
-                    return mq.TLO.FindItem(itemName).TimerReady() == 0
-                end,
             },
             {
                 name = "Forceful Rejuvenation",
                 type = "AA",
-                cond = function(self, aaName)
-                    return Casting.AAReady(aaName)
-                end,
             },
         },
-        ["GroupHealPoint"] = {
+        ['GroupHealPoint'] = {
             {
                 name = "Blessing of Tunare",
                 type = "AA",
                 cond = function(self, aaName, target)
-                    return Casting.AAReady(aaName) and (target.PctHPs() or 999) < Config:GetSetting('BigHealPoint')
+                    return (target.PctHPs() or 999) < Config:GetSetting('BigHealPoint')
                 end,
             },
             {
                 name = "QuickGroupHeal",
                 type = "Spell",
-                cond = function(self, spell)
-                    return Casting.SpellReady(spell)
-                end,
             },
             {
                 name = "Wildtender's Survival",
                 type = "AA",
-                cond = function(self, aaName)
-                    return Casting.AAReady(aaName)
-                end,
             },
             {
                 name = "LongGroupHeal",
                 type = "Spell",
-                cond = function(self, spell)
-                    return Casting.SpellReady(spell)
-                end,
             },
-
         },
-        ["MainHealPoint"] = {
-            doFullRotation = true,
+        ['MainHealPoint'] = {
             {
                 name = "QuickHeal",
                 type = "Spell",
-                cond = function(self, spell)
-                    return Casting.SpellReady(spell)
-                end,
             },
             {
                 name = "QuickHealSurge",
                 type = "Spell",
-                cond = function(self, spell)
-                    return Casting.SpellReady(spell)
-                end,
             },
             {
                 name = "LongHeal1",
                 type = "Spell",
-                cond = function(self, spell)
-                    return Casting.SpellReady(spell)
-                end,
             },
         },
     },
@@ -845,7 +816,7 @@ local _ClassConfig = {
             name = 'Downtime',
             targetId = function(self) return { mq.TLO.Me.ID(), } end,
             cond = function(self, combat_state)
-                return combat_state == "Downtime" and Core.OkayToNotHeal() and Casting.DoBuffCheck() and Casting.AmIBuffable()
+                return combat_state == "Downtime" and Core.OkayToNotHeal() and Casting.OkayToBuff() and Casting.AmIBuffable()
             end,
         },
         { --Summon pet even when buffs are off on emu
@@ -854,7 +825,7 @@ local _ClassConfig = {
             load_cond = function(self) return Core.OnEMU() end,
             cond = function(self, combat_state)
                 if not Config:GetSetting('DoPet') or mq.TLO.Me.Pet.ID() ~= 0 then return false end
-                return combat_state == "Downtime" and (not Core.IsModeActive('Heal') or Core.OkayToNotHeal()) and Casting.DoPetCheck() and Casting.AmIBuffable()
+                return combat_state == "Downtime" and (not Core.IsModeActive('Heal') or Core.OkayToNotHeal()) and Casting.OkayToPetBuff() and Casting.AmIBuffable()
             end,
         },
         {
@@ -864,7 +835,7 @@ local _ClassConfig = {
                 return Casting.GetBuffableGroupIDs()
             end,
             cond = function(self, combat_state)
-                return combat_state == "Downtime" and Core.OkayToNotHeal() and Casting.DoBuffCheck()
+                return combat_state == "Downtime" and Core.OkayToNotHeal() and Casting.OkayToBuff()
             end,
         },
         {
@@ -872,9 +843,9 @@ local _ClassConfig = {
             state = 1,
             steps = 2,
             targetId = function(self) return mq.TLO.Target.ID() == Config.Globals.AutoTargetID and { Config.Globals.AutoTargetID, } or {} end,
-            cond = function(self, combat_state, targetId)
+            cond = function(self, combat_state)
                 return combat_state == "Combat" and not Casting.IAmFeigning() and Core.OkayToNotHeal() and
-                    Casting.DebuffConCheck() and (Casting.HaveManaToDebuff() or Targeting.IsNamed(mq.TLO.Spawn(targetId)))
+                    Casting.OkayToDebuff() and (Casting.HaveManaToDebuff() or Targeting.IsNamed(Targeting.GetAutoTarget()))
             end,
         },
         { --Keep things from running
@@ -897,26 +868,16 @@ local _ClassConfig = {
                     Casting.BurnCheck() and not Casting.IAmFeigning() and Core.OkayToNotHeal()
             end,
         },
-        {
-            name = 'TwinHeal',
-            state = 1,
-            steps = 1,
-            load_cond = function(self) return Config:GetSetting('DoTwinHeal') and self:GetResolvedActionMapItem('TwinHealNuke') end,
-            targetId = function(self) return { Core.GetMainAssistId(), } end,
-            cond = function(self, combat_state)
-                return combat_state == "Combat" and Core.OkayToNotHeal() and not Casting.IAmFeigning()
-            end,
-        },
-        {
-            name = 'HealDPS(71+)',
-            state = 1,
-            steps = 1,
-            load_cond = function() return mq.TLO.Me.Level() > 70 end,
-            targetId = function(self) return mq.TLO.Target.ID() == Config.Globals.AutoTargetID and { Config.Globals.AutoTargetID, } or {} end,
-            cond = function(self, combat_state)
-                return combat_state == "Combat" and not Casting.IAmFeigning() and Core.OkayToNotHeal()
-            end,
-        },
+        -- {
+        --     name = 'TwinHeal',
+        --     state = 1,
+        --     steps = 1,
+        --     load_cond = function(self) return Config:GetSetting('DoTwinHeal') and self:GetResolvedActionMapItem('TwinHealNuke') end,
+        --     targetId = function(self) return { Core.GetMainAssistId(), } end,
+        --     cond = function(self, combat_state)
+        --         return combat_state == "Combat" and Core.OkayToNotHeal() and not Casting.IAmFeigning()
+        --     end,
+        -- },
         {
             name = 'HealDPS(1-70)',
             state = 1,
@@ -929,140 +890,52 @@ local _ClassConfig = {
         },
     },
     ['Rotations']         = {
-        ['HealDPS(71+)'] = {
-            {
-                name = "NaturesWrathDot",
-                type = "Spell",
-                cond = function(self, spell, target)
-                    return (Casting.HaveManaToNuke() or Casting.BurnCheck()) and Casting.TargetedSpellReady(spell, target.ID())
-                end,
-            },
-            {
-                name = "SunDot",
-                type = "Spell",
-                cond = function(self, spell, target)
-                    return Casting.DotSpellCheck(spell) and (Casting.DotHaveManaToNuke() or Casting.BurnCheck()) and Casting.TargetedSpellReady(spell, target.ID())
-                end,
-            },
-            {
-                name = "HordeDot",
-                type = "Spell",
-                cond = function(self, spell, target)
-                    return Casting.DotSpellCheck(spell) and (Casting.DetGOMCheck() or Targeting.IsNamed(mq.TLO.Target)) and Casting.TargetedSpellReady(spell, target.ID())
-                end,
-            },
-            {
-                name = "DichoSpell",
-                type = "Spell",
-                cond = function(self, spell, target)
-                    return Casting.TargetedSpellReady(spell, target.ID()) and (Casting.HaveManaToNuke() or Casting.BurnCheck()) and
-                        (mq.TLO.Me.TargetOfTarget.PctHPs() or 0) <= Config:GetSetting('LightHealPoint')
-                end,
-            },
-            {
-                name = "RemoteSunDD",
-                type = "Spell",
-                cond = function(self, spell, target)
-                    return Casting.TargetedSpellReady(spell, target.ID()) and (mq.TLO.Me.TargetOfTarget.PctHPs() or 0) <= Config:GetSetting('LightHealPoint')
-                end,
-            },
-            {
-                name = "Nature's Frost",
-                type = "AA",
-                cond = function(self, aaName, target)
-                    return Casting.TargetedAAReady(aaName, target.ID()) and (Casting.HaveManaToNuke() or Casting.BurnCheck())
-                end,
-            },
-            {
-                name = "Nature's Fire",
-                type = "AA",
-                cond = function(self, aaName, target)
-                    return Casting.TargetedAAReady(aaName, target.ID()) and (Casting.HaveManaToNuke() or Casting.BurnCheck())
-                end,
-            },
-            {
-                name = "Nature's Bolt",
-                type = "AA",
-                cond = function(self, aaName, target)
-                    return Casting.TargetedAAReady(aaName, target.ID()) and (Casting.HaveManaToNuke() or Casting.BurnCheck())
-                end,
-            },
-        },
         ['HealDPS(1-70)'] = {
             {
                 name = "StunDD",
                 type = "Spell",
                 cond = function(self, spell, target)
-                    return Casting.TargetedSpellReady(spell, target.ID()) and Casting.DetSpellCheck(spell) and (Casting.HaveManaToNuke() or Casting.BurnCheck())
+                    return Casting.DetSpellCheck(spell) and Casting.HaveManaToNuke()
                 end,
             },
             {
                 name = "Storm Strike",
                 type = "AA",
-                cond = function(self, aaName, target)
-                    return Casting.TargetedAAReady(aaName, target.ID())
-                end,
             },
             {
                 name = "WinterFireDD",
                 type = "Spell",
                 cond = function(self, spell, target)
-                    return Casting.TargetedSpellReady(spell, target.ID()) and (Casting.HaveManaToNuke() or Casting.BurnCheck())
-                end,
-            },
-            {
-                name = "Nature's Frost",
-                type = "AA",
-                cond = function(self, aaName, target)
-                    return Casting.TargetedAAReady(aaName, target.ID()) and (Casting.HaveManaToNuke() or Casting.BurnCheck())
-                end,
-            },
-            {
-                name = "Nature's Fire",
-                type = "AA",
-                cond = function(self, aaName, target)
-                    return Casting.TargetedAAReady(aaName, target.ID()) and (Casting.HaveManaToNuke() or Casting.BurnCheck())
-                end,
-            },
-            {
-                name = "Nature's Bolt",
-                type = "AA",
-                cond = function(self, aaName, target)
-                    return Casting.TargetedAAReady(aaName, target.ID()) and (Casting.HaveManaToNuke() or Casting.BurnCheck())
+                    return Casting.HaveManaToNuke()
                 end,
             },
         },
         ['HealBurn'] = {
-            {
-                name = mq.TLO.Me.Inventory("Chest").Name(),
+            { --Chest Click, name function stops errors in rotation window when slot is empty
+                name_func = function() return mq.TLO.Me.Inventory("Chest").Name() or "ChestClick(Missing)" end,
                 type = "Item",
-                cond = function(self)
-                    local item = mq.TLO.Me.Inventory("Chest")
-                    return Config:GetSetting('DoChestClick') and item() and item.Spell.Stacks() and
-                        item.TimerReady() == 0
+                cond = function(self, itemName, target)
+                    if not Config:GetSetting('DoChestClick') or not Casting.ItemHasClicky(itemName) then return false end
+                    return Casting.SelfBuffItemCheck(itemName)
                 end,
             },
             {
                 name = "Distant Conflagration",
                 type = "AA",
-                cond = function(self, aaName)
-                    return Casting.AAReady(aaName) and mq.TLO.Me.Buff("Twincast").ID() == 0
+                cond = function(self)
+                    return not Casting.IHaveBuff("Twincast")
                 end,
             },
             {
                 name = "Improved Twincast",
                 type = "AA",
-                cond = function(self, aaName)
-                    return Casting.AAReady(aaName) and not Casting.BuffActiveByName("Twincast")
+                cond = function(self)
+                    return not Casting.IHaveBuff("Twincast")
                 end,
             },
             {
                 name = "Group Spirit of the Black Wolf",
                 type = "AA",
-                active_cond = function(self, aaName)
-                    return Casting.BuffActiveByID(mq.TLO.Me.AltAbility(aaName)
-                        .Spell.ID())
-                end,
                 cond = function(self, aaName)
                     return Casting.SelfBuffAACheck(aaName)
                 end,
@@ -1070,83 +943,61 @@ local _ClassConfig = {
             {
                 name = "Destructive Vortex",
                 type = "AA",
-                cond = function(self, aaName)
-                    return Casting.AAReady(aaName)
-                end,
             },
             {
                 name = "Nature's Fury",
                 type = "AA",
-                cond = function(self, aaName)
-                    return Casting.AAReady(aaName)
-                end,
             },
             {
                 name = "Spirit of the Wood",
                 type = "AA",
-                cond = function(self, aaName)
-                    return Casting.AAReady(aaName)
-                end,
             },
             {
                 name = "Nature's Boon",
                 type = "AA",
-                cond = function(self, aaName)
-                    return Casting.AAReady(aaName)
-                end,
             },
             {
                 name = "Nature's Guardian",
                 type = "AA",
-                cond = function(self, aaName)
-                    return Casting.AAReady(aaName)
-                end,
             },
             {
                 name = "Spirit of Nature",
                 type = "AA",
-                cond = function(self, aaName)
-                    return Casting.AAReady(aaName)
-                end,
             },
             {
                 name = "Spire of Nature",
                 type = "AA",
-                cond = function(self, aaName)
-                    return Casting.AAReady(aaName)
-                end,
             },
             {
                 name = "TwincastSpell",
                 type = "Spell",
                 cond = function(self, spell)
-                    return Casting.SpellReady(spell) and mq.TLO.Me.Buff("Twincast").ID() == 0
+                    return not Casting.IHaveBuff("Twincast")
                 end,
             },
         },
-        ['TwinHeal'] = {
-            {
-                name = "TwinHealNuke",
-                type = "Spell",
-                retries = 0,
-                cond = function(self, spell) return Casting.SpellReady(spell) and not Casting.SongActiveByName("Healing Twincast") end,
-            },
-        },
+        -- ['TwinHeal'] = {
+        --     {
+        --         name = "TwinHealNuke",
+        --         type = "Spell",
+        --         retries = 0,
+        --         cond = function(self) return not Casting.IHaveBuff("Healing Twincast") end,
+        --     },
+        -- },
         ['Debuff'] = {
             {
                 name = "Blessing of Ro",
                 type = "AA",
                 cond = function(self, aaName, target)
-                    return Casting.TargetedAAReady(aaName, target.ID()) and not Casting.TargetHasBuff(mq.TLO.Me.AltAbility(aaName).Spell.Trigger(1)) and
-                        mq.TLO.FindItemCount(mq.TLO.Me.AltAbility("Blessing of Ro").Spell.Trigger(1).NoExpendReagentID(1)())() >
-                        0
+                    local aaSpell = Casting.GetAASpell(aaName)
+                    return Casting.DetAACheck(aaName) and Casting.ReagentCheck(aaSpell and aaSpell.Trigger(1) or aaName)
                 end,
             },
             {
                 name = "Hand of Ro",
                 type = "AA",
                 cond = function(self, aaName, target)
-                    return Casting.TargetedAAReady(aaName, target.ID()) and Casting.DetSpellCheck(mq.TLO.Me.AltAbility(aaName).Spell)
+                    return Casting.DetAACheck(aaName)
                 end,
             },
             {
@@ -1154,16 +1005,24 @@ local _ClassConfig = {
                 type = "Spell",
                 cond = function(self, spell, target)
                     if not Config:GetSetting('DoRoDebuff') then return false end
-                    return Casting.TargetedSpellReady(spell, target.ID()) and Casting.DetSpellCheck(spell)
+                    return Casting.DetSpellCheck(spell)
                 end,
             },
         },
         ['Snare'] = {
             {
+                name = "Entrap",
+                type = "AA",
+                cond = function(self, aaName)
+                    return Casting.DetAACheck(aaName) and Targeting.GetAutoTargetPctHPs() < 50
+                end,
+            },
+            {
                 name = "SnareSpell",
                 type = "Spell",
-                cond = function(self, spell, target)
-                    return Casting.TargetedSpellReady(spell, target.ID()) and Casting.DetSpellCheck(spell) and Targeting.GetTargetPctHPs(target) < 50
+                cond = function(self, spell)
+                    if Casting.CanUseAA("Entrap") then return false end
+                    return Casting.DetSpellCheck(spell) and Targeting.GetAutoTargetPctHPs() < 50
                 end,
             },
         },
@@ -1172,47 +1031,43 @@ local _ClassConfig = {
                 name = "Swarm of Fireflies",
                 type = "AA",
                 cond = function(self, aaName, target)
-                    return target.ID() == (mq.TLO.Group.MainTank.ID() or 0) and Casting.AAReady(aaName) and Casting.GroupBuffCheck(mq.TLO.Me.AltAbility(aaName).Spell, target)
+                    return Targeting.TargetIsMA(target) and Casting.GroupBuffAACheck(aaName, target)
                 end,
             },
             {
                 name = "GroupDmgShield",
                 type = "Spell",
-                active_cond = function(self, spell) return Casting.BuffActiveByID(spell.ID()) end,
+                active_cond = function(self, spell) return Casting.IHaveBuff(spell) end,
                 cond = function(self, spell, target)
                     return Casting.GroupBuffCheck(spell, target)
                 end,
             },
             {
-                name = "Spirit of Eagles",
+                name = "Flight of Eagles", --this needs a helper function
                 type = "AA",
                 active_cond = function(self, aaName)
-                    return Casting.BuffActiveByID(mq.TLO.Me.AltAbility(aaName).Spell.Trigger(1).ID())
+                    return Casting.IHaveBuff(Casting.GetAASpell())
                 end,
                 cond = function(self, aaName, target)
-                    local bookSpell = self:GetResolvedActionMapItem('MoveSpells')
-                    local aaSpell = mq.TLO.Me.AltAbility(aaName).Spell
-                    if not Config:GetSetting('DoMoveBuffs') or (bookSpell and bookSpell.Level() or 999) > (aaSpell.Level() or 0) then return false end
-
-                    return Casting.GroupBuffCheck(aaSpell, target)
+                    if not Config:GetSetting('DoMoveBuffs') then return false end
+                    return Casting.GroupBuffAACheck(aaName, target)
                 end,
             },
             {
-                name = "MoveSpells",
+                name = "MoveSpells", --needs the same helper function
                 type = "Spell",
-                active_cond = function(self, spell) return Casting.BuffActiveByID(spell.ID()) end,
+                active_cond = function(self, spell) return Casting.IHaveBuff(spell) end,
                 cond = function(self, spell, target)
-                    local aaSpellLvl = mq.TLO.Me.AltAbility("Spirit of Eagles").Spell.Trigger(1).Level() or 0
-                    if not Config:GetSetting("DoMoveBuffs") or aaSpellLvl >= (spell.Level() or 0) then return false end
+                    if not Config:GetSetting("DoMoveBuffs") or Casting.CanUseAA("Flight of Eagles") then return false end
                     return Casting.GroupBuffCheck(spell, target)
                 end,
             },
             {
                 name = "AtkBuff",
                 type = "Spell",
-                active_cond = function(self, spell) return Casting.BuffActiveByID(spell.ID()) end,
+                active_cond = function(self, spell) return Casting.IHaveBuff(spell) end,
                 cond = function(self, spell, target)
-                    return Config.Constants.RGMelee:contains(target.Class.ShortName()) and Casting.GroupBuffCheck(spell, target)
+                    return Targeting.TargetIsAMelee(target) and Casting.GroupBuffCheck(spell, target)
                 end,
             },
             {
@@ -1220,13 +1075,13 @@ local _ClassConfig = {
                 type = "Spell",
                 cond = function(self, spell, target)
                     if not Config:GetSetting('DoTempHP') then return false end
-                    return Targeting.TargetClassIs("WAR", target) and Casting.GemReady(spell) and Casting.GroupBuffCheck(spell, target)
+                    return Targeting.TargetClassIs("WAR", target) and Casting.CastReady(spell) and Casting.GroupBuffCheck(spell, target)
                 end,
             },
             {
                 name = "HPTypeOneGroup",
                 type = "Spell",
-                active_cond = function(self, spell) return Casting.BuffActiveByID(spell.ID()) end,
+                active_cond = function(self, spell) return Casting.IHaveBuff(spell) end,
                 cond = function(self, spell, target)
                     if not Config:GetSetting('DoHPBuff') then return false end
                     return Casting.GroupBuffCheck(spell, target)
@@ -1243,7 +1098,7 @@ local _ClassConfig = {
             {
                 name = "GroupRegenBuff",
                 type = "Spell",
-                active_cond = function(self, spell) return Casting.BuffActiveByID(spell.ID()) end,
+                active_cond = function(self, spell) return Casting.IHaveBuff(spell) end,
                 cond = function(self, spell, target)
                     if not Config:GetSetting('DoGroupRegen') then return false end
                     return Casting.GroupBuffCheck(spell, target)
@@ -1254,7 +1109,7 @@ local _ClassConfig = {
                 type = "AA",
                 active_cond = function(self, aaName) return true end,
                 cond = function(self, aaName, target)
-                    return target.ID() == Core.GetMainAssistId() and Casting.GroupBuffCheck(mq.TLO.Me.AltAbility(aaName).Spell, target)
+                    return Targeting.TargetIsMA(target) and Casting.GroupBuffAACheck(aaName, target)
                 end,
             },
         },
@@ -1277,16 +1132,13 @@ local _ClassConfig = {
             {
                 name = "ManaBear",
                 type = "Spell",
-                active_cond = function(self, spell) return Casting.BuffActiveByID(spell.ID()) end,
+                active_cond = function(self, spell) return Casting.IHaveBuff(spell) end,
                 cond = function(self, spell) return (spell and spell() and spell.MyCastTime() or 999999) < 30000 end,
             },
             {
                 name = "Spirit of the Black Wolf",
                 type = "AA",
-                active_cond = function(self, aaName)
-                    return Casting.BuffActiveByID(mq.TLO.Me.AltAbility(aaName)
-                        .Spell.ID())
-                end,
+                active_cond = function(self, aaName) return Casting.IHaveBuff(aaName) end,
                 cond = function(self, aaName)
                     return Casting.SelfBuffAACheck(aaName)
                 end,
@@ -1294,22 +1146,19 @@ local _ClassConfig = {
             {
                 name = "SelfShield",
                 type = "Spell",
-                active_cond = function(self, spell) return Casting.BuffActiveByID(spell.ID()) end,
+                active_cond = function(self, spell) return Casting.IHaveBuff(spell) end,
                 cond = function(self, spell) return Casting.SelfBuffCheck(spell) end,
             },
             {
                 name = "SelfManaRegen",
                 type = "Spell",
-                active_cond = function(self, spell) return Casting.BuffActiveByID(spell.ID()) end,
+                active_cond = function(self, spell) return Casting.IHaveBuff(spell) end,
                 cond = function(self, spell) return Casting.SelfBuffCheck(spell) end,
             },
             {
                 name = "Preincarnation",
                 type = "AA",
-                active_cond = function(self, aaName)
-                    return Casting.BuffActiveByID(mq.TLO.Me.AltAbility(aaName)
-                        .Spell.ID())
-                end,
+                active_cond = function(self, aaName) return Casting.IHaveBuff(Casting.GetAASpell(aaName)) end,
                 cond = function(self, aaName)
                     return Casting.SelfBuffAACheck(aaName)
                 end,
@@ -1320,7 +1169,6 @@ local _ClassConfig = {
                 name = "PetSpell",
                 type = "Spell",
                 active_cond = function() return mq.TLO.Me.Pet.ID() ~= 0 end,
-                cond = function() return true end,
             },
         },
     },
