@@ -51,7 +51,7 @@ function Casting.TargetHasBuff(effect, target, bAllowTargetChange)
     return mq.TLO.Target.Buff(effect)() and true or false
 end
 
---- Complex buff check that will check for presence and stacking of the buff (and any triggers) on the player.
+--- Complex buff check that will check for presence and stacking of the buff (and any triggers) on the PC.
 --- @param spell MQSpell The name of the spell to check.
 --- @return boolean True if the PC checking should cast the buff, false otherwise.
 function Casting.SelfBuffCheck(spell)
@@ -126,12 +126,12 @@ function Casting.TargetBuffCheck(spell, target, bAllowTargetChange)
     end
 
     local targetName = target.CleanName()
-    local targetID = target.ID()
+    local targetId = target.ID()
     local spellName = spell.RankName.Name()
     local spellID = spell.RankName.ID()
 
     if not mq.TLO.Target.FindBuff("id " .. spellID)() then
-        Logger.log_verbose("%s(ID:%d) not found on %s(ID:%d), let's check for triggers.", spellName, spellID, targetName, targetID)
+        Logger.log_verbose("%s(ID:%d) not found on %s(ID:%d), let's check for triggers.", spellName, spellID, targetName, targetId)
         local numEffects = mq.TLO.Spell(spellID).NumEffects()
         local triggerCount = 0
         local triggerFound = 0
@@ -142,15 +142,15 @@ function Casting.TargetBuffCheck(spell, target, bAllowTargetChange)
                 local triggerName = triggerSpell.Name()
                 local triggerID = triggerSpell.ID()
                 if not mq.TLO.Target.FindBuff("id" .. triggerID)() then
-                    Logger.log_verbose("%s(ID:%d) not found on %s(ID:%d), checking stacking.", triggerName, triggerID, targetName, targetID)
+                    Logger.log_verbose("%s(ID:%d) not found on %s(ID:%d), checking stacking.", triggerName, triggerID, targetName, targetId)
                     if triggerSpell.StacksTarget() then
-                        Logger.log_verbose("%s(ID:%d) seems to stack on %s(ID:%d), let's do it!", triggerName, triggerID, targetName, targetID)
+                        Logger.log_verbose("%s(ID:%d) seems to stack on %s(ID:%d), let's do it!", triggerName, triggerID, targetName, targetId)
                         return true
                     else
-                        Logger.log_verbose("%s(ID:%d) does not stack on %s(ID:%d), moving on.", triggerName, triggerID, targetName, targetID)
+                        Logger.log_verbose("%s(ID:%d) does not stack on %s(ID:%d), moving on.", triggerName, triggerID, targetName, targetId)
                     end
                 else
-                    Logger.log_verbose("%s(ID:%d) found on %s(ID:%d), moving on.", triggerName, triggerID, targetName, targetID)
+                    Logger.log_verbose("%s(ID:%d) found on %s(ID:%d), moving on.", triggerName, triggerID, targetName, targetId)
                     triggerFound = triggerFound + 1
                 end
                 triggerCount = triggerCount + 1
@@ -164,11 +164,11 @@ function Casting.TargetBuffCheck(spell, target, bAllowTargetChange)
             return false
         end
     else
-        Logger.log_verbose("%s(ID:%d) found on %s(ID:%d), ending check.", spellName, spellID, targetName, targetID)
+        Logger.log_verbose("%s(ID:%d) found on %s(ID:%d), ending check.", spellName, spellID, targetName, targetId)
         return false
     end
     if mq.TLO.Spell(spellID).StacksTarget() then
-        Logger.log_verbose("%s(ID:%d) seems to stack on %s(ID:%d), let's do it!", spellName, spellID, targetName, targetID)
+        Logger.log_verbose("%s(ID:%d) seems to stack on %s(ID:%d), let's do it!", spellName, spellID, targetName, targetId)
         return true
     end
     Logger.log_error("Tried to check buff stacking for %s(ID:%d), but something seems to have gone horribly wrong! Please report this.")
@@ -184,19 +184,19 @@ function Casting.PeerBuffCheck(spell, target)
     if not (target and target()) then return false end
 
     local targetName = target.CleanName()
-    local targetID = target.ID()
+    local targetId = target.ID()
     local spellName = spell.RankName.Name()
     local spellID = spell.RankName.ID()
 
-    if not mq.TLO.DanNet(targetName)() then
+    if not mq.TLO.DanNet(mq.TLO.Spawn(targetId).CleanName())() then
         Logger.log_error("Tried to check a peer's buff, but that peer isn't found! Please report this. Spell:%s(ID:%d), Target:%s(ID:%d)", spellName, spellID,
-            targetName, targetID)
+            targetName, targetId)
         return false
     end
 
     local spellResult = DanNet.query(targetName, string.format("Me.FindBuff[id %d]", spellID), 1000)
     if spellResult:lower() == "null" then
-        Logger.log_verbose("%s(ID:%d) not found on %s(ID:%d), let's check for triggers.", spellName, spellID, targetName, targetID)
+        Logger.log_verbose("%s(ID:%d) not found on %s(ID:%d), let's check for triggers.", spellName, spellID, targetName, targetId)
         local numEffects = mq.TLO.Spell(spellID).NumEffects()
         local triggerCount = 0
         local triggerFound = 0
@@ -208,16 +208,16 @@ function Casting.PeerBuffCheck(spell, target)
                 local triggerID = triggerSpell.ID()
                 local triggerResult = DanNet.query(targetName, string.format("Me.FindBuff[id %d]", spellID), 1000)
                 if triggerResult:lower() == "null" then
-                    Logger.log_verbose("%s(ID:%d) not found on %s(ID:%d), checking stacking.", triggerName, triggerID, targetName, targetID)
+                    Logger.log_verbose("%s(ID:%d) not found on %s(ID:%d), checking stacking.", triggerName, triggerID, targetName, targetId)
                     local triggerStackResult = DanNet.query(targetName, string.format("Spell[%d].Stacks", triggerID), 1000)
                     if triggerStackResult:lower() == "true" then
-                        Logger.log_verbose("%s(ID:%d) seems to stack on %s(ID:%d), let's do it!", triggerName, triggerID, targetName, targetID)
+                        Logger.log_verbose("%s(ID:%d) seems to stack on %s(ID:%d), let's do it!", triggerName, triggerID, targetName, targetId)
                         return true
                     else
-                        Logger.log_verbose("%s(ID:%d) does not stack on %s(ID:%d), moving on.", triggerName, triggerID, targetName, targetID)
+                        Logger.log_verbose("%s(ID:%d) does not stack on %s(ID:%d), moving on.", triggerName, triggerID, targetName, targetId)
                     end
                 elseif triggerResult:lower() == triggerName:lower() then
-                    Logger.log_verbose("%s(ID:%d) found on %s(ID:%d), moving on.", triggerName, triggerID, targetName, targetID)
+                    Logger.log_verbose("%s(ID:%d) found on %s(ID:%d), moving on.", triggerName, triggerID, targetName, targetId)
                     triggerFound = triggerFound + 1
                 end
                 triggerCount = triggerCount + 1
@@ -231,7 +231,7 @@ function Casting.PeerBuffCheck(spell, target)
             return false
         end
     elseif spellResult:lower() == spellName:lower() then
-        Logger.log_verbose("%s(ID:%d) found on %s(ID:%d), ending check.", spellName, spellID, targetName, targetID)
+        Logger.log_verbose("%s(ID:%d) found on %s(ID:%d), ending check.", spellName, spellID, targetName, targetId)
         return false
     else
         Logger.log_error("Tried to check buff presence for %s(ID:%d), but something seems to have gone horribly wrong! Please report this.")
@@ -240,10 +240,10 @@ function Casting.PeerBuffCheck(spell, target)
 
     local stackResult = DanNet.query(targetName, string.format("Spell[%d].Stacks", spellID), 1000)
     if stackResult:lower() == "true" then
-        Logger.log_verbose("%s(ID:%d) seems to stack on %s(ID:%d), let's do it!", spellName, spellID, targetName, targetID)
+        Logger.log_verbose("%s(ID:%d) seems to stack on %s(ID:%d), let's do it!", spellName, spellID, targetName, targetId)
         return true
     elseif stackResult:lower() == spellName:lower() then
-        Logger.log_verbose("%s(ID:%d) does not stack on %s(ID:%d), ending check.", spellName, spellID, targetName, targetID)
+        Logger.log_verbose("%s(ID:%d) does not stack on %s(ID:%d), ending check.", spellName, spellID, targetName, targetId)
         return false
     end
     Logger.log_error("Tried to check buff stacking for %s(ID:%d), but something seems to have gone horribly wrong! Please report this.")
@@ -262,11 +262,11 @@ function Casting.GroupBuffCheck(spell, target)
     if target.ID() == mq.TLO.Me.ID() then
         Logger.log_verbose("Target is myself, using SelfBuffCheck.")
         ret = Casting.SelfSpellCheck(spell)
-    elseif mq.TLO.DanNet(target.CleanName())() then
+    elseif mq.TLO.DanNet(mq.TLO.Spawn(target.ID()).CleanName())() then
         Logger.log_verbose("Target is a DanNet peer, using PeerBuffCheck.")
         ret = Casting.PeerSpellCheck(spell, target)
     else
-        Logger.log_verbose("Target is not myself or a DanNet peer, falling back to TargetSpellCheck.")
+        Logger.log_verbose("Target is not myself or a DanNet peer, using TargetSpellCheck.")
         ret = Casting.TargetSpellCheck(spell, target, true)
     end
     return ret
