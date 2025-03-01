@@ -816,7 +816,7 @@ local _ClassConfig = {
             --an earlier version of this function checked your cast speed to add to this value, but cast speed TLO is always rounded down and is virtually always "2"
             if Targeting.GetXTHaterCount() == 0 then threshold = Config:GetSetting('RefreshDT') end
 
-            local res = Casting.SongMemed(songSpell) and
+            local res = Casting.SpellLoaded(songSpell) and
                 ((me.Buff(songSpell.Name()).Duration.TotalSeconds() or 999) <= threshold or
                     (me.Song(songSpell.Name()).Duration.TotalSeconds() or 0) <= threshold)
             Logger.log_verbose("\ayRefreshBuffSong(%s) => memed(%s), song: duration(%0.2f) < reusetime(%0.2f) buff: duration(%0.2f) < reusetime(%0.2f) --> result(%s)",
@@ -1082,7 +1082,7 @@ local _ClassConfig = {
                 name = "FireDotSong",
                 type = "Song",
                 cond = function(self, songSpell)
-                    if not Config:GetSetting('UseFireDots') and Casting.SongMemed(songSpell) then return false end
+                    if not Config:GetSetting('UseFireDots') and Casting.SpellLoaded(songSpell) then return false end
                     return self.ClassConfig.HelperFunctions.DotSongCheck(songSpell) and
                         -- If dot is about to wear off, recast
                         self.ClassConfig.HelperFunctions.GetDetSongDuration(songSpell) <= 3
@@ -1092,7 +1092,7 @@ local _ClassConfig = {
                 name = "IceDotSong",
                 type = "Song",
                 cond = function(self, songSpell)
-                    if not Config:GetSetting('UseIceDots') and Casting.SongMemed(songSpell) then return false end
+                    if not Config:GetSetting('UseIceDots') and Casting.SpellLoaded(songSpell) then return false end
                     return self.ClassConfig.HelperFunctions.DotSongCheck(songSpell) and
                         -- If dot is about to wear off, recast
                         self.ClassConfig.HelperFunctions.GetDetSongDuration(songSpell) <= 3
@@ -1102,7 +1102,7 @@ local _ClassConfig = {
                 name = "PoisonDotSong",
                 type = "Song",
                 cond = function(self, songSpell)
-                    if not Config:GetSetting('UsePoisonDots') and Casting.SongMemed(songSpell) then return false end
+                    if not Config:GetSetting('UsePoisonDots') and Casting.SpellLoaded(songSpell) then return false end
                     return self.ClassConfig.HelperFunctions.DotSongCheck(songSpell) and
                         -- If dot is about to wear off, recast
                         self.ClassConfig.HelperFunctions.GetDetSongDuration(songSpell) <= 3
@@ -1112,7 +1112,7 @@ local _ClassConfig = {
                 name = "DiseaseDotSong",
                 type = "Song",
                 cond = function(self, songSpell)
-                    if not Config:GetSetting('UseDiseaseDots') and Casting.SongMemed(songSpell) then return false end
+                    if not Config:GetSetting('UseDiseaseDots') and Casting.SpellLoaded(songSpell) then return false end
                     return self.ClassConfig.HelperFunctions.DotSongCheck(songSpell) and
                         -- If dot is about to wear off, recast
                         self.ClassConfig.HelperFunctions.GetDetSongDuration(songSpell) <= 3
@@ -1130,7 +1130,7 @@ local _ClassConfig = {
                 name = "AllianceSong",
                 type = "Song",
                 cond = function(self, songSpell)
-                    return Casting.SongMemed(songSpell) and Config:GetSetting('UseAlliance') and
+                    return Casting.SpellLoaded(songSpell) and Config:GetSetting('UseAlliance') and
                         (mq.TLO.Me.PctMana() > Config:GetSetting('SelfManaPct') or Casting.BurnCheck()) and Casting.DetSpellCheck(songSpell)
                 end,
             },

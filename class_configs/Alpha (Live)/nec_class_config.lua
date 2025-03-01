@@ -1041,8 +1041,8 @@ local _ClassConfig = {
             {
                 name = "BestowBuff",
                 type = "Spell",
-                active_cond = function(self, spell) return Casting.SongActiveByName(spell.RankName()) end,
-                cond = function(self, spell) return not Casting.SongActiveByName(spell.RankName()) end,
+                active_cond = function(self, spell) return Casting.IHaveBuff(spell.RankName()) end,
+                cond = function(self, spell) return not Casting.SelfBuffCheck(spell) end,
             },
             {
                 name = "Silent Casting",

@@ -1230,7 +1230,7 @@ local _ClassConfig = {
                 cond = function(self, spell)
                     if Config:GetSetting('DoTerror') == 1 then return false end
                     ---@diagnostic disable-next-line: undefined-field
-                    return Casting.SpellLoaded(spell) and (mq.TLO.Target.SecondaryPctAggro() or 0) > 60
+                    return (mq.TLO.Target.SecondaryPctAggro() or 0) > 60
                 end,
             },
             {
