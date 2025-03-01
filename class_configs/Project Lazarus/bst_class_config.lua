@@ -1207,7 +1207,7 @@ return {
                 type = "Spell",
                 cond = function(self, spell, target)
                     -- Make sure this is gemmed due to long refresh, and only use the single target versions on classes that need it.
-                    if (spell and spell() and ((spell.TargetType() or ""):lower() ~= "group v2")) and (not Casting.GemReady(spell)
+                    if (spell and spell() and ((spell.TargetType() or ""):lower() ~= "group v2")) and (not Casting.CastReady(spell)
                             or not Config.Constants.RGMelee:contains(target.Class.ShortName())) then
                         return false
                     end

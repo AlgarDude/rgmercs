@@ -633,7 +633,7 @@ function Module:DoClickies()
             if item then
                 if item.Timer.TotalSeconds() == 0 then
                     if (item.RequiredLevel() or 0) <= mq.TLO.Me.Level() then
-                        if not Casting.BuffActiveByID(item.Clicky.Spell.RankName.ID() or 0) and Casting.SpellStacksOnMe(item.Clicky.Spell.RankName) then
+                        if Casting.SelfBuffItemCheck(item) then
                             Logger.log_verbose("\aaCasting Item: \at%s\ag Clicky: \at%s\ag!", item.Name(), item.Clicky.Spell.RankName.Name())
                             Casting.UseItem(item.Name(), mq.TLO.Me.ID())
                         else

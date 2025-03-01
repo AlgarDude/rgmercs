@@ -1671,7 +1671,7 @@ _ClassConfig      = {
                 name = "GatherMana",
                 type = "Spell",
                 cond = function(self, spell)
-                    return spell and spell() and mq.TLO.Me.PctMana() <= Config:GetSetting('GatherManaPct') and Casting.GemReady(spell)
+                    return spell and spell() and mq.TLO.Me.PctMana() <= Config:GetSetting('GatherManaPct') and Casting.CastReady(spell)
                 end,
             },
             {

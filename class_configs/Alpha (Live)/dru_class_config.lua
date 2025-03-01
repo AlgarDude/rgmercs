@@ -1078,8 +1078,8 @@ local _ClassConfig = {
                 name = "Blessing of Ro",
                 type = "AA",
                 cond = function(self, aaName, target)
-                    return not Casting.TargetHasBuff(mq.TLO.Me.AltAbility(aaName).Spell.Trigger(1)) and
-                        mq.TLO.FindItemCount(mq.TLO.Me.AltAbility("Blessing of Ro").Spell.Trigger(1).NoExpendReagentID(1)())() > 0
+                    local aaSpell = Casting.GetAASpell(aaName)
+                    return Casting.DetAACheck(aaName, target) and Casting.ReagentCheck(aaSpell and aaSpell.Trigger(1) or aaName)
                 end,
             },
             {
@@ -1160,7 +1160,7 @@ local _ClassConfig = {
                 type = "Spell",
                 cond = function(self, spell, target)
                     if not Config:GetSetting('DoTempHP') then return false end
-                    return Targeting.TargetClassIs("WAR", target) and Casting.GemReady(spell) and Casting.GroupBuffCheck(spell, target)
+                    return Targeting.TargetClassIs("WAR", target) and Casting.CastReady(spell) and Casting.GroupBuffCheck(spell, target)
                 end,
             },
             {
