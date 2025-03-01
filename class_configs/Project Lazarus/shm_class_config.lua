@@ -1271,7 +1271,7 @@ local _ClassConfig = {
                 name = "CanniSpell",
                 type = "Spell",
                 cond = function(self, spell)
-                    return Config:GetSetting('DoSpellCanni') and Casting.GemReady(spell) and mq.TLO.Me.PctMana() < Config:GetSetting('SpellCanniManaPct') and
+                    return Config:GetSetting('DoSpellCanni') and Casting.CastReady(spell) and mq.TLO.Me.PctMana() < Config:GetSetting('SpellCanniManaPct') and
                         mq.TLO.Me.PctHPs() >= Config:GetSetting('SpellCanniMinHP')
                 end,
             },
@@ -1378,7 +1378,7 @@ local _ClassConfig = {
                 type = "Spell",
                 cond = function(self, spell, target)
                     if not Config:GetSetting('DoTempHP') then return false end
-                    return Targeting.TargetClassIs("WAR", target) and Casting.GemReady(spell) and Casting.GroupBuffCheck(spell, target)
+                    return Targeting.TargetClassIs("WAR", target) and Casting.CastReady(spell) and Casting.GroupBuffCheck(spell, target)
                 end,
             },
             {
@@ -1406,7 +1406,7 @@ local _ClassConfig = {
                 name = "LowLvlAtkBuff",
                 type = "Spell",
                 cond = function(self, spell, target)
-                    return mq.TLO.Me.Level() < 86 and Config.Constants.RGMelee:contains(target.Class.ShortName()) and Casting.GemReady(spell) and
+                    return mq.TLO.Me.Level() < 86 and Config.Constants.RGMelee:contains(target.Class.ShortName()) and Casting.CastReady(spell) and
                         Casting.GroupBuffCheck(spell, target)
                 end,
             },

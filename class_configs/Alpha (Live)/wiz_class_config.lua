@@ -799,7 +799,7 @@ return {
                 type = "AA",
                 cond = function(self)
                     if not Config:GetSetting('DoManaBurn') then return false end
-                    return not Casting.TargetHasBuffByName("Mana Burn") and Casting.HaveManaToNuke()
+                    return not Casting.TargetHasBuff("Mana Burn") and Casting.HaveManaToNuke()
                 end,
             },
             {
@@ -1188,7 +1188,7 @@ return {
                 name = "HarvestSpell",
                 type = "Spell",
                 cond = function(self, spell)
-                    return Casting.GemReady(spell) and mq.TLO.Me.PctMana() < Config:GetSetting('HarvestManaPct')
+                    return Casting.CastReady(spell) and mq.TLO.Me.PctMana() < Config:GetSetting('HarvestManaPct')
                 end,
             },
             { --Chest Click, name function stops errors in rotation window when slot is empty

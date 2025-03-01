@@ -831,7 +831,7 @@ local _ClassConfig = {
                 type = "Spell",
                 cond = function(self, spell)
                     if not mq.TLO.Group() then return false end
-                    return Casting.GemReady(spell) and mq.TLO.Group.Injured(Config:GetSetting('GroupHealPoint'))() > Config:GetSetting('GroupInjureCnt')
+                    return Casting.CastReady(spell) and mq.TLO.Group.Injured(Config:GetSetting('GroupHealPoint'))() > Config:GetSetting('GroupInjureCnt')
                 end,
             },
             {
@@ -839,7 +839,7 @@ local _ClassConfig = {
                 type = "Spell",
                 cond = function(self, spell)
                     if not mq.TLO.Group() then return false end
-                    return Casting.GemReady(spell) and mq.TLO.Group.Injured(Config:GetSetting('GroupHealPoint'))() > Config:GetSetting('GroupInjureCnt')
+                    return Casting.CastReady(spell) and mq.TLO.Group.Injured(Config:GetSetting('GroupHealPoint'))() > Config:GetSetting('GroupInjureCnt')
                 end,
             },
         },

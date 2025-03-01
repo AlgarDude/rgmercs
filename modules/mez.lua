@@ -404,7 +404,7 @@ function Module:MezNow(mezId, useAE, useAA)
         -- Only Enchanters have an AA AE Mez but we'll prefer the AE Spell if we can.
         -- TODO CHECK IF ITS READY
         if useAA and Core.MyClassIs("enc") and
-            not Casting.TargetedSpellReady(aeMezSpell.RankName.Name(), mezId, false) and
+            not Casting.SpellReady(aeMezSpell) and
             Casting.AAReady("Beam of Slumber") and self.settings.UseAEAAMez then
             -- This is a beam AE so I need ot face the target and  cast.
             Core.DoCmd("/face fast")
@@ -416,7 +416,7 @@ function Module:MezNow(mezId, useAE, useAA)
             Comms.HandleAnnounce(string.format("\aw I JUST CAST \ar AE AA MEZ \ag Beam of Slumber"), Config:GetSetting('MezAnnounceGroup'),
                 Config:GetSetting('MezAnnounce'))
             -- reset timers
-        elseif Casting.TargetedSpellReady(aeMezSpell.RankName.Name(), mezId, false) then
+        elseif Casting.SpellReady(aeMezSpell) then
             -- If we're here we're not doing AA-based AE Mezzing. We're either using our bard song or
             -- ENCH/NEC Spell
             Comms.HandleAnnounce(string.format("\aw I AM \ar AE SPELL MEZZING \ag %s", aeMezSpell.RankName()), Config:GetSetting('MezAnnounceGroup'),
@@ -741,7 +741,7 @@ function Module:ProcessMezList()
                         mq.delay(500, function() return mq.TLO.Target.BuffsPopulated() end)
 
                         local maxWait = 5000
-                        while not Casting.TargetedSpellReady(mezSpell.RankName.Name()) and maxWait > 0 do
+                        while not Casting.SpellReady(mezSpell) and maxWait > 0 do
                             mq.delay(100)
                             maxWait = maxWait - 100
                         end

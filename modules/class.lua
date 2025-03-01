@@ -903,7 +903,7 @@ function Module:GiveTime(combat_state)
                 Logger.log_debug("\arXT(%s) is behind us! \atTaking evasive maneuvers! \awMyHeader(\am%d\aw) ThierHeading(\am%d\aw)", xtSpawn.DisplayName() or "",
                     mq.TLO.Me.Heading.Degrees(),
                     (xtSpawn.Heading.Degrees() or 0))
-                Core.DoCmd("/stick moveback %s", Config:GetSetting('MovebackDistance'))
+                Core.DoCmd("/stick moveback %d", Config:GetSetting('MovebackDistance'))
                 mq.delay(500)
             end
         end
