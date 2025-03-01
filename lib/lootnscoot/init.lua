@@ -2613,10 +2613,10 @@ function LNS.checkClasses(decision, classes, new)
     return decision
 end
 
-function LNS.checkWearable(isEqupiable, decision, ruletype, nodrop, newrule, isAug, item)
+function LNS.checkWearable(isequipable, decision, ruletype, nodrop, newrule, isAug, item)
     local msgTbl = {}
     local iCanWear = false
-    if isEqupiable then
+    if isequipable then
         if (LNS.Settings.CanWear and decision == 'Keep' and ruletype == 'Normal') or decision == 'CanUse' or (nodrop and newrule) then
             if not item.CanUse() then
                 decision = 'Ignore'
@@ -2699,7 +2699,7 @@ function LNS.getRule(item, fromFunction, index)
     local iCanUse                                   = true
     local freeSpace                                 = mq.TLO.Me.FreeInventory()
     local lootActionPreformed                       = "Looted"
-    local equpiable                                 = (item.WornSlots() or 0) > 0
+    local equipable                                 = (item.WornSlots() or 0) > 0
     local newNoDrop                                 = false
     local itemLink                                  = item.ItemLink('CLICKABLE')() or 'NULL'
     local lootNewItemRule                           = 'NULL'
@@ -2719,7 +2719,7 @@ function LNS.getRule(item, fromFunction, index)
     lootDecision = lootRule
 
     if lootRule == 'NULL' and isNoDrop then
-        if not equpiable then
+        if not equipable then
             lootRule = "Ask"
             ruletype = 'Normal'
             lootNewItemRule = "Ask"
@@ -2839,7 +2839,7 @@ function LNS.getRule(item, fromFunction, index)
     end
 
     if isNoDrop and (ruletype == 'Normal' or newRule) then
-        iCanUse, lootDecision = LNS.checkWearable(equpiable, lootDecision, ruletype, isNoDrop, newRule, isAug, item)
+        iCanUse, lootDecision = LNS.checkWearable(equipable, lootDecision, ruletype, isNoDrop, newRule, isAug, item)
 
         if not LNS.Settings.LootNoDrop or (not newRule and not iCanUse) then
             table.insert(noDropItems, itemLink)
@@ -2885,7 +2885,7 @@ function LNS.getRule(item, fromFunction, index)
             lootNewItemRule = 'Sell'
         elseif tributeValue > 0 and not equipable then
             lootNewItemRule = 'Tribtue'
-        elseif tributeValue > 0 and equpiable then
+        elseif tributeValue > 0 and equipable then
             lootNewItemRule = 'Ask'
         end
 

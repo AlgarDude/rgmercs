@@ -22,8 +22,11 @@ Casting.UseGem        = mq.TLO.Me.NumGems()
 --- @return boolean Returns true if the player has the buff, false otherwise.
 function Casting.IHaveBuff(effect)
     if not effect then return false end
-    if type(effect) ~= "string" then effect = mq.TLO.Spell(effect)() or "nil" end
-
+    if type(effect) ~= "string" then
+        Logger.log_verbose("Non-string passed, converting: " .. effect)
+        effect = mq.TLO.Spell(effect)() or "nil"
+    end
+    Logger.log_verbose("Searching Buff and Song windows for %s.", effect)
     return (mq.TLO.Me.Buff(effect)() or mq.TLO.Me.Song(effect)()) and true or false
 end
 
@@ -267,10 +270,10 @@ function Casting.GroupBuffCheck(spell, target)
         ret = Casting.LocalBuffCheck(spell)
     elseif mq.TLO.DanNet(mq.TLO.Spawn(target.ID()).CleanName())() then
         Logger.log_verbose("Target is a DanNet peer, using PeerBuffCheck.")
-        ret = Casting.PeerSpellCheck(spell, target)
+        ret = Casting.PeerBuffCheck(spell, target)
     else
         Logger.log_verbose("Target is not myself or a DanNet peer, using TargetSpellCheck.")
-        ret = Casting.TargetSpellCheck(spell, target, true)
+        ret = Casting.TargetBuffCheck(spell, target, true)
     end
     return ret
 end
@@ -914,7 +917,7 @@ function Casting.UseSong(songName, targetId, bAllowMem, retryCount)
 
         local targetSpawn = mq.TLO.Spawn(targetId)
 
-        if (Targeting.GetXTHaterCount() > 0 or not bAllowMem) and (not Casting.CastReady(songName) or not mq.TLO.Me.Gem(songName)()) then
+        if (Targeting.GetXTHaterCount() > 0 or not bAllowMem) and (not Casting.CastReady(spell) or not mq.TLO.Me.Gem(songName)()) then
             Logger.log_debug("\ayI tried to singing %s but it was not ready and we are in combat - moving on.",
                 songName)
             return false
@@ -1092,7 +1095,7 @@ function Casting.UseSpell(spellName, targetId, bAllowMem, bAllowDead, overrideWa
             return false
         end
 
-        if (Targeting.GetXTHaterCount() > 0 or not bAllowMem) and (not Casting.CastReady(spellName) or not mq.TLO.Me.Gem(spellName)()) then
+        if (Targeting.GetXTHaterCount() > 0 or not bAllowMem) and (not Casting.CastReady(spell) or not mq.TLO.Me.Gem(spellName)()) then
             Logger.log_debug("\ayUseSpell(): \ayI tried to cast %s but it was not ready and we are in combat - moving on.",
                 spellName)
             return false
@@ -1122,7 +1125,7 @@ function Casting.UseSpell(spellName, targetId, bAllowMem, bAllowDead, overrideWa
             Targeting.SetTarget(targetId, true)
         end
 
-        --if not Casting.SpellStacksOnTarget(spell) then
+        --if not spell.StacksTarget() then
         --    Logger.log_debug("\ayUseSpell(): \arStacking checked failed - Someone tell Derple or Algar to add a Stacking Check to the condition of '%s'!", spellName)
         --    return false
         --end
@@ -1555,12 +1558,12 @@ end
 
 function Casting.DetSpellCheck(spell, target)
     if not spell or not spell() then return false end
-    return Casting.TargetSpellCheck(spell, target)
+    return Casting.TargetBuffCheck(spell, target)
 end
 
 function Casting.DetAACheck(aaName, target)
     if not Casting.CanUseAA(aaName) then return false end
-    return Casting.TargetSpellCheck(mq.TLO.Me.AltAbility(aaName).Spell, target)
+    return Casting.TargetBuffCheck(mq.TLO.Me.AltAbility(aaName).Spell, target)
 end
 
 function Casting.DotSpellCheck(spell, target)
@@ -1568,13 +1571,13 @@ function Casting.DotSpellCheck(spell, target)
     local threshold = Targeting.IsNamed(target) and Config:GetSetting('NamedStopDOT') or Config:GetSetting('HPStopDOT')
     if threshold < Targeting.GetTargetPctHPs(target) then return false end
 
-    return Casting.TargetSpellCheck(spell, target)
+    return Casting.TargetBuffCheck(spell, target)
 end
 
 function Casting.DetItemCheck(itemName, target)
     local clickySpell = Casting.GetClickySpell(itemName)
     if not clickySpell or not clickySpell() then return false end
-    return Casting.TargetSpellCheck(clickySpell, target)
+    return Casting.TargetBuffCheck(clickySpell, target)
 end
 
 function Casting.NoDiscActive()

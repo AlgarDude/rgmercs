@@ -880,43 +880,43 @@ local _ClassConfig = {
             {
                 name = "Orator's Unity",
                 type = "AA",
-                active_cond = function(self, aaName) return Casting.BuffActiveByName(aaName) end,
+                active_cond = function(self, aaName) return Casting.IHaveBuff(aaName) end,
                 cond = function(self, aaName) return Casting.SelfBuffAACheck(aaName) end,
             },
             {
                 name = "SelfGuardShield",
                 type = "Spell",
-                active_cond = function(self, spell) return Casting.BuffActiveByID(spell.RankName.ID()) end,
+                active_cond = function(self, spell) return Casting.IHaveBuff(spell.RankName.ID()) end,
                 cond = function(self, spell) return Casting.SelfBuffCheck(spell) end,
             },
             {
                 name = "SelfRune1",
                 type = "Spell",
-                active_cond = function(self, spell) return Casting.BuffActiveByID(spell.ID()) end,
+                active_cond = function(self, spell) return Casting.IHaveBuff(spell.ID()) end,
                 cond = function(self, spell) return Casting.SelfBuffCheck(spell) end,
             },
             {
                 name = "SelfHPBuff",
                 type = "Spell",
-                active_cond = function(self, spell) return Casting.BuffActiveByID(spell.ID()) end,
+                active_cond = function(self, spell) return Casting.IHaveBuff(spell.ID()) end,
                 cond = function(self, spell) return Casting.SelfBuffCheck(spell) end,
             },
             {
                 name = "MezBuff",
                 type = "Spell",
-                active_cond = function(self, spell) return Casting.BuffActiveByID(spell.ID()) end,
+                active_cond = function(self, spell) return Casting.IHaveBuff(spell.ID()) end,
                 cond = function(self, spell) return Casting.SelfBuffCheck(spell) end,
             },
             {
                 name = "SelfRune2",
                 type = "Spell",
-                active_cond = function(self, spell) return Casting.BuffActiveByID(spell.ID()) end,
+                active_cond = function(self, spell) return Casting.IHaveBuff(spell.ID()) end,
                 cond = function(self, spell) return Casting.SelfBuffCheck(spell) end,
             },
             {
                 name = "Veil of Mindshadow",
                 type = "AA",
-                active_cond = function(self, aaName) return Casting.BuffActiveByName(aaName) end,
+                active_cond = function(self, aaName) return Casting.IHaveBuff(aaName) end,
                 cond = function(self, aaName) return Casting.SelfBuffAACheck(aaName) end,
             },
             {
@@ -1093,7 +1093,7 @@ local _ClassConfig = {
             {
                 name = "SpellProcBuff",
                 type = "Spell",
-                active_cond = function(self, spell) return Casting.BuffActiveByID(spell.ID()) end,
+                active_cond = function(self, spell) return Casting.IHaveBuff(spell.ID()) end,
                 cond = function(self, spell, target)
                     if not Config:GetSetting('DoProcBuff') or not Config.Constants.RGCasters:contains(target.Class.ShortName()) then return false end
                     return Casting.GroupBuffCheck(spell, target)
@@ -1398,7 +1398,7 @@ local _ClassConfig = {
                 name = "Bite of Tashani",
                 type = "AA",
                 cond = function(self, aaName)
-                    return Casting.DetSpellAACheck(aaName)
+                    return Casting.DetAACheck(aaName)
                 end,
             },
         },
@@ -1408,7 +1408,7 @@ local _ClassConfig = {
                 type = "AA",
                 cond = function(self, aaName)
                     if Targeting.GetXTHaterCount() < Config:GetSetting('AESlowCount') then return false end
-                    return Casting.DetSpellAACheck(aaName)
+                    return Casting.DetAACheck(aaName)
                 end,
             },
             {
@@ -1416,7 +1416,7 @@ local _ClassConfig = {
                 type = "AA",
                 cond = function(self, aaName)
                     local aaSpell = mq.TLO.Me.AltAbility(aaName).Spell
-                    return Casting.DetSpellAACheck(aaName) and (aaSpell.SlowPct() or 0) > Targeting.GetTargetSlowedPct()
+                    return Casting.DetAACheck(aaName) and (aaSpell.SlowPct() or 0) > Targeting.GetTargetSlowedPct()
                 end,
             },
             {

@@ -986,7 +986,7 @@ local _ClassConfig = {
             {
                 name = "Divine Protector's Unity",
                 type = "AA",
-                active_cond = function(self, aaName) return Casting.BuffActiveByID(mq.TLO.Me.AltAbility(aaName).Spell.Trigger(1).ID() or 0) end,
+                active_cond = function(self, aaName) return Casting.IHaveBuff(mq.TLO.Me.AltAbility(aaName).Spell.Trigger(1).ID() or 0) end,
                 cond = function(self, aaName)
                     return Casting.SelfBuffAACheck(aaName)
                 end,
@@ -994,7 +994,7 @@ local _ClassConfig = {
             {
                 name = "ArmorSelfBuff",
                 type = "Spell",
-                active_cond = function(self, spell) return Casting.BuffActiveByID(spell.RankName.ID()) end,
+                active_cond = function(self, spell) return Casting.IHaveBuff(spell.RankName.ID()) end,
                 cond = function(self, spell)
                     return self.ClassConfig.HelperFunctions.SingleBuffCheck() and Casting.SelfBuffCheck(spell)
                 end,
@@ -1002,7 +1002,7 @@ local _ClassConfig = {
             {
                 name = "FuryProc",
                 type = "Spell",
-                active_cond = function(self, spell) return Casting.BuffActiveByID(spell.RankName.ID()) end,
+                active_cond = function(self, spell) return Casting.IHaveBuff(spell.RankName.ID()) end,
                 cond = function(self, spell)
                     return self.ClassConfig.HelperFunctions.SingleBuffCheck() and Casting.SelfBuffCheck(spell)
                 end,
@@ -1018,7 +1018,7 @@ local _ClassConfig = {
             {
                 name = "Remorse",
                 type = "Spell",
-                active_cond = function(self, spell) return Casting.BuffActiveByID(spell.RankName.ID()) end,
+                active_cond = function(self, spell) return Casting.IHaveBuff(spell.RankName.ID()) end,
                 cond = function(self, spell)
                     return self.ClassConfig.HelperFunctions.SingleBuffCheck() and Casting.SelfBuffCheck(spell)
                 end,
@@ -1026,7 +1026,7 @@ local _ClassConfig = {
             {
                 name = "Piety",
                 type = "Spell",
-                active_cond = function(self, spell) return Casting.BuffActiveByID(spell.RankName.ID()) end,
+                active_cond = function(self, spell) return Casting.IHaveBuff(spell.RankName.ID()) end,
                 cond = function(self, spell)
                     return self.ClassConfig.HelperFunctions.SingleBuffCheck() and Casting.SelfBuffCheck(spell)
                 end,
@@ -1044,24 +1044,24 @@ local _ClassConfig = {
             {
                 name = "TempHP",
                 type = "Spell",
-                active_cond = function(self, spell) return Casting.BuffActiveByID(spell.RankName.ID()) end,
+                active_cond = function(self, spell) return Casting.IHaveBuff(spell.RankName.ID()) end,
                 cond = function(self, spell)
                     if not Config:GetSetting('DoTempHP') then return false end
-                    return Casting.SpellStacksOnMe(spell.RankName) and (mq.TLO.Me.Buff(spell).Duration.TotalSeconds() or 0) < 45
+                    return spell.RankName.Stacks() and (mq.TLO.Me.Buff(spell).Duration.TotalSeconds() or 0) < 45
                 end,
             },
             {
                 name = "Incoming",
                 type = "Spell",
                 cond = function(self, spell)
-                    return Casting.SpellStacksOnMe(spell.RankName) and Core.IsModeActive("Tank") and (mq.TLO.Me.Buff(spell).Duration.TotalSeconds() or 0) < 15
+                    return spell.RankName.Stacks() and Core.IsModeActive("Tank") and (mq.TLO.Me.Buff(spell).Duration.TotalSeconds() or 0) < 15
                 end,
             },
             {
                 name = "HealWard",
                 type = "Spell",
                 cond = function(self, spell, target)
-                    return Casting.SpellStacksOnMe(spell.RankName) and Core.IsModeActive("Tank") and (mq.TLO.Me.Song(spell).Duration.TotalSeconds() or 0) < 15
+                    return spell.RankName.Stacks() and Core.IsModeActive("Tank") and (mq.TLO.Me.Song(spell).Duration.TotalSeconds() or 0) < 15
                 end,
             },
             { --Charm Click, name function stops errors in rotation window when slot is empty
@@ -1087,7 +1087,7 @@ local _ClassConfig = {
             {
                 name = "Brells",
                 type = "Spell",
-                active_cond = function(self, spell) return Casting.BuffActiveByID(spell.ID()) end,
+                active_cond = function(self, spell) return Casting.IHaveBuff(spell.ID()) end,
                 cond = function(self, spell)
                     if not Config:GetSetting('DoBrells') then return false end
                     return Casting.SelfBuffCheck(spell)
@@ -1096,7 +1096,7 @@ local _ClassConfig = {
             {
                 name = "Aego",
                 type = "Spell",
-                active_cond = function(self, spell) return Casting.BuffActiveByID(spell.ID()) end,
+                active_cond = function(self, spell) return Casting.IHaveBuff(spell.ID()) end,
                 cond = function(self, spell)
                     if Config:GetSetting('AegoSymbol') ~= 1 then return false end
                     return Casting.SelfBuffCheck(spell)
@@ -1105,7 +1105,7 @@ local _ClassConfig = {
             {
                 name = "Symbol",
                 type = "Spell",
-                active_cond = function(self, spell) return Casting.BuffActiveByID(spell.ID()) end,
+                active_cond = function(self, spell) return Casting.IHaveBuff(spell.ID()) end,
                 cond = function(self, spell)
                     if Config:GetSetting('AegoSymbol') ~= 2 then return false end
                     return Casting.SelfBuffCheck(spell)
@@ -1423,7 +1423,7 @@ local _ClassConfig = {
                 name = "HealStun",
                 type = "Spell",
                 cond = function(self, spell, target)
-                    return Casting.DetSpellCheck(spell) and Casting.SpellStacksOnMe(spell.RankName) and (mq.TLO.Me.Song(spell.Trigger(1).Name).Duration.TotalSeconds() or 0) < 12
+                    return Casting.DetSpellCheck(spell) and spell.RankName.Stacks() and (mq.TLO.Me.Song(spell.Trigger(1).Name).Duration.TotalSeconds() or 0) < 12
                 end,
             },
             {

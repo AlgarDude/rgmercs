@@ -891,7 +891,7 @@ local _ClassConfig = {
                 name = "Dark Lord's Unity (Azia)",
                 type = "AA",
                 tooltip = Tooltips.DLUA,
-                active_cond = function(self, aaName) return Casting.BuffActiveByID(mq.TLO.Me.AltAbility(aaName).Spell.Trigger(2).ID() or 0) end,
+                active_cond = function(self, aaName) return Casting.IHaveBuff(mq.TLO.Me.AltAbility(aaName).Spell.Trigger(2).ID() or 0) end,
                 cond = function(self, aaName, target)
                     if Config:GetSetting('ProcChoice') ~= 1 then return false end
                     --SelfBuffAACheck does not work for this specific AA, it returns a strange spell in the stacking check
@@ -902,7 +902,7 @@ local _ClassConfig = {
                 name = "Dark Lord's Unity (Beza)",
                 type = "AA",
                 tooltip = Tooltips.DLUB,
-                active_cond = function(self, aaName) return Casting.BuffActiveByID(mq.TLO.Me.AltAbility(aaName).Spell.Trigger(2).ID() or 0) end,
+                active_cond = function(self, aaName) return Casting.IHaveBuff(mq.TLO.Me.AltAbility(aaName).Spell.Trigger(2).ID() or 0) end,
                 cond = function(self, aaName, target)
                     if Config:GetSetting('ProcChoice') ~= 2 then return false end
                     --SelfBuffAACheck does not work for this specific AA, it returns a strange spell in the stacking check
@@ -913,7 +913,7 @@ local _ClassConfig = {
                 name = "Shroud",
                 type = "Spell",
                 tooltip = Tooltips.Shroud,
-                active_cond = function(self, spell) return Casting.BuffActiveByID(spell.RankName.ID()) end,
+                active_cond = function(self, spell) return Casting.IHaveBuff(spell.RankName.ID()) end,
                 cond = function(self, spell)
                     return self.ClassConfig.HelperFunctions.SingleBuffCheck() and Casting.SelfBuffCheck(spell)
                 end,
@@ -922,7 +922,7 @@ local _ClassConfig = {
                 name = "Horror",
                 type = "Spell",
                 tooltip = Tooltips.Horror,
-                active_cond = function(self, spell) return Casting.BuffActiveByID(spell.RankName.ID()) end,
+                active_cond = function(self, spell) return Casting.IHaveBuff(spell.RankName.ID()) end,
                 cond = function(self, spell)
                     if Config:GetSetting('ProcChoice') ~= 1 then return false end
                     return self.ClassConfig.HelperFunctions.SingleBuffCheck() and Casting.SelfBuffCheck(spell)
@@ -932,7 +932,7 @@ local _ClassConfig = {
                 name = "Mental",
                 type = "Spell",
                 tooltip = Tooltips.Horror,
-                active_cond = function(self, spell) return Casting.BuffActiveByID(spell.RankName.ID()) end,
+                active_cond = function(self, spell) return Casting.IHaveBuff(spell.RankName.ID()) end,
                 cond = function(self, spell)
                     if Config:GetSetting('ProcChoice') ~= 2 then return false end
                     return self.ClassConfig.HelperFunctions.SingleBuffCheck() and Casting.SelfBuffCheck(spell)
@@ -942,7 +942,7 @@ local _ClassConfig = {
                 name = "Demeanor",
                 type = "Spell",
                 tooltip = Tooltips.Demeanor,
-                active_cond = function(self, spell) return Casting.BuffActiveByID(spell.RankName.ID()) end,
+                active_cond = function(self, spell) return Casting.IHaveBuff(spell.RankName.ID()) end,
                 cond = function(self, spell)
                     return self.ClassConfig.HelperFunctions.SingleBuffCheck() and Casting.SelfBuffCheck(spell)
                 end,
@@ -951,7 +951,7 @@ local _ClassConfig = {
                 name = "CloakHP",
                 type = "Spell",
                 tooltip = Tooltips.CloakHP,
-                active_cond = function(self, spell) return Casting.BuffActiveByID(spell.RankName.ID()) end,
+                active_cond = function(self, spell) return Casting.IHaveBuff(spell.RankName.ID()) end,
                 cond = function(self, spell)
                     return self.ClassConfig.HelperFunctions.SingleBuffCheck() and Casting.SelfBuffCheck(spell)
                 end,
@@ -960,7 +960,7 @@ local _ClassConfig = {
                 name = "SelfDS",
                 type = "Spell",
                 tooltip = Tooltips.SelfDS,
-                active_cond = function(self, spell) return Casting.BuffActiveByID(spell.RankName.ID()) end,
+                active_cond = function(self, spell) return Casting.IHaveBuff(spell.RankName.ID()) end,
                 cond = function(self, spell)
                     return self.ClassConfig.HelperFunctions.SingleBuffCheck() and Casting.SelfBuffCheck(spell) and Casting.ReagentCheck(spell)
                 end,
@@ -969,7 +969,7 @@ local _ClassConfig = {
                 name = "Covenant",
                 type = "Spell",
                 tooltip = Tooltips.Covenant,
-                active_cond = function(self, spell) return Casting.BuffActiveByID(spell.RankName.ID()) end,
+                active_cond = function(self, spell) return Casting.IHaveBuff(spell.RankName.ID()) end,
                 cond = function(self, spell)
                     return self.ClassConfig.HelperFunctions.SingleBuffCheck() and Casting.SelfBuffCheck(spell)
                 end,
@@ -978,7 +978,7 @@ local _ClassConfig = {
                 name = "CallAtk",
                 type = "Spell",
                 tooltip = Tooltips.CallAtk,
-                active_cond = function(self, spell) return Casting.BuffActiveByID(spell.RankName.ID()) end,
+                active_cond = function(self, spell) return Casting.IHaveBuff(spell.RankName.ID()) end,
                 cond = function(self, spell)
                     return self.ClassConfig.HelperFunctions.SingleBuffCheck() and Casting.SelfBuffCheck(spell)
                 end,
@@ -990,35 +990,35 @@ local _ClassConfig = {
                 name = "Skin",
                 type = "Spell",
                 tooltip = Tooltips.Skin,
-                active_cond = function(self, spell) return Casting.BuffActiveByID(spell.RankName.ID()) end,
+                active_cond = function(self, spell) return Casting.IHaveBuff(spell.RankName.ID()) end,
                 cond = function(self, spell)
-                    return Casting.SpellStacksOnMe(spell.RankName) and (mq.TLO.Me.Buff(spell).Duration.TotalSeconds() or 0) < 60
+                    return spell.RankName.Stacks() and (mq.TLO.Me.Buff(spell).Duration.TotalSeconds() or 0) < 60
                 end,
             },
             {
                 name = "TempHP",
                 type = "Spell",
                 tooltip = Tooltips.TempHP,
-                active_cond = function(self, spell) return Casting.BuffActiveByID(spell.RankName.ID()) end,
+                active_cond = function(self, spell) return Casting.IHaveBuff(spell.RankName.ID()) end,
                 cond = function(self, spell)
                     if not Config:GetSetting('DoTempHP') or not Casting.CastReady(spell) then return false end
-                    return Casting.SpellStacksOnMe(spell.RankName) and (mq.TLO.Me.Buff(spell).Duration.TotalSeconds() or 0) < 45
+                    return spell.RankName.Stacks() and (mq.TLO.Me.Buff(spell).Duration.TotalSeconds() or 0) < 45
                 end,
             },
             {
                 name = "HealBurn",
                 type = "Spell",
                 tooltip = Tooltips.HealBurn,
-                active_cond = function(self, spell) return Casting.BuffActiveByID(spell.RankName.ID()) end,
+                active_cond = function(self, spell) return Casting.IHaveBuff(spell.RankName.ID()) end,
                 cond = function(self, spell)
-                    return Casting.SpellStacksOnMe(spell.RankName) and (mq.TLO.Me.Buff(spell).Duration.TotalSeconds() or 0) < 30
+                    return spell.RankName.Stacks() and (mq.TLO.Me.Buff(spell).Duration.TotalSeconds() or 0) < 30
                 end,
             },
             {
                 name = "Voice of Thule",
                 type = "AA",
                 tooltip = Tooltips.HateBuff,
-                active_cond = function(self, aaName) return Casting.BuffActiveByID(mq.TLO.Me.AltAbility(aaName).Spell.ID()) end,
+                active_cond = function(self, aaName) return Casting.IHaveBuff(mq.TLO.Me.AltAbility(aaName).Spell.ID()) end,
                 cond = function(self, aaName)
                     if not Config:GetSetting('DoHateBuff') then return false end
                     return Casting.SelfBuffAACheck(aaName)
@@ -1028,7 +1028,7 @@ local _ClassConfig = {
                 name = "HateBuff",
                 type = "Spell",
                 tooltip = Tooltips.HateBuff,
-                active_cond = function(self, spell) return Casting.BuffActiveByID(spell) end,
+                active_cond = function(self, spell) return Casting.IHaveBuff(spell) end,
                 cond = function(self, spell)
                     if not Config:GetSetting('DoHateBuff') or Casting.CanUseAA('Voice of Thule') or not Casting.CastReady(spell) then return false end
                     return Casting.SelfBuffCheck(spell)
@@ -1046,7 +1046,7 @@ local _ClassConfig = {
                 name = "Scourge Skin",
                 type = "AA",
                 --tooltip = Tooltips.ScourgeSkin,
-                active_cond = function(self, aaName) return Casting.BuffActiveByID(mq.TLO.Me.AltAbility(aaName).Spell.ID()) end,
+                active_cond = function(self, aaName) return Casting.IHaveBuff(mq.TLO.Me.AltAbility(aaName).Spell.ID()) end,
                 cond = function(self, aaName)
                     if not Core.IsTanking() then return false end
                     return Casting.SelfBuffAACheck(aaName)
@@ -1368,7 +1368,7 @@ local _ClassConfig = {
                 tooltip = Tooltips.EncroachingDarkness,
                 type = "AA",
                 cond = function(self, aaName, target)
-                    return Casting.DetSpellAACheck(aaName)
+                    return Casting.DetAACheck(aaName)
                 end,
             },
             {
@@ -1643,7 +1643,7 @@ local _ClassConfig = {
                 tooltip = Tooltips.PowerTapAC,
                 cond = function(self, spell, target)
                     if not Config:GetSetting('DoACTap') or not spell or not spell() then return false end
-                    return not mq.TLO.Me.Buff(spell.Trigger())()
+                    return Casting.SelfBuffCheck(spell)
                 end,
             },
             {
@@ -1652,7 +1652,7 @@ local _ClassConfig = {
                 tooltip = Tooltips.PowerTapAtk,
                 cond = function(self, spell, target)
                     if not Config:GetSetting('DoAtkTap') or not spell or not spell() then return false end
-                    return not mq.TLO.Me.Buff(spell.Trigger())()
+                    return Casting.SelfBuffCheck(spell)
                 end,
             },
             {
@@ -1661,7 +1661,7 @@ local _ClassConfig = {
                 tooltip = Tooltips.MaxHPTap,
                 cond = function(self, spell, target)
                     if not Config:GetSetting('DoMaxHPTap') or not spell or not spell() then return false end
-                    return not mq.TLO.Me.Buff(spell.Trigger())() and Casting.SpellStacksOnMe(spell.Trigger)
+                    return Casting.SelfBuffCheck(spell)
                 end,
             },
         },

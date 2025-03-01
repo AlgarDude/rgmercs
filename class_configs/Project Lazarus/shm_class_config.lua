@@ -1057,7 +1057,7 @@ local _ClassConfig = {
                 type = "AA",
                 cond = function(self, aaName, target)
                     if not Config:GetSetting('DoAEMalo') then return false end
-                    return Targeting.GetXTHaterCount() >= Config:GetSetting('AEMaloCount') and Casting.DetSpellAACheck(aaName)
+                    return Targeting.GetXTHaterCount() >= Config:GetSetting('AEMaloCount') and Casting.DetAACheck(aaName)
                 end,
             },
             {
@@ -1073,7 +1073,7 @@ local _ClassConfig = {
                 type = "AA",
                 cond = function(self, aaName, target)
                     if not Config:GetSetting('DoSTMalo') then return false end
-                    return Casting.DetSpellAACheck(aaName)
+                    return Casting.DetAACheck(aaName)
                 end,
             },
             {
@@ -1091,7 +1091,7 @@ local _ClassConfig = {
                 type = "AA",
                 cond = function(self, aaName, target)
                     if not Config:GetSetting('DoAESlow') then return false end
-                    return Targeting.GetXTHaterCount() >= Config:GetSetting('AESlowCount') and Casting.DetSpellAACheck(aaName)
+                    return Targeting.GetXTHaterCount() >= Config:GetSetting('AESlowCount') and Casting.DetAACheck(aaName)
                 end,
             },
             {
@@ -1107,7 +1107,7 @@ local _ClassConfig = {
                 type = "AA",
                 cond = function(self, aaName, target)
                     if not Config:GetSetting('DoSTSlow') then return false end
-                    return Casting.DetSpellAACheck(aaName)
+                    return Casting.DetAACheck(aaName)
                 end,
             },
             {
@@ -1216,7 +1216,7 @@ local _ClassConfig = {
                 allowDead = true,
                 cond = function(self, spell)
                     if not Casting.CanUseAA("Luminary's Synergy") and Config:GetSetting('DoHealOverTime') then return false end
-                    return not Casting.DotSpellCheck(spell) and Casting.SpellStacksOnMe(spell.RankName)
+                    return not Casting.DotSpellCheck(spell) and spell.RankName.Stacks()
                         and (mq.TLO.Me.Song(spell).Duration.TotalSeconds() or 0) < 30
                 end,
             },
@@ -1278,7 +1278,7 @@ local _ClassConfig = {
             {
                 name = "GroupHealProcBuff",
                 type = "Spell",
-                active_cond = function(self, spell) return Casting.BuffActiveByID(spell.ID()) end,
+                active_cond = function(self, spell) return Casting.IHaveBuff(spell.ID()) end,
                 cond = function(self, spell)
                     return Casting.SelfBuffCheck(spell)
                 end,
@@ -1288,14 +1288,14 @@ local _ClassConfig = {
                 type = "Spell",
                 cond = function(self, spell)
                     if not Casting.CanUseAA("Luminary's Synergy") and Config:GetSetting('DoHealOverTime') then return false end
-                    return Casting.SpellStacksOnMe(spell.RankName) and (mq.TLO.Me.Song(spell).Duration.TotalSeconds() or 0) < 30
+                    return spell.RankName.Stacks() and (mq.TLO.Me.Song(spell).Duration.TotalSeconds() or 0) < 30
                 end,
             },
             {
                 name = "Preincarnation",
                 type = "AA",
                 active_cond = function(self, aaName)
-                    return Casting.BuffActiveByID(mq.TLO.Me.AltAbility(aaName)
+                    return Casting.IHaveBuff(mq.TLO.Me.AltAbility(aaName)
                         .Spell.Trigger(1).ID())
                 end,
                 cond = function(self, aaName)
@@ -1337,7 +1337,7 @@ local _ClassConfig = {
                 name = "Visionary's Unity",
                 type = "AA",
                 active_cond = function(self, aaName)
-                    return Casting.BuffActiveByID(mq.TLO.Me.AltAbility(aaName)
+                    return Casting.IHaveBuff(mq.TLO.Me.AltAbility(aaName)
                         .Spell.Trigger(1).ID())
                 end,
                 cond = function(self, aaName) --Check ranks because we don't want the first pack buff (drains mana)
@@ -1348,7 +1348,7 @@ local _ClassConfig = {
             {
                 name = "PackSelfBuff",
                 type = "Spell",
-                active_cond = function(self, spell) return Casting.BuffActiveByID(spell.ID()) end,
+                active_cond = function(self, spell) return Casting.IHaveBuff(spell.ID()) end,
                 cond = function(self, spell)
                     if (mq.TLO.Me.AltAbility("Visionary's Unity").Rank() or 999) > 1 then return false end
                     return Casting.SelfBuffCheck(spell)
@@ -1357,7 +1357,7 @@ local _ClassConfig = {
             {
                 name = "WardBuff",
                 type = "Spell",
-                active_cond = function(self, spell) return Casting.BuffActiveByID(spell.ID()) end,
+                active_cond = function(self, spell) return Casting.IHaveBuff(spell.ID()) end,
                 cond = function(self, spell)
                     if not Config:GetSetting('DoSelfWard') then return false end
                     return Casting.SelfBuffCheck(spell)
@@ -1431,7 +1431,7 @@ local _ClassConfig = {
             {
                 name = "SingleRegenBuff",
                 type = "Spell",
-                active_cond = function(self, spell) return Casting.BuffActiveByID(spell.ID()) end,
+                active_cond = function(self, spell) return Casting.IHaveBuff(spell.ID()) end,
                 cond = function(self, spell, target)
                     if Core.GetResolvedActionMapItem('GroupRegenBuff') then return false end --We don't need this once we can use the group version
                     return (Config.Constants.RGTank:contains(target.Class.ShortName()) or target.ID() == mq.TLO.Me.ID()) and Casting.GroupBuffCheck(spell, target)
@@ -1440,7 +1440,7 @@ local _ClassConfig = {
             {
                 name = "GroupRegenBuff",
                 type = "Spell",
-                active_cond = function(self, spell) return Casting.BuffActiveByID(spell.ID()) end,
+                active_cond = function(self, spell) return Casting.IHaveBuff(spell.ID()) end,
                 cond = function(self, spell, target)
                     if not Config:GetSetting('DoGroupRegen') or Core.GetResolvedActionMapItem('DichoSpell') then return false end --Dicho regen overwrites this
                     return Casting.GroupBuffCheck(spell, target)
@@ -1450,7 +1450,7 @@ local _ClassConfig = {
                 name = "Lupine Spirit",
                 type = "AA",
                 active_cond = function(self, aaName)
-                    return Casting.BuffActiveByID(mq.TLO.Me.AltAbility(aaName).Spell.Trigger(1).ID())
+                    return Casting.IHaveBuff(mq.TLO.Me.AltAbility(aaName).Spell.Trigger(1).ID())
                 end,
                 cond = function(self, aaName, target) --check ranks because this won't use Tala'Tak between 74 and 90
                     if not Config:GetSetting('DoRunSpeed') or (mq.TLO.Me.AltAbility(aaName).Rank() or 0) < 4 then return false end

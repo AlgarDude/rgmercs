@@ -864,7 +864,7 @@ return {
                 type = "AA",
                 cond = function(self, aaName)
                     return mq.TLO.Me.Level() < 80 and not Casting.IHaveBuff('Group Armor of the Inquisitor') and not Casting.IHaveBuff('Armor of the Inquisitor') and
-                        not Casting.BuffActiveByName('Spire of Chivalry')
+                        not Casting.IHaveBuff('Spire of Chivalry')
                 end,
             },
             {
@@ -1016,7 +1016,7 @@ return {
                 name = "Force of Disruption",
                 type = "AA",
                 cond = function(self, aaName)
-                    return (mq.TLO.Me.AltAbility(aaName).Rank() or 0) > 7 and not Casting.BuffActiveByName("Knight's Yaulp") and
+                    return (mq.TLO.Me.AltAbility(aaName).Rank() or 0) > 7 and not Casting.IHaveBuff("Knight's Yaulp") and
                         Targeting.GetTargetDistance() < 30
                 end,
             },
@@ -1204,7 +1204,7 @@ return {
                 name = "Disruptive Persecution",
                 type = "AA",
                 cond = function(self, aaName)
-                    return mq.TLO.Me.AltAbility(aaName).Rank() >= 3 and not Casting.BuffActiveByName("Knight's Yaulp")
+                    return mq.TLO.Me.AltAbility(aaName).Rank() >= 3 and not Casting.IHaveBuff("Knight's Yaulp")
                 end,
             },
             { --Chest Click, name function stops errors in rotation window when slot is empty
@@ -1302,13 +1302,13 @@ return {
             {
                 name = "Brells",
                 type = "Spell",
-                active_cond = function(self, spell) return Casting.BuffActiveByID(spell.ID()) end,
+                active_cond = function(self, spell) return Casting.IHaveBuff(spell.ID()) end,
                 cond = function(self, spell) return Casting.SelfBuffCheck(spell) and Config:GetSetting('DoBrells') end,
             },
             {
                 name = "Aego",
                 type = "Spell",
-                active_cond = function(self, spell) return Casting.BuffActiveByID(spell.ID()) end,
+                active_cond = function(self, spell) return Casting.IHaveBuff(spell.ID()) end,
                 cond = function(self, spell)
                     if Config:GetSetting('AegoSymbol') ~= 1 then return false end
                     return Casting.SelfBuffCheck(spell)
@@ -1317,7 +1317,7 @@ return {
             {
                 name = "Symbol",
                 type = "Spell",
-                active_cond = function(self, spell) return Casting.BuffActiveByID(spell.ID()) end,
+                active_cond = function(self, spell) return Casting.IHaveBuff(spell.ID()) end,
                 cond = function(self, spell)
                     if Config:GetSetting('AegoSymbol') ~= 2 then return false end
                     return Casting.SelfBuffCheck(spell)

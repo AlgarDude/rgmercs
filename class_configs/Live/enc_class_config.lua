@@ -899,43 +899,43 @@ local _ClassConfig = {
             {
                 name = "Orator's Unity",
                 type = "AA",
-                active_cond = function(self, aaName) return Casting.BuffActiveByName(aaName) end,
+                active_cond = function(self, aaName) return Casting.IHaveBuff(aaName) end,
                 cond = function(self, aaName) return Casting.SelfBuffAACheck(aaName) end,
             },
             {
                 name = "SelfGuardShield",
                 type = "Spell",
-                active_cond = function(self, spell) return Casting.BuffActiveByID(spell.RankName.ID()) end,
+                active_cond = function(self, spell) return Casting.IHaveBuff(spell.RankName.ID()) end,
                 cond = function(self, spell) return Casting.SelfBuffCheck(spell) end,
             },
             {
                 name = "SelfRune1",
                 type = "Spell",
-                active_cond = function(self, spell) return Casting.BuffActiveByID(spell.ID()) end,
+                active_cond = function(self, spell) return Casting.IHaveBuff(spell.ID()) end,
                 cond = function(self, spell) return Casting.SelfBuffCheck(spell) end,
             },
             {
                 name = "SelfHPBuff",
                 type = "Spell",
-                active_cond = function(self, spell) return Casting.BuffActiveByID(spell.ID()) end,
+                active_cond = function(self, spell) return Casting.IHaveBuff(spell.ID()) end,
                 cond = function(self, spell) return Casting.SelfBuffCheck(spell) end,
             },
             {
                 name = "MezBuff",
                 type = "Spell",
-                active_cond = function(self, spell) return Casting.BuffActiveByID(spell.ID()) end,
+                active_cond = function(self, spell) return Casting.IHaveBuff(spell.ID()) end,
                 cond = function(self, spell) return Casting.SelfBuffCheck(spell) end,
             },
             {
                 name = "SelfRune2",
                 type = "Spell",
-                active_cond = function(self, spell) return Casting.BuffActiveByID(spell.ID()) end,
+                active_cond = function(self, spell) return Casting.IHaveBuff(spell.ID()) end,
                 cond = function(self, spell) return Casting.SelfBuffCheck(spell) end,
             },
             {
                 name = "Eldritch Rune",
                 type = "AA",
-                active_cond = function(self, aaName) return Casting.BuffActiveByName(aaName) end,
+                active_cond = function(self, aaName) return Casting.IHaveBuff(aaName) end,
                 cond = function(self, aaName)
                     return Casting.SelfBuffAACheck(aaName)
                 end,
@@ -943,7 +943,7 @@ local _ClassConfig = {
             {
                 name = "Veil of Mindshadow",
                 type = "AA",
-                active_cond = function(self, aaName) return Casting.BuffActiveByName(aaName) end,
+                active_cond = function(self, aaName) return Casting.IHaveBuff(aaName) end,
                 cond = function(self, aaName) return Casting.SelfBuffAACheck(aaName) end,
             },
 
@@ -1080,7 +1080,7 @@ local _ClassConfig = {
             {
                 name = "SpellProcBuff",
                 type = "Spell",
-                active_cond = function(self, spell) return Casting.BuffActiveByID(spell.ID()) end,
+                active_cond = function(self, spell) return Casting.IHaveBuff(spell.ID()) end,
                 cond = function(self, spell, target)
                     if not Config:GetSetting('DoProcBuff') or not Config.Constants.RGCasters:contains(target.Class.ShortName()) then return false end
                     return Casting.GroupBuffCheck(spell, target)
@@ -1210,7 +1210,7 @@ local _ClassConfig = {
                 type = "Spell",
                 cond = function(self, spell, target)
                     if Config:GetSetting('TwincastMez') ~= 3 or Modules:ExecModule("Mez", "IsMezImmune", target.ID()) then return false end
-                    return not Casting.BuffActiveByID(spell.ID()) and not mq.TLO.Me.Buff("Improved Twincast")()
+                    return not Casting.IHaveBuff(spell.ID()) and not mq.TLO.Me.Buff("Improved Twincast")()
                 end,
             },
             {
@@ -1305,7 +1305,7 @@ local _ClassConfig = {
                 type = "Spell",
                 cond = function(self, spell, target)
                     if Config:GetSetting('TwincastMez') ~= 3 or Modules:ExecModule("Mez", "IsMezImmune", target.ID()) then return false end
-                    return not Casting.BuffActiveByID(spell.ID()) and not mq.TLO.Me.Buff("Improved Twincast")()
+                    return not Casting.IHaveBuff(spell.ID()) and not mq.TLO.Me.Buff("Improved Twincast")()
                 end,
             },
             { --used when the chanter or group members are low mana
@@ -1372,7 +1372,7 @@ local _ClassConfig = {
                 name = "Bite of Tashani",
                 type = "AA",
                 cond = function(self, aaName, target)
-                    return Config:GetSetting('DoTash') and Casting.DetSpellAACheck(aaName) and
+                    return Config:GetSetting('DoTash') and Casting.DetAACheck(aaName) and
                         Targeting.GetXTHaterCount() > 1
                 end,
             },
@@ -1383,7 +1383,7 @@ local _ClassConfig = {
                 type = "AA",
                 cond = function(self, aaName, target)
                     if Targeting.GetXTHaterCount() < Config:GetSetting('AESlowCount') then return false end
-                    return Casting.DetSpellAACheck(aaName)
+                    return Casting.DetAACheck(aaName)
                 end,
             },
             {
