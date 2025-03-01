@@ -832,8 +832,13 @@ end
 function Module:GiveTime(combat_state)
     if not self.ClassConfig then return end
 
-    -- dead... whoops
-    if mq.TLO.Me.Hovering() then return end
+    local me = mq.TLO.Me
+    if me.Hovering() or me.Stunned() or me.Charmed() or me.Feared() or me.Mezzed() then
+        Logger.log_super_verbose("Class GiveTime aborted, we aren't in control of ourselves. Hovering(%s) Stunned(%s) Charmed(%s) Feared(%s) Mezzed(%s)",
+            Strings.BoolToColorString(me.Hovering()), Strings.BoolToColorString(me.Stunned()), Strings.BoolToColorString(me.Charmed() and true or false),
+            Strings.BoolToColorString(me.Feared()), Strings.BoolToColorString(me.Mezzed() and true or false))
+        return
+    end
 
     if Config.ShouldPriorityFollow() then
         Logger.log_verbose("\arSkipping Class GiveTime because we are moving and follow is the priority.")
