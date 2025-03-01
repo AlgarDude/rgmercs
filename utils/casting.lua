@@ -23,10 +23,10 @@ Casting.UseGem        = mq.TLO.Me.NumGems()
 function Casting.IHaveBuff(effect)
     if not effect then return false end
     if type(effect) ~= "string" then
-        Logger.log_verbose("Non-string passed, converting: " .. effect)
+        Logger.log_verbose("Non-string passed, converting: " .. effect())
         effect = mq.TLO.Spell(effect)() or "nil"
     end
-    Logger.log_verbose("Searching Buff and Song windows for %s.", effect)
+    Logger.log_verbose("Searching Buff and Song windows for %s.", effect())
     return (mq.TLO.Me.Buff(effect)() or mq.TLO.Me.Song(effect)()) and true or false
 end
 
@@ -103,11 +103,12 @@ function Casting.LocalBuffCheck(spell, checkPet)
         Logger.log_verbose("%s(ID:%d) found, ending check.", spellName, spellID)
         return false
     end
-    if mq.TLO.Spell(spellID).Stacks() then
+    local spellStacks = checkPet and mq.TLO.Spell(spellID).StacksPet() or mq.TLO.Spell(spellID).Stacks()
+    if spellStacks then
         Logger.log_verbose("%s(ID:%d) seems to stack, let's do it!", spellName, spellID)
         return true
     end
-    Logger.log_error("Tried to check buff stacking for %s(ID:%d), but something seems to have gone horribly wrong! Please report this.")
+    Logger.log_error("Tried to check buff stacking for %s(ID:%d), but something seems to have gone horribly wrong! Please report this.", spellName, spellID)
     return false
 end
 
@@ -1542,11 +1543,11 @@ function Casting.ItemReady(itemName)
 end
 
 function Casting.ItemHasClicky(itemName)
-    return mq.TLO.FindItem("=" .. itemName).Clicky() and true or false --makes this an explicit boolean function
+    return mq.TLO.FindItem("=" .. (itemName() or "None")).Clicky() and true or false --makes this an explicit boolean function
 end
 
 function Casting.GetClickySpell(itemName)
-    local itemClicky = mq.TLO.FindItem("=" .. itemName).Clicky
+    local itemClicky = mq.TLO.FindItem("=" .. itemName()).Clicky
     if not itemClicky then return false end
     return itemClicky.Spell
 end
