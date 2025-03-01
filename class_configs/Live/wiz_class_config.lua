@@ -688,7 +688,7 @@ return {
             steps = 1,
             targetId = function(self) return mq.TLO.Target.ID() == Config.Globals.AutoTargetID and { Config.Globals.AutoTargetID, } or {} end,
             cond = function(self, combat_state)
-                return combat_state == "Combat" and (not Config:GetSetting('DoGOMCheck') or Casting.DetGOMCheck())
+                return combat_state == "Combat" and (not Config:GetSetting('DoGOMCheck') or Casting.GOMCheck())
             end,
         },
         {
@@ -738,15 +738,15 @@ return {
                 name = "Arcane Destruction",
                 type = "AA",
                 cond = function(self)
-                    return not Casting.SongActiveByName("Frenzied Devastation")
+                    return not Casting.IHaveBuff("Frenzied Devastation")
                 end,
             },
             {
                 name = "Arcane Fury",
                 type = "AA",
                 cond = function(self)
-                    return (not Casting.SongActiveByName("Chromatic Haze")) and (not Casting.SongActiveByName("Gift of Chromatic Haze")) and
-                        ((Casting.SongActiveByName("Arcane Destruction")) or (Casting.SongActiveByName("Frenzied Devastation")))
+                    return (not Casting.IHaveBuff("Chromatic Haze")) and (not Casting.IHaveBuff("Gift of Chromatic Haze")) and
+                        ((Casting.IHaveBuff("Arcane Destruction")) or (Casting.IHaveBuff("Frenzied Devastation")))
                 end,
             },
             {
@@ -920,21 +920,21 @@ return {
                 name = "CloudburstNuke",
                 type = "Spell",
                 cond = function(self, spell)
-                    return Casting.DetGambitCheck() or ((mq.TLO.Me.Song("Evoker's Synergy I").ID() or 0) > 0)
+                    return Casting.GambitCheck() or ((mq.TLO.Me.Song("Evoker's Synergy I").ID() or 0) > 0)
                 end,
             },
             {
                 name = "WildNuke",
                 type = "Spell",
                 cond = function(self, spell)
-                    return Casting.DetGambitCheck()
+                    return Casting.GambitCheck()
                 end,
             },
             {
                 name = "ChaosNuke",
                 type = "Spell",
                 cond = function(self, spell)
-                    return Casting.DetGambitCheck()
+                    return Casting.GambitCheck()
                 end,
             },
             {
@@ -955,7 +955,7 @@ return {
                 name = "DichoSpell",
                 type = "Spell",
                 cond = function(self, spell)
-                    return not Casting.DetGambitCheck() and not mq.TLO.Me.Buff("Twincast")()
+                    return not Casting.GambitCheck() and not mq.TLO.Me.Buff("Twincast")()
                 end,
             },
             {
@@ -970,28 +970,28 @@ return {
                 type = "Spell",
                 cond = function(self, spell)
                     local fireClaw = Modules:ExecModule("Class", "GetResolvedActionMapItem", "FireClaw")
-                    return not Casting.DetGambitCheck() and ((not fireClaw or not fireClaw()) or not mq.TLO.Me.SpellReady(fireClaw.RankName()))
+                    return not Casting.GambitCheck() and ((not fireClaw or not fireClaw()) or not mq.TLO.Me.SpellReady(fireClaw.RankName()))
                 end,
             },
             {
                 name = "FireNuke",
                 type = "Spell",
                 cond = function(self, spell)
-                    return Casting.HaveManaToNuke() and not Casting.DetGambitCheck()
+                    return Casting.HaveManaToNuke() and not Casting.GambitCheck()
                 end,
             },
             {
                 name = "IceNuke",
                 type = "Spell",
                 cond = function(self, spell)
-                    return Casting.HaveManaToNuke() and not Casting.DetGambitCheck()
+                    return Casting.HaveManaToNuke() and not Casting.GambitCheck()
                 end,
             },
             {
                 name = "MagicNuke",
                 type = "Spell",
                 cond = function(self, spell)
-                    return Casting.HaveManaToNuke() and not Casting.DetGambitCheck()
+                    return Casting.HaveManaToNuke() and not Casting.GambitCheck()
                 end,
             },
             {
@@ -1042,7 +1042,7 @@ return {
                 name = "FireRainNuke",
                 type = "Spell",
                 cond = function(self, spell)
-                    return Casting.HaveManaToNuke() and not Casting.DetGambitCheck() and
+                    return Casting.HaveManaToNuke() and not Casting.GambitCheck() and
                         Targeting.GetTargetDistance() >= Config:GetSetting('RainDist')
                 end,
             },
@@ -1050,7 +1050,7 @@ return {
                 name = "IceRainNuke",
                 type = "Spell",
                 cond = function(self, spell)
-                    return Casting.HaveManaToNuke() and not Casting.DetGambitCheck() and
+                    return Casting.HaveManaToNuke() and not Casting.GambitCheck() and
                         Targeting.GetTargetDistance() >= Config:GetSetting('RainDist')
                 end,
             },
@@ -1126,7 +1126,7 @@ return {
                 type = "Item",
                 cond = function(self, itemName, target)
                     if not Config:GetSetting('DoChestClick') or not Casting.ItemHasClicky(itemName) then return false end
-                    return mq.TLO.Me.PctMana() < Config:GetSetting('HarvestManaPct') and Casting.ItemSpellCheck(itemName, target)
+                    return mq.TLO.Me.PctMana() < Config:GetSetting('HarvestManaPct') and Casting.SelfBuffItemCheck(itemName)
                 end,
             },
         },

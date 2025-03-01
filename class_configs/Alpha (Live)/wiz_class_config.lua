@@ -773,21 +773,21 @@ return {
                 name = "Improved Twincast",
                 type = "AA",
                 cond = function(self)
-                    return not mq.TLO.Me.Buff("Twincast")()
+                    return not Casting.IHaveBuff("Twincast")()
                 end,
             },
             {
                 name = "Arcane Destruction",
                 type = "AA",
                 cond = function(self)
-                    return not mq.TLO.Me.Buff("Spire of Arcanum")
+                    return not Casting.IHaveBuff("Spire of Arcanum")
                 end,
             },
             {
                 name = "Frenzied Devastation",
                 type = "AA",
                 cond = function(self)
-                    return not mq.TLO.Me.Buff("Spire of Arcanum")
+                    return not Casting.IHaveBuff("Spire of Arcanum")
                 end,
             },
             {
@@ -850,7 +850,7 @@ return {
                 name = "Atol's Shackles",
                 type = "AA",
                 cond = function(self, aaName, target)
-                    return Casting.DetSpellCheck(mq.TLO.Me.AltAbility(aaName).Spell) and Targeting.GetAutoTargetPctHPs() < 50
+                    return Casting.DetSpellAACheck(aaName) and Targeting.GetAutoTargetPctHPs() < 50
                 end,
             },
             {
@@ -867,7 +867,7 @@ return {
                 name = "TwincastSpell",
                 type = "Spell",
                 cond = function(self)
-                    return not mq.TLO.Me.Buff("Twincast")()
+                    return not Casting.IHaveBuff("Twincast")
                 end,
             },
             {
@@ -899,7 +899,7 @@ return {
                 name = "Lower Element",
                 type = "AA",
                 cond = function(self, aaName)
-                    return Casting.DetSpellCheck(mq.TLO.Me.AltAbility(aaName).Spell)
+                    return Casting.DetSpellAACheck(aaName)
                 end,
             },
             {
@@ -920,14 +920,14 @@ return {
                 name = "VortexNuke",
                 type = "Spell",
                 cond = function(self, spell) --using DotSpellCheck to leverage HPStopDot settings to ensure we aren't casting just before trash dies (default: stop at 25% on named, 50% on trash)
-                    return (Casting.DetGambitCheck() or Casting.DotSpellCheck(spell))
+                    return Casting.GambitCheck() or Casting.DotSpellCheck(spell)
                 end,
             },
             {
                 name = "CloudburstNuke",
                 type = "Spell",
                 cond = function(self)
-                    return (Casting.DetGambitCheck() or mq.TLO.Me.Song("Evoker's Synergy")())
+                    return Casting.GambitCheck() or Casting.IHaveBuff("Evoker's Synergy")
                 end,
             },
             {
@@ -946,7 +946,7 @@ return {
                 name = "FireClaw",
                 type = "Spell",
                 cond = function(self)
-                    return not mq.TLO.Me.Buff("Improved Twincast")()
+                    return not Casting.IHaveBuff("Improved Twincast")
                 end,
             },
             {
@@ -965,7 +965,7 @@ return {
                 name = "WildNuke",
                 type = "Spell",
                 cond = function(self)
-                    return Casting.DetGambitCheck()
+                    return Casting.GambitCheck()
                 end,
             },
             {
@@ -982,14 +982,14 @@ return {
                 name = "FireEtherealNuke",
                 type = "Spell",
                 cond = function(self)
-                    return (Casting.DetGOMCheck() or (Casting.BurnCheck() and Casting.HaveManaToNuke))
+                    return Casting.GOMCheck() or (Casting.BurnCheck() and Casting.HaveManaToNuke())
                 end,
             },
             {
                 name = "IceEtherealNuke",
                 type = "Spell",
                 cond = function(self)
-                    return (Casting.DetGOMCheck() or (Casting.BurnCheck() and Casting.HaveManaToNuke))
+                    return Casting.GOMCheck() or (Casting.BurnCheck() and Casting.HaveManaToNuke())
                 end,
             },
             {
@@ -1011,7 +1011,7 @@ return {
                 type = "Spell",
                 cond = function(self, spell)
                     if not Config:GetSetting('DoStun') then return false end
-                    return (Casting.HaveManaToDebuff() or Casting.BurnCheck()) and Casting.DetSpellCheck(spell)
+                    return Casting.HaveManaToDebuff() and Casting.DetSpellCheck(spell)
                 end,
             },
             {
@@ -1019,7 +1019,7 @@ return {
                 type = "Spell",
                 cond = function(self, spell, target)
                     if not self.ClassConfig.HelperFunctions.RainCheck(target) then return false end
-                    return (Casting.HaveManaToNuke() or Casting.BurnCheck())
+                    return Casting.HaveManaToNuke()
                 end,
             },
             {
@@ -1027,14 +1027,14 @@ return {
                 type = "Spell",
                 cond = function(self, spell, target)
                     if (Targeting.GetAutoTargetPctHPs() < Config:GetSetting('HPStopBigNuke') and not Targeting.IsNamed(target)) then return false end
-                    return (Casting.HaveManaToNuke() or Casting.BurnCheck())
+                    return Casting.HaveManaToNuke()
                 end,
             },
             {
                 name = "FireNuke",
                 type = "Spell",
                 cond = function(self)
-                    return (Casting.HaveManaToNuke() or Casting.BurnCheck())
+                    return Casting.HaveManaToNuke()
                 end,
             },
         },
@@ -1044,7 +1044,7 @@ return {
                 type = "Spell",
                 cond = function(self, spell)
                     if not Config:GetSetting('DoStun') then return false end
-                    return (Casting.HaveManaToDebuff() or Casting.BurnCheck()) and Casting.DetSpellCheck(spell)
+                    return Casting.HaveManaToDebuff() and Casting.DetSpellCheck(spell)
                 end,
             },
             {
@@ -1052,7 +1052,7 @@ return {
                 type = "Spell",
                 cond = function(self, spell, target)
                     if not self.ClassConfig.HelperFunctions.RainCheck(target) then return false end
-                    return (Casting.HaveManaToNuke() or Casting.BurnCheck())
+                    return Casting.HaveManaToNuke()
                 end,
             },
             {
@@ -1060,14 +1060,14 @@ return {
                 type = "Spell",
                 cond = function(self, spell, target)
                     if (Targeting.GetAutoTargetPctHPs() < Config:GetSetting('BigNukeMinHealth') and not Targeting.IsNamed(target)) then return false end
-                    return (Casting.HaveManaToNuke() or Casting.BurnCheck())
+                    return Casting.HaveManaToNuke()
                 end,
             },
             {
                 name = "IceNuke",
                 type = "Spell",
                 cond = function(self)
-                    return (Casting.HaveManaToNuke() or Casting.BurnCheck())
+                    return Casting.HaveManaToNuke()
                 end,
             },
         },
@@ -1077,7 +1077,7 @@ return {
                 type = "Spell",
                 cond = function(self, spell)
                     if not Config:GetSetting('DoStun') then return false end
-                    return (Casting.HaveManaToDebuff() or Casting.BurnCheck()) and Casting.DetSpellCheck(spell)
+                    return Casting.HaveManaToDebuff() and Casting.DetSpellCheck(spell)
                 end,
             },
             {
@@ -1085,14 +1085,14 @@ return {
                 type = "Spell",
                 cond = function(self, spell, target)
                     if (Targeting.GetAutoTargetPctHPs() < Config:GetSetting('BigNukeMinHealth') and not Targeting.IsNamed(target)) then return false end
-                    return (Casting.HaveManaToNuke() or Casting.BurnCheck())
+                    return Casting.HaveManaToNuke()
                 end,
             },
             {
                 name = "MagicNuke",
                 type = "Spell",
                 cond = function(self)
-                    return (Casting.HaveManaToNuke() or Casting.BurnCheck())
+                    return Casting.HaveManaToNuke()
                 end,
             },
         },
@@ -1164,7 +1164,7 @@ return {
                 type = "Spell",
                 active_cond = function(self, spell) return Casting.BuffActiveByID(spell.RankName.ID()) end,
                 cond = function(self, spell)
-                    return spell.Stacks() and spell.Level() > (mq.TLO.Me.AltAbility("Improved Familiar").Spell.Level() or 0) and not Casting.BuffActiveByID(spell.RankName.ID())
+                    return spell.Level() > (mq.TLO.Me.AltAbility("Improved Familiar").Spell.Level() or 0) and Casting.SelfBuffCheck(spell)
                 end,
             },
             {
@@ -1196,7 +1196,7 @@ return {
                 type = "Item",
                 cond = function(self, itemName, target)
                     if not Config:GetSetting('DoChestClick') or not Casting.ItemHasClicky(itemName) then return false end
-                    return mq.TLO.Me.PctMana() < Config:GetSetting('HarvestManaPct') and Casting.ItemSpellCheck(itemName, target)
+                    return mq.TLO.Me.PctMana() < Config:GetSetting('HarvestManaPct') and Casting.SelfBuffItemCheck(itemName)
                 end,
             },
         },

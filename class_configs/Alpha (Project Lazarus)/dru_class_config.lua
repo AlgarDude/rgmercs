@@ -895,7 +895,7 @@ local _ClassConfig = {
                 name = "StunDD",
                 type = "Spell",
                 cond = function(self, spell, target)
-                    return Casting.DetSpellCheck(spell) and (Casting.HaveManaToNuke() or Casting.BurnCheck())
+                    return Casting.DetSpellCheck(spell) and Casting.HaveManaToNuke()
                 end,
             },
             {
@@ -906,7 +906,7 @@ local _ClassConfig = {
                 name = "WinterFireDD",
                 type = "Spell",
                 cond = function(self, spell, target)
-                    return (Casting.HaveManaToNuke() or Casting.BurnCheck())
+                    return Casting.HaveManaToNuke()
                 end,
             },
         },
@@ -916,7 +916,7 @@ local _ClassConfig = {
                 type = "Item",
                 cond = function(self, itemName, target)
                     if not Config:GetSetting('DoChestClick') or not Casting.ItemHasClicky(itemName) then return false end
-                    return Casting.ItemSpellCheck(itemName, target)
+                    return Casting.SelfBuffItemCheck(itemName)
                 end,
             },
             {
@@ -985,24 +985,23 @@ local _ClassConfig = {
         --         name = "TwinHealNuke",
         --         type = "Spell",
         --         retries = 0,
-        --         cond = function(self) return not Casting.SongActiveByName("Healing Twincast") end,
+        --         cond = function(self) return not Casting.IHaveBuff("Healing Twincast") end,
         --     },
         -- },
         ['Debuff'] = {
             {
                 name = "Blessing of Ro",
                 type = "AA",
-                cond = function(self, aaName)
-                    return not Casting.TargetHasBuff(mq.TLO.Me.AltAbility(aaName).Spell.Trigger(1)) and
-                        mq.TLO.FindItemCount(mq.TLO.Me.AltAbility("Blessing of Ro").Spell.Trigger(1).NoExpendReagentID(1)())() >
-                        0
+                cond = function(self, aaName, target)
+                    local aaSpell = Casting.GetAASpell(aaName)
+                    return Casting.DetAACheck(aaName, target) and Casting.ReagentCheck(aaSpell and aaSpell.Trigger(1) or aaName)
                 end,
             },
             {
                 name = "Hand of Ro",
                 type = "AA",
                 cond = function(self, aaName, target)
-                    return Casting.DetSpellCheck(mq.TLO.Me.AltAbility(aaName).Spell)
+                    return Casting.DetSpellAACheck(aaName)
                 end,
             },
             {
@@ -1016,9 +1015,17 @@ local _ClassConfig = {
         },
         ['Snare'] = {
             {
+                name = "Entrap",
+                type = "AA",
+                cond = function(self, aaName)
+                    return Casting.DetSpellAACheck(aaName) and Targeting.GetAutoTargetPctHPs() < 50
+                end,
+            },
+            {
                 name = "SnareSpell",
                 type = "Spell",
-                cond = function(self, spell, target)
+                cond = function(self, spell)
+                    if Casting.CanUseAA("Entrap") then return false end
                     return Casting.DetSpellCheck(spell) and Targeting.GetAutoTargetPctHPs() < 50
                 end,
             },
@@ -1028,7 +1035,7 @@ local _ClassConfig = {
                 name = "Swarm of Fireflies",
                 type = "AA",
                 cond = function(self, aaName, target)
-                    return Targeting.TargetIsMA(target) and Casting.GroupBuffCheck(mq.TLO.Me.AltAbility(aaName).Spell, target)
+                    return Targeting.TargetIsMA(target) and Casting.GroupBuffAACheck(aaName, target)
                 end,
             },
             {
@@ -1040,7 +1047,7 @@ local _ClassConfig = {
                 end,
             },
             {
-                name = "Spirit of Eagles",
+                name = "Spirit of Eagles", --this needs a helper function
                 type = "AA",
                 active_cond = function(self, aaName)
                     return Casting.BuffActiveByID(mq.TLO.Me.AltAbility(aaName).Spell.Trigger(1).ID())
@@ -1050,11 +1057,11 @@ local _ClassConfig = {
                     local aaSpell = mq.TLO.Me.AltAbility(aaName).Spell
                     if not Config:GetSetting('DoMoveBuffs') or (bookSpell and bookSpell.Level() or 999) > (aaSpell.Level() or 0) then return false end
 
-                    return Casting.GroupBuffCheck(aaSpell, target)
+                    return Casting.GroupBuffAACheck(aaName, target)
                 end,
             },
             {
-                name = "MoveSpells",
+                name = "MoveSpells", --needs the same helper function
                 type = "Spell",
                 active_cond = function(self, spell) return Casting.BuffActiveByID(spell.ID()) end,
                 cond = function(self, spell, target)
@@ -1110,7 +1117,7 @@ local _ClassConfig = {
                 type = "AA",
                 active_cond = function(self, aaName) return true end,
                 cond = function(self, aaName, target)
-                    return Targeting.TargetIsMA(target) and Casting.GroupBuffCheck(mq.TLO.Me.AltAbility(aaName).Spell, target)
+                    return Targeting.TargetIsMA(target) and Casting.GroupBuffAACheck(aaName, target)
                 end,
             },
         },

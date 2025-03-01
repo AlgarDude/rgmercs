@@ -857,7 +857,7 @@ local _ClassConfig = {
                 name = "Epic",
                 type = "Item",
                 cond = function(self, itemName, target)
-                    return target.ID() == Core.GetMainAssistId
+                    return Targeting.TargetIsMA(target)
                 end,
             },
             {
@@ -1193,7 +1193,7 @@ local _ClassConfig = {
             --     retries = 0,
             --     cond = function(self, spell)
             --         if not Config:GetSetting('DoTwinHeal') then return false end
-            --         return not Casting.SongActiveByName("Healing Twincast")
+            --         return not Casting.IHaveBuff("Healing Twincast")
             --     end,
             -- },
             {
@@ -1201,7 +1201,7 @@ local _ClassConfig = {
                 type = "Spell",
                 cond = function(self, spell)
                     if not Config:GetSetting('DoHealStun') then return false end
-                    return Casting.DetSpellCheck(spell) and (Casting.HaveManaToNuke() or Casting.BurnCheck())
+                    return Casting.DetSpellCheck(spell) and Casting.HaveManaToNuke()
                 end,
             },
             -- {
@@ -1209,7 +1209,7 @@ local _ClassConfig = {
             --     type = "Spell",
             --     cond = function(self, spell, target)
             --         if Core.GetMainAssistPctHPs() > Config:GetSetting('LightHealPoint') then return false end
-            --         return (Casting.HaveManaToNuke() or Casting.BurnCheck())
+            --         return Casting.HaveManaToNuke()
             --     end,
             -- },
             -- {
@@ -1217,14 +1217,14 @@ local _ClassConfig = {
             --     type = "Spell",
             --     cond = function(self, spell, target)
             --         if Core.GetMainAssistPctHPs() > Config:GetSetting('LightHealPoint') then return false end
-            --         return (Casting.HaveManaToNuke() or Casting.BurnCheck())            --     end,
+            --         return Casting.HaveManaToNuke()            --     end,
             -- },
             -- {
             --     name = "NukeHeal3",
             --     type = "Spell",
             --     cond = function(self, spell, target)
             --         if Core.GetMainAssistPctHPs() > Config:GetSetting('LightHealPoint') then return false end
-            --         return (Casting.HaveManaToNuke() or Casting.BurnCheck())            --     end,
+            --         return Casting.HaveManaToNuke()            --     end,
             -- },
             {
                 name = "Yaulp",
@@ -1248,7 +1248,7 @@ local _ClassConfig = {
                 type = "Spell",
                 allowDead = true,
                 cond = function(self, spell)
-                    if (mq.TLO.Me.Level() < 101 and not Casting.DetGOMCheck()) then return false end
+                    if (mq.TLO.Me.Level() < 101 and not Casting.GOMCheck()) then return false end
                     return Casting.SpellStacksOnMe(spell.RankName) and (mq.TLO.Me.Song(spell).Duration.TotalSeconds() or 0) < 15
                 end,
             },
@@ -1272,7 +1272,7 @@ local _ClassConfig = {
                 type = "Spell",
                 cond = function(self, aaName, target)
                     if not Config:GetSetting('DoUndeadNuke') or not Targeting.TargetBodyIs(target, "Undead") then return false end
-                    return (Casting.HaveManaToNuke() or Casting.BurnCheck())
+                    return Casting.HaveManaToNuke()
                 end,
             },
             {
@@ -1280,7 +1280,7 @@ local _ClassConfig = {
                 type = "Spell",
                 cond = function(self)
                     if not Config:GetSetting('DoMagicNuke') then return false end
-                    return (Casting.HaveManaToNuke() or Casting.BurnCheck())
+                    return Casting.HaveManaToNuke()
                 end,
             },
         },
@@ -1343,7 +1343,7 @@ local _ClassConfig = {
                 type = "AA",
                 cond = function(self, aaName, target)
                     if not Targeting.TargetIsMA(target) then return false end
-                    return Casting.GroupBuffCheck(mq.TLO.Me.AltAbility(aaName).Spell, target)
+                    return Casting.GroupBuffAACheck(aaName, target)
                 end,
             },
             {
@@ -1351,8 +1351,7 @@ local _ClassConfig = {
                 type = "Spell",
                 cond = function(self, spell, target)
                     if Config:GetSetting('AegoSymbol') > 2 then return false end
-                    ---@diagnostic disable-next-line: undefined-field
-                    return Casting.GroupBuffCheck(spell, target, mq.TLO.Me.Spell(spell).ID())
+                    return Casting.GroupBuffCheck(spell.ID, target)
                 end,
             },
             {

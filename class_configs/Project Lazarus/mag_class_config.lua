@@ -1291,7 +1291,7 @@ _ClassConfig      = {
             --     type = "Spell",
             --     cond = function(self, spell)
             --         local auraBuff = string.format("%s Effect", spell.Name())
-            --         return Casting.SelfBuffPetCheck(spell) and not mq.TLO.Me.PetBuff(auraBuff)()
+            --         return Casting.PetBuffCheck(spell) and not mq.TLO.Me.PetBuff(auraBuff)()
             --     end,
             -- },
             {
@@ -1301,7 +1301,7 @@ _ClassConfig      = {
                     return mq.TLO.Me.PetBuff(spell.RankName.Name())() ~= nil or mq.TLO.Me.PetBuff(spell.Name())() ~= nil
                 end,
                 cond = function(self, spell)
-                    return Casting.SelfBuffPetCheck(spell)
+                    return Casting.PetBuffCheck(spell)
                 end,
             },
             {
@@ -1311,7 +1311,7 @@ _ClassConfig      = {
                     return mq.TLO.Me.PetBuff(spell.RankName.Name())() ~= nil or mq.TLO.Me.PetBuff(spell.Name())() ~= nil
                 end,
                 cond = function(self, spell)
-                    return Casting.SelfBuffPetCheck(spell)
+                    return Casting.PetBuffCheck(spell)
                 end,
             },
             {
@@ -1334,35 +1334,35 @@ _ClassConfig      = {
                 name = "Second Wind Ward",
                 type = "AA",
                 cond = function(self, aaName)
-                    return Casting.SelfBuffPetCheck(mq.TLO.Me.AltAbility(aaName).Spell)
+                    return Casting.PetBuffAACheck(aaName)
                 end,
             },
             {
                 name = "Host in the Shell",
                 type = "AA",
                 cond = function(self, aaName)
-                    return Casting.SelfBuffPetCheck(mq.TLO.Me.AltAbility(aaName).Spell) and Core.IsModeActive("PetTank")
+                    return Casting.PetBuffAACheck(aaName) and Core.IsModeActive("PetTank")
                 end,
             },
             {
                 name = "Aegis of Kildrukaun",
                 type = "AA",
                 cond = function(self, aaName)
-                    return Casting.SelfBuffPetCheck(mq.TLO.Me.AltAbility(aaName).Spell)
+                    return Casting.PetBuffAACheck(aaName)
                 end,
             },
             {
                 name = "Fortify Companion",
                 type = "AA",
                 cond = function(self, aaName)
-                    return Casting.SelfBuffPetCheck(mq.TLO.Me.AltAbility(aaName).Spell)
+                    return Casting.PetBuffAACheck(aaName)
                 end,
             },
             {
                 name = "Companion's Intervening Divine Aura",
                 type = "AA",
                 cond = function(self, aaName)
-                    return Casting.SelfBuffPetCheck(mq.TLO.Me.AltAbility(aaName).Spell) and Core.IsModeActive("PetTank")
+                    return Casting.PetBuffAACheck(aaName) and Core.IsModeActive("PetTank")
                 end,
             },
         },
@@ -1431,7 +1431,7 @@ _ClassConfig      = {
                 type = "Item",
                 cond = function(self, itemName, target)
                     if not Config:GetSetting('DoChestClick') or not Casting.ItemHasClicky(itemName) then return false end
-                    return Casting.ItemSpellCheck(itemName, target)
+                    return Casting.SelfBuffItemCheck(itemName)
                 end,
             },
             {
@@ -1497,7 +1497,7 @@ _ClassConfig      = {
                 type = "Spell",
                 cond = function(self, spell)
                     return Core.IsModeActive("PetTank") and self.TempSettings.OowRobeBase ~= nil and Core.IsModeActive("PetTank") and
-                        Casting.SelfBuffPetCheck(spell) and mq.TLO.Me.Pet.PctHPs() <= 95 and
+                        Casting.PetBuffCheck(spell) and mq.TLO.Me.Pet.PctHPs() <= 95 and
                         (mq.TLO.Me.PetBuff(mq.TLO.Spell(self.TempSettings.OowRobeBase).RankName.Base(1)() or "").ID()) or 0 == 0
                 end,
             },
@@ -1505,21 +1505,21 @@ _ClassConfig      = {
                 name = "SurgeDS1",
                 type = "Spell",
                 cond = function(self, spell)
-                    return Core.IsModeActive("PetTank") and not Casting.SelfBuffPetCheck(spell) and (mq.TLO.Me.PetBuff(self.ResolvedActionMap['SurgeDS1'] or "")() == nil)
+                    return Core.IsModeActive("PetTank") and not Casting.PetBuffCheck(spell) and (mq.TLO.Me.PetBuff(self.ResolvedActionMap['SurgeDS1'] or "")() == nil)
                 end,
             },
             {
                 name = "SurgeDS2",
                 type = "Spell",
                 cond = function(self, spell)
-                    return Core.IsModeActive("PetTank") and Casting.SelfBuffPetCheck(spell) and (mq.TLO.Me.PetBuff(self.ResolvedActionMap['SurgeDS2'] or "")() == nil)
+                    return Core.IsModeActive("PetTank") and Casting.PetBuffCheck(spell) and (mq.TLO.Me.PetBuff(self.ResolvedActionMap['SurgeDS2'] or "")() == nil)
                 end,
             },
             {
                 name = "ShortDurDmgShield",
                 type = "Spell",
                 cond = function(self, spell)
-                    return Core.IsModeActive("PetTank") and Casting.SelfBuffPetCheck(spell)
+                    return Core.IsModeActive("PetTank") and Casting.PetBuffCheck(spell)
                 end,
             },
             {
@@ -1554,28 +1554,28 @@ _ClassConfig      = {
                 name = "SwarmPet",
                 type = "Spell",
                 cond = function(self, spell)
-                    return Core.IsModeActive("DPS") and (Casting.HaveManaToNuke() or Casting.BurnCheck())
+                    return Core.IsModeActive("DPS") and Casting.HaveManaToNuke()
                 end,
             },
             {
                 name = "ChaoticNuke",
                 type = "Spell",
                 cond = function(self, _)
-                    return Core.IsModeActive("DPS") and (Casting.HaveManaToNuke() or Casting.BurnCheck())
+                    return Core.IsModeActive("DPS") and Casting.HaveManaToNuke()
                 end,
             },
             {
                 name = "SpearNuke",
                 type = "Spell",
                 cond = function(self, spell)
-                    return Core.IsModeActive("DPS") and (Casting.HaveManaToNuke() or Casting.BurnCheck())
+                    return Core.IsModeActive("DPS") and Casting.HaveManaToNuke()
                 end,
             },
             {
                 name = "VolleyNuke",
                 type = "Spell",
                 cond = function(self, spell)
-                    return Core.IsModeActive("DPS") and (Casting.HaveManaToNuke() or Casting.BurnCheck())
+                    return Core.IsModeActive("DPS") and Casting.HaveManaToNuke()
                 end,
             },
             {
@@ -1606,7 +1606,7 @@ _ClassConfig      = {
                 cond = function(self, spell, target)
                     if Config:GetSetting('ElementChoice') ~= 1 then return false end
                     if (Targeting.GetAutoTargetPctHPs() < Config:GetSetting('HPStopBigNuke') and not Targeting.IsNamed(target)) then return false end
-                    return (Casting.HaveManaToNuke() or Casting.BurnCheck())
+                    return Casting.HaveManaToNuke()
                 end,
             },
             {
@@ -1614,7 +1614,7 @@ _ClassConfig      = {
                 type = "Spell",
                 cond = function(self)
                     if Config:GetSetting('ElementChoice') ~= 1 then return false end
-                    return (Casting.HaveManaToNuke() or Casting.BurnCheck())
+                    return Casting.HaveManaToNuke()
                 end,
             },
             {
@@ -1622,7 +1622,7 @@ _ClassConfig      = {
                 type = "Spell",
                 cond = function(self)
                     if Config:GetSetting('ElementChoice') ~= 2 then return false end
-                    return (Casting.HaveManaToNuke() or Casting.BurnCheck())
+                    return Casting.HaveManaToNuke()
                 end,
             },
             {
@@ -1638,7 +1638,7 @@ _ClassConfig      = {
                 name = "Malosinete",
                 type = "AA",
                 cond = function(self, aaName)
-                    return Casting.DetSpellCheck(mq.TLO.Me.AltAbility(aaName).Spell)
+                    return Casting.DetSpellAACheck(aaName)
                 end,
             },
             {
@@ -1654,7 +1654,7 @@ _ClassConfig      = {
                 type = "AA",
                 cond = function(self, aaName)
                     if not Config:GetSetting('DoAEMalo') then return false end
-                    return Casting.DetSpellCheck(mq.TLO.Me.AltAbility(aaName).Spell)
+                    return Casting.DetSpellAACheck(aaName)
                 end,
             },
         },

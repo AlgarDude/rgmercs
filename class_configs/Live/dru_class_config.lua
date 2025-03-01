@@ -553,7 +553,7 @@ local _ClassConfig = {
             "Ensnaring Roots",
             "Grasping Roots",
         },
-        ['SnareSpells'] = {
+        ['SnareSpell'] = {
             -- Snare Spells
             "Thornmaw Vines",
             "Serpent Vines",
@@ -1004,7 +1004,7 @@ local _ClassConfig = {
                 name = "Season's Wrath",
                 type = "AA",
                 cond = function(self, aaName)
-                    return Core.IsModeActive("Mana") and Casting.DetSpellCheck(mq.TLO.Me.AltAbility(aaName).Spell) and
+                    return Core.IsModeActive("Mana") and Casting.DetSpellAACheck(aaName) and
                         Targeting.GetTargetPctHPs() > 75
                 end,
             },
@@ -1086,7 +1086,7 @@ local _ClassConfig = {
                 cond = function(self, spell)
                     return Core.IsModeActive("Mana")
                         and Casting.DetSpellCheck(spell) and Config:GetSetting('DoFire') and
-                        (Casting.HaveManaToNuke() or Casting.BurnCheck())
+                        Casting.HaveManaToNuke()
                 end,
             },
             {
@@ -1096,7 +1096,7 @@ local _ClassConfig = {
                     return Core.IsModeActive("Mana")
                         and Casting.DetSpellCheck(spell) and not Config:GetSetting('DoFire') and
                         Config:GetSetting('DoRain') and
-                        (Casting.HaveManaToNuke() or Casting.BurnCheck())
+                        Casting.HaveManaToNuke()
                 end,
             },
             {
@@ -1105,32 +1105,32 @@ local _ClassConfig = {
                 cond = function(self, spell)
                     return Core.IsModeActive("Mana")
                         and Casting.DetSpellCheck(spell) and not Config:GetSetting('DoFire') and
-                        (Casting.HaveManaToNuke() or Casting.BurnCheck())
+                        Casting.HaveManaToNuke()
                 end,
             },
             {
                 name = "Nature's Frost",
                 type = "AA",
                 cond = function(self, aaName)
-                    return Core.IsModeActive("Mana") and Casting.DetSpellCheck(mq.TLO.Me.AltAbility(aaName).Spell) and
+                    return Core.IsModeActive("Mana") and Casting.DetSpellAACheck(aaName) and
                         mq.TLO.Me.PctMana() > 50 and
-                        (not Core.IsModeActive("Heal") or (Core.IsModeActive("Heal") and not Config:GetSetting('DoFire') and (Casting.HaveManaToNuke() or Casting.BurnCheck())))
+                        (not Core.IsModeActive("Heal") or (Core.IsModeActive("Heal") and not Config:GetSetting('DoFire') and Casting.HaveManaToNuke()))
                 end,
             },
             {
                 name = "Nature's Fire",
                 type = "AA",
                 cond = function(self, aaName)
-                    return Casting.DetSpellCheck(mq.TLO.Me.AltAbility(aaName).Spell) and mq.TLO.Me.PctMana() > 50 and
+                    return Casting.DetSpellAACheck(aaName) and mq.TLO.Me.PctMana() > 50 and
                         Config:GetSetting('DoNuke') and
-                        (not Core.IsModeActive("Heal") or (Core.IsModeActive("Heal") and Config:GetSetting('DoFire') and (Casting.HaveManaToNuke() or Casting.BurnCheck())))
+                        (not Core.IsModeActive("Heal") or (Core.IsModeActive("Heal") and Config:GetSetting('DoFire') and Casting.HaveManaToNuke()))
                 end,
             },
             {
                 name = "Nature's Bolt",
                 type = "AA",
                 cond = function(self, aaName)
-                    return Core.IsModeActive("Mana") and Casting.DetSpellCheck(mq.TLO.Me.AltAbility(aaName).Spell) and
+                    return Core.IsModeActive("Mana") and Casting.DetSpellAACheck(aaName) and
                         mq.TLO.Me.PctMana() > 50
                 end,
             },
@@ -1141,7 +1141,7 @@ local _ClassConfig = {
                 type = "Item",
                 cond = function(self, itemName, target)
                     if not Config:GetSetting('DoChestClick') or not Casting.ItemHasClicky(itemName) then return false end
-                    return Casting.ItemSpellCheck(itemName, target)
+                    return Casting.SelfBuffItemCheck(itemName)
                 end,
             },
             {
@@ -1186,7 +1186,7 @@ local _ClassConfig = {
                 name = "TwinHealNuke",
                 type = "Spell",
                 retries = 0,
-                cond = function(self, spell) return not Casting.SongActiveByName("Healing Twincast") end,
+                cond = function(self, spell) return not Casting.IHaveBuff("Healing Twincast") end,
             },
         },
         ['Debuff'] = {
@@ -1199,9 +1199,8 @@ local _ClassConfig = {
                 name = "Blessing of Ro",
                 type = "AA",
                 cond = function(self, aaName, target)
-                    return not Casting.TargetHasBuff(mq.TLO.Me.AltAbility(aaName).Spell.Trigger(1)) and
-                        mq.TLO.FindItemCount(mq.TLO.Me.AltAbility("Blessing of Ro").Spell.Trigger(1).NoExpendReagentID(1)())() >
-                        0
+                    local aaSpell = Casting.GetAASpell(aaName)
+                    return Casting.DetAACheck(aaName, target) and Casting.ReagentCheck(aaSpell and aaSpell.Trigger(1) or aaName)
                 end,
             },
             {
@@ -1232,16 +1231,16 @@ local _ClassConfig = {
             },
             {
                 name = "Entrap",
-                tooltip = "AA: Snare",
                 type = "AA",
                 cond = function(self, aaName)
-                    return Config:GetSetting('DoSnare') and Casting.DetSpellCheck(mq.TLO.Me.AltAbility(aaName).Spell)
+                    return Config:GetSetting('DoSnare') and Casting.DetSpellAACheck(aaName) and Targeting.GetAutoTargetPctHPs() < 50
                 end,
             },
             {
-                name = "SnareSpells",
+                name = "SnareSpell",
                 type = "Spell",
-                cond = function(self, spell, target)
+                cond = function(self, spell)
+                    if Casting.CanUseAA("Entrap") then return false end
                     return Config:GetSetting('DoSnare') and Casting.DetSpellCheck(spell) and Targeting.GetAutoTargetPctHPs() < 50
                 end,
             },
@@ -1249,7 +1248,7 @@ local _ClassConfig = {
                 name = "Season's Wrath",
                 type = "AA",
                 cond = function(self, aaName, target)
-                    return Casting.DetSpellCheck(mq.TLO.Me.AltAbility(aaName).Spell)
+                    return Casting.DetSpellAACheck(aaName)
                 end,
             },
         },
@@ -1447,7 +1446,7 @@ local _ClassConfig = {
                     end,
                 },
                 {
-                    name = "SnareSpells",
+                    name = "SnareSpell",
                     cond = function(self)
                         return Config:GetSetting('DoSnare')
                             and Core.IsModeActive("Mana")
@@ -1523,7 +1522,7 @@ local _ClassConfig = {
                 -- [ HEAL MODE ] --
                 { name = "SunrayDot",           cond = function(self) return mq.TLO.Me.Level() >= 73 end, },
                 { name = "ReptileCombatInnate", cond = function(self) return true end, },
-                { name = "SnareSpells",         cond = function(self) return Config:GetSetting('DoSnare') end, },
+                { name = "SnareSpell",          cond = function(self) return Config:GetSetting('DoSnare') end, },
                 -- [ Fall Back ]--
                 { name = "HordeDot",            cond = function(self) return true end, },
             },
@@ -1539,7 +1538,7 @@ local _ClassConfig = {
                 { name = "RoDebuff",            cond = function(self) return true end, },
                 -- [ Fall Back ]--
                 { name = "HordeDot",            cond = function(self) return true end, },
-                { name = "SnareSpells",         cond = function(self) return Config:GetSetting('DoSnare') end, },
+                { name = "SnareSpell",          cond = function(self) return Config:GetSetting('DoSnare') end, },
             },
         },
         {
