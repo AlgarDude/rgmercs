@@ -1070,7 +1070,7 @@ local _ClassConfig = {
                 name = "TwinHealNuke",
                 type = "Spell",
                 retries = 0,
-                cond = function(self) return not Casting.SongActiveByName("Healing Twincast") end,
+                cond = function(self) return not Casting.IHaveBuff("Healing Twincast") end,
             },
         },
         ['Debuff'] = {
