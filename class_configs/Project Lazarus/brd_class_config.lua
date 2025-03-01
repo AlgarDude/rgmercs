@@ -955,7 +955,7 @@ local _ClassConfig = {
                 type = "Item",
                 cond = function(self, itemName, target)
                     if not Config:GetSetting('DoChestClick') or not Casting.ItemHasClicky(itemName) then return false end
-                    return Casting.ItemSpellCheck(itemName, target)
+                    return Casting.SelfBuffItemCheck(itemName)
                 end,
             },
             {
@@ -1001,7 +1001,7 @@ local _ClassConfig = {
                 type = "Item",
                 cond = function(self, itemName, target)
                     if not Config:GetSetting('UseDreadstone') then return false end
-                    return Casting.ItemSpellCheck(itemName, target)
+                    return Casting.DetItemCheck(itemName, target)
                 end,
             },
         },
@@ -1049,7 +1049,7 @@ local _ClassConfig = {
                 cond = function(self, aaName, target)
                     if Config:GetSetting('UseBellow') == 1 then return false end
                     return ((Config:GetSetting('UseBellow') == 3 and mq.TLO.Me.PctEndurance() > Config:GetSetting('SelfEndPct')) or (Config:GetSetting('UseBellow') == 2 and Casting.BurnCheck())) and
-                        Casting.DetSpellCheck(mq.TLO.Me.AltAbility(aaName).Spell)
+                        Casting.DetSpellAACheck(aaName)
                 end,
             },
             {
@@ -1363,7 +1363,7 @@ local _ClassConfig = {
                 type = "Item",
                 cond = function(self, itemName, target)
                     if not Config:GetSetting('UseSoBItems') then return false end
-                    return Casting.ItemSpellCheck(itemName, target)
+                    return Casting.SelfBuffItemCheck(itemName)
                 end,
             },
             {
@@ -1412,7 +1412,7 @@ local _ClassConfig = {
                 type = "Item",
                 cond = function(self, itemName, target)
                     if not Config:GetSetting('DoCoating') then return false end
-                    return mq.TLO.Me.PctHPs() <= Config:GetSetting('EmergencyStart') and Casting.ItemSpellCheck(itemName, target)
+                    return mq.TLO.Me.PctHPs() <= Config:GetSetting('EmergencyStart') and Casting.SelfBuffItemCheck(itemName)
                 end,
             },
         },

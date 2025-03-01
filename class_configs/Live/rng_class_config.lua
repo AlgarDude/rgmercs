@@ -1244,7 +1244,7 @@ local _ClassConfig = {
                 type = "Disc",
                 tooltip = Tooltips.BowDisc,
                 cond = function(self)
-                    return not mq.TLO.Me.ActiveDisc.ID() and not Config:GetSetting('DoMelee')
+                    return Casting.NoDiscActive() and not Config:GetSetting('DoMelee')
                 end,
             },
             {
@@ -1252,7 +1252,7 @@ local _ClassConfig = {
                 type = "Disc",
                 tooltip = Tooltips.MeleeDisc,
                 cond = function(self)
-                    return not mq.TLO.Me.ActiveDisc.ID() and Config:GetSetting('DoMelee')
+                    return Casting.NoDiscActive() and Config:GetSetting('DoMelee')
                 end,
             },
         },
@@ -1455,7 +1455,7 @@ local _ClassConfig = {
                 type = "Disc",
                 tooltip = Tooltips.EndRegenDisc,
                 cond = function(self, discSpell)
-                    return not mq.TLO.Me.ActiveDisc.ID() and not Casting.SongActiveByName(discSpell.RankName.Name() or "") and mq.TLO.Me.PctEndurance() < 30
+                    return Casting.NoDiscActive() and not Casting.IHaveBuff(discSpell.RankName.Name() or "") and mq.TLO.Me.PctEndurance() < 30
                 end,
             },
         },
@@ -1465,7 +1465,7 @@ local _ClassConfig = {
                 type = "AA",
                 tooltip = Tooltips.GotF,
                 cond = function(self, spell)
-                    return not Casting.SongActiveByName("Group Guardian of the Forest") and not Casting.SongActiveByName("Outrider's Accuracy")
+                    return not Casting.IHaveBuff("Group Guardian of the Forest") and not Casting.IHaveBuff("Outrider's Accuracy")
                 end,
             },
             {
@@ -1473,7 +1473,7 @@ local _ClassConfig = {
                 type = "AA",
                 tooltip = Tooltips.OA,
                 cond = function(self, spell)
-                    return not Casting.SongActiveByName("Group Guardian of the Forest") and not Casting.SongActiveByName("Guardian of the Forest")
+                    return not Casting.IHaveBuff("Group Guardian of the Forest") and not Casting.IHaveBuff("Guardian of the Forest")
                 end,
             },
             {
@@ -1481,7 +1481,7 @@ local _ClassConfig = {
                 type = "AA",
                 tooltip = Tooltips.GGotF,
                 cond = function(self, spell)
-                    return not Casting.SongActiveByName("Guardian of the Forest") and not Casting.SongActiveByName("Outrider's Accuracy")
+                    return not Casting.IHaveBuff("Guardian of the Forest") and not Casting.IHaveBuff("Outrider's Accuracy")
                 end,
             },
             {
@@ -1489,7 +1489,7 @@ local _ClassConfig = {
                 type = "Item",
                 tooltip = Tooltips.Epic,
                 cond = function(self, itemName)
-                    return not mq.TLO.Me.ActiveDisc.ID()
+                    return Casting.NoDiscActive()
                 end,
             },
         },
@@ -1499,7 +1499,7 @@ local _ClassConfig = {
                 type = "Disc",
                 tooltip = Tooltips.DefenseDisc,
                 cond = function(self)
-                    return mq.TLO.Me.PctHPs() < 20 and not mq.TLO.Me.ActiveDisc.ID()
+                    return mq.TLO.Me.PctHPs() < 20 and Casting.NoDiscActive()
                 end,
             },
             {
@@ -1532,7 +1532,7 @@ local _ClassConfig = {
                 tooltip = Tooltips.JoltingKicks,
                 active_cond = function(self) return not Core.IsTanking() and mq.TLO.Me.PctAggro() > 30 end,
                 cond = function(self)
-                    return not mq.TLO.Me.ActiveDisc.ID() and Targeting.GetTargetDistance() <= 50
+                    return Casting.NoDiscActive() and Targeting.GetTargetDistance() <= 50
                 end,
             },
             {

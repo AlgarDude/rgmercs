@@ -335,7 +335,7 @@ return {
                 type = "Item",
                 cond = function(self, itemName, target)
                     if not Config:GetSetting('DoChestClick') or not Casting.ItemHasClicky(itemName) then return false end
-                    return Casting.ItemSpellCheck(itemName, target)
+                    return Casting.SelfBuffItemCheck(itemName)
                 end,
             },
             {
@@ -390,21 +390,21 @@ return {
                 name = "Knifeplay",
                 type = "Disc",
                 cond = function(self, discSpell)
-                    return not mq.TLO.Me.ActiveDisc.ID()
+                    return Casting.NoDiscActive()
                 end,
             },
             {
                 name = "AspDisc",
                 type = "Disc",
                 cond = function(self, discSpell)
-                    return not mq.TLO.Me.ActiveDisc.ID()
+                    return Casting.NoDiscActive()
                 end,
             },
             {
                 name = "ProcBuff",
                 type = "Disc",
                 cond = function(self, discSpell)
-                    return not mq.TLO.Me.ActiveDisc.ID()
+                    return Casting.NoDiscActive()
                 end,
             },
             {
@@ -515,7 +515,7 @@ return {
                 type = "Item",
                 cond = function(self, itemName, target)
                     if not Config:GetSetting('DoCoating') then return false end
-                    return Casting.ItemSpellCheck(itemName, target)
+                    return Casting.SelfBuffItemCheck(itemName)
                 end,
             },
             {

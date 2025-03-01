@@ -1015,7 +1015,7 @@ local _ClassConfig = {
                 name = "PetBuffSpell",
                 type = "Spell",
                 active_cond = function(self, spell) return mq.TLO.Me.PetBuff(spell.ID()).ID() end,
-                cond = function(self, spell) return Casting.SelfBuffPetCheck(spell) end,
+                cond = function(self, spell) return Casting.PetBuffCheck(spell) end,
             },
         },
         ['GroupBuff'] = {
@@ -1218,7 +1218,7 @@ local _ClassConfig = {
                 type = "Spell",
                 cond = function(self, spell, target)
                     if not Config:GetSetting('DoDot') then return false end
-                    return Casting.DotSpellCheck(spell) and (Casting.DotHaveManaToNuke() or Casting.BurnCheck())
+                    return Casting.DotSpellCheck(spell) and Casting.HaveManaToDot()
                 end,
             },
             {
@@ -1234,21 +1234,21 @@ local _ClassConfig = {
                 type = "Spell",
                 cond = function(self, spell, target)
                     if not Config:GetSetting('DoDicho') then return false end
-                    return (Casting.HaveManaToNuke() or Casting.BurnCheck())
+                    return Casting.HaveManaToNuke()
                 end,
             },
             {
                 name = "NukeSpell",
                 type = "Spell",
                 cond = function(self, spell, target)
-                    return (Casting.HaveManaToNuke() or Casting.BurnCheck())
+                    return Casting.HaveManaToNuke()
                 end,
             },
             {
                 name = "ManaDrainSpell",
                 type = "Spell",
                 cond = function(self, spell, target)
-                    return (target.CurrentMana() or 0) > 10 and (Casting.HaveManaToNuke() or Casting.BurnCheck())
+                    return (target.CurrentMana() or 0) > 10 and Casting.HaveManaToNuke()
                 end,
             },
         },
@@ -1269,35 +1269,35 @@ local _ClassConfig = {
                 name = "DichoSpell",
                 type = "Spell",
                 cond = function(self, spell, target)
-                    return Casting.DetSpellCheck(spell) and (Casting.HaveManaToNuke() or Casting.BurnCheck())
+                    return Casting.DetSpellCheck(spell) and Casting.HaveManaToNuke()
                 end,
             },
             {
                 name = "ManaDot",
                 type = "Spell",
                 cond = function(self, spell, target)
-                    return Casting.DotSpellCheck(spell) and (Casting.DotHaveManaToNuke() or Casting.BurnCheck())
+                    return Casting.DotSpellCheck(spell) and Casting.HaveManaToDot()
                 end,
             },
             {
                 name = "NukeSpell",
                 type = "Spell",
                 cond = function(self, spell, target)
-                    return (Casting.HaveManaToNuke() or Casting.BurnCheck())
+                    return Casting.HaveManaToNuke()
                 end,
             },
             { --Mana check used instead of dot mana check because this is spammed like a nuke
                 name = "DotSpell1",
                 type = "Spell",
                 cond = function(self, spell, target)
-                    return (Casting.HaveManaToNuke() or Casting.BurnCheck())
+                    return Casting.HaveManaToNuke()
                 end,
             },
             { --this is not an error, we want the spell twice in a row as part of the rotation.
                 name = "DotSpell1",
                 type = "Spell",
                 cond = function(self, spell, target)
-                    return (Casting.HaveManaToNuke() or Casting.BurnCheck())
+                    return Casting.HaveManaToNuke()
                 end,
             },
             {
@@ -1347,13 +1347,13 @@ local _ClassConfig = {
                 type = "Item",
                 cond = function(self, itemName, target)
                     if not Config:GetSetting('DoChestClick') or not Casting.ItemHasClicky(itemName) then return false end
-                    return Casting.ItemSpellCheck(itemName, target)
+                    return Casting.SelfBuffItemCheck(itemName)
                 end,
             },
             {
                 name = "Spire of Enchantment",
                 type = "AA",
-                cond = function(self, aaName) return not Casting.SongActiveByName("Illusions of Grandeur") end,
+                cond = function(self, aaName) return not Casting.IHaveBuff("Illusions of Grandeur") end,
             },
             {
                 name = "Phantasmal Opponent",
@@ -1372,7 +1372,7 @@ local _ClassConfig = {
                 name = "Bite of Tashani",
                 type = "AA",
                 cond = function(self, aaName, target)
-                    return Config:GetSetting('DoTash') and Casting.DetSpellCheck(mq.TLO.Me.AltAbility(aaName).Spell) and
+                    return Config:GetSetting('DoTash') and Casting.DetSpellAACheck(aaName) and
                         Targeting.GetXTHaterCount() > 1
                 end,
             },
@@ -1383,7 +1383,7 @@ local _ClassConfig = {
                 type = "AA",
                 cond = function(self, aaName, target)
                     if Targeting.GetXTHaterCount() < Config:GetSetting('AESlowCount') then return false end
-                    return Casting.DetSpellCheck(mq.TLO.Me.AltAbility(aaName).Spell)
+                    return Casting.DetSpellAACheck(aaName)
                 end,
             },
             {

@@ -1069,7 +1069,7 @@ local _ClassConfig = {
                 type = "Item",
                 cond = function(self, itemName, target)
                     if not Config:GetSetting('DoCharmClick') or not Casting.ItemHasClicky(itemName) then return false end
-                    return Casting.ItemSpellCheck(itemName, target)
+                    return Casting.SelfBuffItemCheck(itemName)
                 end,
             },
             {
@@ -1142,7 +1142,7 @@ local _ClassConfig = {
                     end
                 end,
                 cond = function(self, discSpell)
-                    return mq.TLO.Me.PctHPs() <= Config:GetSetting('EmergencyLockout') and not mq.TLO.Me.ActiveDisc.ID() and
+                    return mq.TLO.Me.PctHPs() <= Config:GetSetting('EmergencyLockout') and Casting.NoDiscActive() and
                         (mq.TLO.Me.AltAbilityTimer("Shield Flash")() or 0) < 234000
                 end,
             },
@@ -1163,7 +1163,7 @@ local _ClassConfig = {
                 name = "Penitent",
                 type = "Disc",
                 cond = function(self, discSpell)
-                    return not mq.TLO.Me.ActiveDisc.ID() and Core.IsTanking()
+                    return Casting.NoDiscActive() and Core.IsTanking()
                 end,
             },
             {
@@ -1185,14 +1185,14 @@ local _ClassConfig = {
                 type = "Item",
                 cond = function(self, itemName, target)
                     if not Config:GetSetting('DoChestClick') or not Casting.ItemHasClicky(itemName) then return false end
-                    return Casting.ItemSpellCheck(itemName, target)
+                    return Casting.SelfBuffItemCheck(itemName)
                 end,
             },
             {
                 name = "Mantle",
                 type = "Disc",
                 cond = function(self, discSpell)
-                    return not mq.TLO.Me.ActiveDisc.ID()
+                    return Casting.NoDiscActive()
                 end,
             },
             --if we made it this far let's reset our dicho/dire and hope for the best!
@@ -1309,7 +1309,7 @@ local _ClassConfig = {
                 type = "Disc",
                 cond = function(self, discSpell, target)
                     if not Core.IsTanking() then return false end
-                    return not mq.TLO.Me.ActiveDisc.ID() and (Targeting.IsNamed(target) or self.ClassConfig.HelperFunctions.DefensiveDiscCheck(true))
+                    return Casting.NoDiscActive() and (Targeting.IsNamed(target) or self.ClassConfig.HelperFunctions.DefensiveDiscCheck(true))
                 end,
             },
             {
@@ -1317,7 +1317,7 @@ local _ClassConfig = {
                 type = "Disc",
                 cond = function(self, discSpell, target)
                     if not Core.IsTanking() then return false end
-                    return not mq.TLO.Me.ActiveDisc.ID() and (Targeting.IsNamed(target) or self.ClassConfig.HelperFunctions.DefensiveDiscCheck(true))
+                    return Casting.NoDiscActive() and (Targeting.IsNamed(target) or self.ClassConfig.HelperFunctions.DefensiveDiscCheck(true))
                 end,
             },
             {
@@ -1325,7 +1325,7 @@ local _ClassConfig = {
                 type = "Disc",
                 cond = function(self, discSpell, target)
                     if not Core.IsTanking() then return false end
-                    return not mq.TLO.Me.ActiveDisc.ID() and (Targeting.IsNamed(target) or self.ClassConfig.HelperFunctions.DefensiveDiscCheck(true))
+                    return Casting.NoDiscActive() and (Targeting.IsNamed(target) or self.ClassConfig.HelperFunctions.DefensiveDiscCheck(true))
                 end,
             },
             {
@@ -1333,7 +1333,7 @@ local _ClassConfig = {
                 type = "Item",
                 cond = function(self, itemName, target)
                     if not Config:GetSetting('DoCoating') then return false end
-                    return Casting.ItemSpellCheck(itemName, target)
+                    return Casting.SelfBuffItemCheck(itemName)
                 end,
             },
             {
@@ -1352,7 +1352,7 @@ local _ClassConfig = {
                 cond = function(self, spell, target)
                     if not Config:GetSetting('DoDicho') then return false end
                     local myHP = mq.TLO.Me.PctHPs()
-                    return (myHP <= Config:GetSetting('EmergencyStart') or ((Casting.DotHaveManaToNuke() or Casting.BurnCheck()) and myHP <= Config:GetSetting('StartDicho')))
+                    return (myHP <= Config:GetSetting('EmergencyStart') or (Casting.HaveManaToDot() and myHP <= Config:GetSetting('StartDicho')))
                 end,
             },
             {
@@ -1443,7 +1443,7 @@ local _ClassConfig = {
                 name = "Disruptive Persecution",
                 type = "AA",
                 cond = function(self, aaName, target)
-                    return (Casting.DotHaveManaToNuke() or Casting.BurnCheck())
+                    return Casting.HaveManaToDot()
                 end,
             },
             {

@@ -905,28 +905,28 @@ local _ClassConfig = {
                 name = "NaturesWrathDot",
                 type = "Spell",
                 cond = function(self)
-                    return (Casting.HaveManaToNuke() or Casting.BurnCheck())
+                    return Casting.HaveManaToNuke()
                 end,
             },
             {
                 name = "SunDot",
                 type = "Spell",
                 cond = function(self, spell)
-                    return Casting.DotSpellCheck(spell) and (Casting.DotHaveManaToNuke() or Casting.BurnCheck())
+                    return Casting.DotSpellCheck(spell) and Casting.HaveManaToDot()
                 end,
             },
             {
                 name = "HordeDot",
                 type = "Spell",
                 cond = function(self, spell, target)
-                    return Casting.DotSpellCheck(spell) and (Casting.DetGOMCheck() or Targeting.IsNamed(target))
+                    return Casting.DotSpellCheck(spell) and (Casting.GOMCheck() or Targeting.IsNamed(target))
                 end,
             },
             {
                 name = "DichoSpell",
                 type = "Spell",
                 cond = function(self, spell)
-                    return (Casting.HaveManaToNuke() or Casting.BurnCheck()) and (mq.TLO.Me.TargetOfTarget.PctHPs() or 0) <= Config:GetSetting('LightHealPoint')
+                    return Casting.HaveManaToNuke() and (mq.TLO.Me.TargetOfTarget.PctHPs() or 0) <= Config:GetSetting('LightHealPoint')
                 end,
             },
             {
@@ -940,21 +940,21 @@ local _ClassConfig = {
                 name = "Nature's Frost",
                 type = "AA",
                 cond = function(self, aaName, target)
-                    return (Casting.HaveManaToNuke() or Casting.BurnCheck())
+                    return Casting.HaveManaToNuke()
                 end,
             },
             {
                 name = "Nature's Fire",
                 type = "AA",
                 cond = function(self, aaName, target)
-                    return (Casting.HaveManaToNuke() or Casting.BurnCheck())
+                    return Casting.HaveManaToNuke()
                 end,
             },
             {
                 name = "Nature's Bolt",
                 type = "AA",
                 cond = function(self, aaName, target)
-                    return (Casting.HaveManaToNuke() or Casting.BurnCheck())
+                    return Casting.HaveManaToNuke()
                 end,
             },
         },
@@ -963,35 +963,35 @@ local _ClassConfig = {
                 name = "StunDD",
                 type = "Spell",
                 cond = function(self, spell)
-                    return Casting.DetSpellCheck(spell) and (Casting.HaveManaToNuke() or Casting.BurnCheck())
+                    return Casting.DetSpellCheck(spell) and Casting.HaveManaToNuke()
                 end,
             },
             {
                 name = "WinterFireDD",
                 type = "Spell",
                 cond = function(self)
-                    return (Casting.HaveManaToNuke() or Casting.BurnCheck())
+                    return Casting.HaveManaToNuke()
                 end,
             },
             {
                 name = "Nature's Frost",
                 type = "AA",
                 cond = function(self)
-                    return (Casting.HaveManaToNuke() or Casting.BurnCheck())
+                    return Casting.HaveManaToNuke()
                 end,
             },
             {
                 name = "Nature's Fire",
                 type = "AA",
                 cond = function(self)
-                    return (Casting.HaveManaToNuke() or Casting.BurnCheck())
+                    return Casting.HaveManaToNuke()
                 end,
             },
             {
                 name = "Nature's Bolt",
                 type = "AA",
                 cond = function(self)
-                    return (Casting.HaveManaToNuke() or Casting.BurnCheck())
+                    return Casting.HaveManaToNuke()
                 end,
             },
         },
@@ -1001,7 +1001,7 @@ local _ClassConfig = {
                 type = "Item",
                 cond = function(self, itemName, target)
                     if not Config:GetSetting('DoChestClick') or not Casting.ItemHasClicky(itemName) then return false end
-                    return Casting.ItemSpellCheck(itemName, target)
+                    return Casting.SelfBuffItemCheck(itemName)
                 end,
             },
             {
@@ -1086,7 +1086,7 @@ local _ClassConfig = {
                 name = "Season's Wrath",
                 type = "AA",
                 cond = function(self, aaName)
-                    return Casting.DetSpellCheck(mq.TLO.Me.AltAbility(aaName).Spell)
+                    return Casting.DetSpellAACheck(aaName)
                 end,
             },
             {
@@ -1100,9 +1100,17 @@ local _ClassConfig = {
         },
         ['Snare'] = {
             {
+                name = "Entrap",
+                type = "AA",
+                cond = function(self, aaName)
+                    return Casting.DetSpellAACheck(aaName) and Targeting.GetAutoTargetPctHPs() < 50
+                end,
+            },
+            {
                 name = "SnareSpell",
                 type = "Spell",
                 cond = function(self, spell)
+                    if Casting.CanUseAA("Entrap") then return false end
                     return Casting.DetSpellCheck(spell) and Targeting.GetAutoTargetPctHPs() < 50
                 end,
             },

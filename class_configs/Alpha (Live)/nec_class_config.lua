@@ -896,7 +896,7 @@ local _ClassConfig = {
                 name = "FireDot2",
                 type = "Spell",
                 cond = function(self, spell, target)
-                    return Casting.DotSpellCheck(spell) and (Casting.DotHaveManaToNuke() or Casting.BurnCheck())
+                    return Casting.DotSpellCheck(spell) and Casting.HaveManaToDot()
                 end,
             },
             {
@@ -911,28 +911,28 @@ local _ClassConfig = {
                 name = "Combo",
                 type = "Spell",
                 cond = function(self, spell, target)
-                    return Casting.DotSpellCheck(spell) and (Casting.DotHaveManaToNuke() or Casting.BurnCheck())
+                    return Casting.DotSpellCheck(spell) and Casting.HaveManaToDot()
                 end,
             },
             {
                 name = "Poison2",
                 type = "Spell",
                 cond = function(self, spell, target)
-                    return Casting.DotSpellCheck(spell) and (Casting.DotHaveManaToNuke() or Casting.BurnCheck())
+                    return Casting.DotSpellCheck(spell) and Casting.HaveManaToDot()
                 end,
             },
             {
                 name = "Magic2",
                 type = "Spell",
                 cond = function(self, spell, target)
-                    return Casting.DotSpellCheck(spell) and (Casting.DotHaveManaToNuke() or Casting.BurnCheck())
+                    return Casting.DotSpellCheck(spell) and Casting.HaveManaToDot()
                 end,
             },
             {
                 name = "GroupLeech",
                 type = "Spell",
                 cond = function(self, spell, target)
-                    return Casting.DotSpellCheck(spell) and (Casting.DotHaveManaToNuke() or Casting.BurnCheck())
+                    return Casting.DotSpellCheck(spell) and Casting.HaveManaToDot()
                 end,
             },
             {
@@ -946,7 +946,7 @@ local _ClassConfig = {
                 name = "PoisonNuke2",
                 type = "Spell",
                 cond = function(self, spell, target)
-                    return (Casting.HaveManaToNuke() or Casting.BurnCheck())
+                    return Casting.HaveManaToNuke()
                 end,
             },
             {
@@ -1035,7 +1035,7 @@ local _ClassConfig = {
                 type = "Item",
                 cond = function(self, itemName, target)
                     if not Config:GetSetting('DoChestClick') or not Casting.ItemHasClicky(itemName) then return false end
-                    return Casting.ItemSpellCheck(itemName, target)
+                    return Casting.SelfBuffItemCheck(itemName)
                 end,
             },
             {
@@ -1081,14 +1081,14 @@ local _ClassConfig = {
             {
                 name = "Death Bloom",
                 type = "AA",
-                active_cond = function(self, aaName) return Casting.SongActiveByName(mq.TLO.AltAbility(aaName).Spell()) end,
+                active_cond = function(self, aaName) return Casting.IHaveBuff(mq.TLO.AltAbility(aaName).Spell()) end,
                 cond = function(self, aaName) return mq.TLO.Me.PctMana() < Config:GetSetting('DeathBloomPercent') end,
             },
             {
                 name = "BestowBuff",
                 type = "Spell",
-                active_cond = function(self, spell) return Casting.SongActiveByName(spell.RankName()) end,
-                cond = function(self, spell) return not Casting.SongActiveByName(spell.RankName()) end,
+                active_cond = function(self, spell) return Casting.IHaveBuff(spell.RankName()) end,
+                cond = function(self, spell) return not Casting.IHaveBuff(spell.RankName()) end,
             },
             {
                 name = "FleshBuff",
@@ -1134,19 +1134,19 @@ local _ClassConfig = {
                 name = "PetHaste",
                 type = "Spell",
                 active_cond = function(self, spell) return mq.TLO.Me.PetBuff(spell.RankName())() ~= nil end,
-                cond = function(self, spell) return Casting.SelfBuffPetCheck(spell) end,
+                cond = function(self, spell) return Casting.PetBuffCheck(spell) end,
             },
             {
                 name = "PetBuff",
                 type = "Spell",
                 active_cond = function(self, spell) return mq.TLO.Me.PetBuff(spell.RankName())() ~= nil end,
-                cond = function(self, spell) return Casting.SelfBuffPetCheck(spell) end,
+                cond = function(self, spell) return Casting.PetBuffCheck(spell) end,
             },
             {
                 name = "Companion's Aegis",
                 type = "AA",
                 cond = function(self, aaName)
-                    return Casting.SelfBuffPetCheck(mq.TLO.Me.AltAbility(aaName).Spell)
+                    return Casting.PetBuffAACheck(aaName)
                 end,
             },
         },

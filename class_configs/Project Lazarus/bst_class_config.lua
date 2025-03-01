@@ -782,12 +782,12 @@ return {
         FlurryActive = function(self)
             local fury = self.ResolvedActionMap['FuryDisc']
             local dicho = self.ResolvedActionMap['DichoSpell']
-            return (dicho and dicho() and Casting.SongActiveByName(dicho.Name()))
-                or (fury and fury() and Casting.SongActiveByName(fury.Name()))
+            return (dicho and dicho() and Casting.IHaveBuff(dicho.Name()))
+                or (fury and fury() and Casting.IHaveBuff(fury.Name()))
         end,
         DmgModActive = function(self) --Song active by name will check both Bestial Alignments (Self and Group)
             local disc = self.ResolvedActionMap['DmgModDisc']
-            return Casting.SongActiveByName("Bestial Alignment") or (disc and disc() and Casting.SongActiveByName(disc.Name()))
+            return Casting.IHaveBuff("Bestial Alignment") or (disc and disc() and Casting.IHaveBuff(disc.Name()))
                 or Casting.BuffActiveByName("Ferociousness")
         end,
         --function to make sure we don't have non-hostiles in range before we use AE damage or non-taunt AE hate abilities
@@ -853,7 +853,7 @@ return {
                 type = "Item",
                 cond = function(self, itemName, target)
                     if not Config:GetSetting('DoChestClick') or not Casting.ItemHasClicky(itemName) then return false end
-                    return Casting.ItemSpellCheck(itemName, target)
+                    return Casting.SelfBuffItemCheck(itemName)
                 end,
             },
             {
@@ -973,7 +973,7 @@ return {
                 type = "Item",
                 cond = function(self, itemName, target)
                     if not Config:GetSetting('DoCoating') then return false end
-                    return Casting.ItemSpellCheck(itemName, target)
+                    return Casting.SelfBuffItemCheck(itemName)
                 end,
             },
         },
@@ -1022,7 +1022,7 @@ return {
                 type = "Spell",
                 cond = function(self, spell, target)
                     if not Config:GetSetting('DoDot') then return false end
-                    return Casting.DotSpellCheck(spell) and (Casting.DotHaveManaToNuke() or Casting.BurnCheck())
+                    return Casting.DotSpellCheck(spell) and Casting.HaveManaToDot()
                 end,
             },
             {
@@ -1030,7 +1030,7 @@ return {
                 type = "Spell",
                 cond = function(self, spell, target)
                     if not Config:GetSetting('DoDot') then return false end
-                    return Casting.DotSpellCheck(spell) and (Casting.DotHaveManaToNuke() or Casting.BurnCheck())
+                    return Casting.DotSpellCheck(spell) and Casting.HaveManaToDot()
                 end,
             },
             {
@@ -1038,35 +1038,35 @@ return {
                 type = "Spell",
                 cond = function(self, spell, target)
                     if not Config:GetSetting('DoDot') then return false end
-                    return Casting.DotSpellCheck(spell) and (Casting.DotHaveManaToNuke() or Casting.BurnCheck())
+                    return Casting.DotSpellCheck(spell) and Casting.HaveManaToDot()
                 end,
             },
             {
                 name = "Maelstrom",
                 type = "Spell",
                 cond = function(self, spell, target)
-                    return (Casting.HaveManaToNuke() or Casting.BurnCheck())
+                    return Casting.HaveManaToNuke()
                 end,
             },
             {
                 name = "FrozenPoi",
                 type = "Spell",
                 cond = function(self, spell, target)
-                    return (Casting.HaveManaToNuke() or Casting.BurnCheck())
+                    return Casting.HaveManaToNuke()
                 end,
             },
             {
                 name = "PoiBite",
                 type = "Spell",
                 cond = function(self, spell, target)
-                    return (Casting.HaveManaToNuke() or Casting.BurnCheck())
+                    return Casting.HaveManaToNuke()
                 end,
             },
             {
                 name = "Icelance1",
                 type = "Spell",
                 cond = function(self, spell, target)
-                    return (Casting.HaveManaToNuke() or Casting.BurnCheck())
+                    return Casting.HaveManaToNuke()
                 end,
             },
             {
@@ -1074,7 +1074,7 @@ return {
                 type = "Spell",
                 cond = function(self, spell, target)
                     if Config:GetSetting("DoAERoar") then return false end
-                    return (Casting.HaveManaToNuke() or Casting.BurnCheck())
+                    return Casting.HaveManaToNuke()
                 end,
             },
             {
@@ -1082,7 +1082,7 @@ return {
                 type = "Spell",
                 cond = function(self, spell, target)
                     if not (Config:GetSetting("DoAERoar") and Config:GetSetting("DoAEDamage")) then return false end
-                    return (Casting.HaveManaToNuke() or Casting.BurnCheck()) and self.ClassConfig.HelperFunctions.AETargetCheck(true)
+                    return Casting.HaveManaToNuke() and self.ClassConfig.HelperFunctions.AETargetCheck(true)
                 end,
             },
             {
@@ -1092,7 +1092,7 @@ return {
                     if not Config:GetSetting('DoSwarmPet') then return false end
                     --We will let Feralgia apply swarm pets if our pet currently doesn't have its Growl Effect.
                     local feralgia = self.ResolvedActionMap['Feralgia']
-                    return (feralgia and feralgia() and mq.TLO.Me.PetBuff(mq.TLO.Spell(feralgia).RankName.Trigger(2).ID())) and (Casting.HaveManaToNuke() or Casting.BurnCheck())
+                    return (feralgia and feralgia() and mq.TLO.Me.PetBuff(mq.TLO.Spell(feralgia).RankName.Trigger(2).ID())) and Casting.HaveManaToNuke()
                 end,
             },
         },
@@ -1324,63 +1324,63 @@ return {
                 name = "AvatarSpell",
                 type = "Spell",
                 cond = function(self, spell)
-                    return Config:GetSetting('DoAvatar') and Casting.SelfBuffPetCheck(spell)
+                    return Config:GetSetting('DoAvatar') and Casting.PetBuffCheck(spell)
                 end,
             },
             {
                 name = "RunSpeedBuff",
                 type = "Spell",
                 cond = function(self, spell)
-                    return Config:GetSetting('DoRunSpeed') and Casting.SelfBuffPetCheck(spell)
+                    return Config:GetSetting('DoRunSpeed') and Casting.PetBuffCheck(spell)
                 end,
             },
             {
                 name = "PetOffenseBuff",
                 type = "Spell",
                 cond = function(self, spell)
-                    return (not Config:GetSetting('DoTankPet')) and Casting.SelfBuffPetCheck(spell)
+                    return (not Config:GetSetting('DoTankPet')) and Casting.PetBuffCheck(spell)
                 end,
             },
             {
                 name = "PetDefenseBuff",
                 type = "Spell",
                 cond = function(self, spell)
-                    return Config:GetSetting('DoTankPet') and Casting.SelfBuffPetCheck(spell)
+                    return Config:GetSetting('DoTankPet') and Casting.PetBuffCheck(spell)
                 end,
             },
             {
                 name = "PetSlowProc",
                 type = "Spell",
                 cond = function(self, spell)
-                    return Config:GetSetting('DoPetSlow') and Casting.SelfBuffPetCheck(spell)
+                    return Config:GetSetting('DoPetSlow') and Casting.PetBuffCheck(spell)
                 end,
             },
             {
                 name = "PetHaste",
                 type = "Spell",
                 cond = function(self, spell)
-                    return Casting.SelfBuffPetCheck(spell)
+                    return Casting.PetBuffCheck(spell)
                 end,
             },
             {
                 name = "PetDamageProc",
                 type = "Spell",
                 cond = function(self, spell)
-                    return (not Config:GetSetting('DoTankPet')) and Casting.SelfBuffPetCheck(spell)
+                    return (not Config:GetSetting('DoTankPet')) and Casting.PetBuffCheck(spell)
                 end,
             },
             {
                 name = "PetHealProc",
                 type = "Spell",
                 cond = function(self, spell)
-                    return Casting.SelfBuffPetCheck(spell)
+                    return Casting.PetBuffCheck(spell)
                 end,
             },
             {
                 name = "PetSpellGuard",
                 type = "Spell",
                 cond = function(self, spell)
-                    return Config:GetSetting('DoSpellGuard') and Casting.SelfBuffPetCheck(spell)
+                    return Config:GetSetting('DoSpellGuard') and Casting.PetBuffCheck(spell)
                 end,
             },
             {
@@ -1395,14 +1395,14 @@ return {
                 name = "Fortify Companion",
                 type = "AA",
                 cond = function(self, aaName)
-                    return Casting.SelfBuffPetCheck(mq.TLO.Me.AltAbility(aaName).Spell)
+                    return Casting.PetBuffAACheck(aaName)
                 end,
             },
             {
                 name = "Taste of Blood",
                 type = "AA",
                 cond = function(self, aaName)
-                    return Casting.SelfBuffPetCheck(mq.TLO.Me.AltAbility(aaName).Spell)
+                    return Casting.PetBuffAACheck(aaName)
                 end,
             },
         },

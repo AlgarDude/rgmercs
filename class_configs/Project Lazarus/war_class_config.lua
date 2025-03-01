@@ -425,7 +425,7 @@ local _ClassConfig = {
                     return mq.TLO.Me.ActiveDisc.ID() == discSpell.ID()
                 end,
                 cond = function(self, discSpell)
-                    return Core.IsTanking() and not mq.TLO.Me.ActiveDisc.ID()
+                    return Core.IsTanking() and Casting.NoDiscActive()
                 end,
             },
             {
@@ -455,14 +455,14 @@ local _ClassConfig = {
                 name = "Infused by Rage",
                 type = "AA",
                 cond = function(self, aaName)
-                    return Core.IsTanking() and Casting.SelfBuffAACheck(aaName) and not Casting.SongActiveByName(aaName)
+                    return Core.IsTanking() and Casting.SelfBuffAACheck(aaName) and not Casting.IHaveBuff(aaName)
                 end,
             },
             {
                 name = "Blade Guardian",
                 type = "AA",
                 cond = function(self, aaName)
-                    return Casting.SelfBuffAACheck(aaName) and not Casting.SongActiveByName(aaName)
+                    return Casting.SelfBuffAACheck(aaName) and not Casting.IHaveBuff(aaName)
                 end,
             },
             { --Charm Click, name function stops errors in rotation window when slot is empty
@@ -470,7 +470,7 @@ local _ClassConfig = {
                 type = "Item",
                 cond = function(self, itemName, target)
                     if not Config:GetSetting('DoCharmClick') or not Casting.ItemHasClicky(itemName) then return false end
-                    return Casting.ItemSpellCheck(itemName, target)
+                    return Casting.SelfBuffItemCheck(itemName)
                 end,
             },
             {
@@ -585,7 +585,7 @@ local _ClassConfig = {
                 name = "Fortitude",
                 type = "Disc",
                 cond = function(self, discSpell)
-                    return mq.TLO.Me.PctHPs() <= Config:GetSetting('EmergencyLockout') and not Casting.SongActiveByName("Flash of Anger") and
+                    return mq.TLO.Me.PctHPs() <= Config:GetSetting('EmergencyLockout') and not Casting.IHaveBuff("Flash of Anger") and
                         not Casting.BuffActiveByID(mq.TLO.AltAbility("Blade Guardian").Spell.Base(1)())
                 end,
             },
@@ -662,7 +662,7 @@ local _ClassConfig = {
                 cond = function(self, itemName, target)
                     if not Config:GetSetting('DoChestClick') or not Casting.ItemHasClicky(itemName) then return false end
                     local dichoShield = Core.GetResolvedActionMapItem('DichoShield')
-                    return not mq.TLO.Me.Buff(dichoShield) and Casting.ItemSpellCheck(itemName, target)
+                    return not mq.TLO.Me.Buff(dichoShield) and Casting.SelfBuffItemCheck(itemName)
                 end,
             },
             { --shares effect with OoW Chest and Warlord's Bravery, offset from AbsorbDisc for automation flow/coverage
@@ -712,7 +712,7 @@ local _ClassConfig = {
                 type = "Item",
                 cond = function(self, itemName, target)
                     if not Config:GetSetting('DoCoating') then return false end
-                    return Casting.ItemSpellCheck(itemName, target)
+                    return Casting.SelfBuffItemCheck(itemName)
                 end,
             },
             { --incredibly weak at high level, but low opportunity cost for use and optional
@@ -831,7 +831,7 @@ local _ClassConfig = {
                 type = "AA",
                 cond = function(self, aaName, target)
                     if not Config:GetSetting('DoBattleLeap') then return false end
-                    return not Casting.SongActiveByName(aaName) and not Casting.SongActiveByName('Group Bestial Alignment')
+                    return not Casting.IHaveBuff(aaName) and not Casting.IHaveBuff('Group Bestial Alignment')
                         ---@diagnostic disable-next-line: undefined-field --Defs are not updated with HeadWet
                         and not mq.TLO.Me.HeadWet() --Stops Leap from launching us above the water's surface
                 end,
@@ -860,7 +860,7 @@ local _ClassConfig = {
                 type = "AA",
                 cond = function(self, aaName, target)
                     if not Config:GetSetting('DoSnare') then return false end
-                    return Casting.DetSpellCheck(mq.TLO.Me.AltAbility(aaName).Spell)
+                    return Casting.DetSpellAACheck(aaName)
                 end,
             },
             {
@@ -908,7 +908,7 @@ local _ClassConfig = {
                     return mq.TLO.Me.ActiveDisc.ID() == discSpell.ID()
                 end,
                 cond = function(self, discSpell)
-                    return Core.IsTanking() and not mq.TLO.Me.ActiveDisc.ID()
+                    return Core.IsTanking() and Casting.NoDiscActive()
                 end,
             },
         },

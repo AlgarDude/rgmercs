@@ -700,7 +700,7 @@ local _ClassConfig = {
         LeechCheck = function(self)
             local LeechEffects = { "Leechcurse Discipline", "Mortal Coil", "Lich Sting Recourse", "Leeching Embrace", "Reaper Strike Recourse", "Leeching Touch", }
             for _, buffName in ipairs(LeechEffects) do
-                if mq.TLO.Me.Buff(buffName)() or mq.TLO.Me.Song(buffName)() then return false end
+                if Casting.IHaveBuff(buffName) then return false end
             end
             return true
         end,
@@ -861,8 +861,7 @@ local _ClassConfig = {
                 active_cond = function(self, aaName) return Casting.BuffActiveByID(mq.TLO.Me.AltAbility(aaName).Spell.Trigger(2).ID() or 0) end,
                 cond = function(self, aaName, target)
                     if Config:GetSetting('ProcChoice') ~= 1 then return false end
-                    --SelfBuffAACheck does not work for this specific AA, it returns a strange spell in the stacking check
-                    return Casting.GroupBuffCheck(mq.TLO.Me.AltAbility(aaName).Spell, target)
+                    return Casting.SelfBuffAACheck(aaName)
                 end,
             },
             {
@@ -872,8 +871,7 @@ local _ClassConfig = {
                 active_cond = function(self, aaName) return Casting.BuffActiveByID(mq.TLO.Me.AltAbility(aaName).Spell.Trigger(2).ID() or 0) end,
                 cond = function(self, aaName, target)
                     if Config:GetSetting('ProcChoice') ~= 2 then return false end
-                    --SelfBuffAACheck does not work for this specific AA, it returns a strange spell in the stacking check
-                    return Casting.GroupBuffCheck(mq.TLO.Me.AltAbility(aaName).Spell, target)
+                    return Casting.SelfBuffAACheck(aaName)
                 end,
             },
             {
@@ -948,7 +946,7 @@ local _ClassConfig = {
                 active_cond = function(self, spell) return Casting.BuffActiveByID(spell.RankName.ID()) end,
                 cond = function(self, spell)
                     return self.ClassConfig.HelperFunctions.SingleBuffCheck() and Casting.SelfBuffCheck(spell) and
-                        not mq.TLO.Me.Buff("Howl of the Predator")() --fix for bad stacking check
+                        not Casting.IHaveBuff("Howl of the Predator") --fix for bad stacking check
                 end,
             },
             --You'll notice my use of TotalSeconds, this is to keep as close to 100% uptime as possible on these buffs, rebuffing early to decrease the chance of them falling off in combat
@@ -960,7 +958,7 @@ local _ClassConfig = {
                 tooltip = Tooltips.Skin,
                 active_cond = function(self, spell) return Casting.BuffActiveByID(spell.RankName.ID()) end,
                 cond = function(self, spell)
-                    return Casting.SpellStacksOnMe(spell.RankName) and (mq.TLO.Me.Buff(spell).Duration.TotalSeconds() or 0) < 60
+                    return spell.RankName.Stacks() and (mq.TLO.Me.Buff(spell).Duration.TotalSeconds() or 0) < 60
                 end,
             },
             {
@@ -970,7 +968,7 @@ local _ClassConfig = {
                 active_cond = function(self, spell) return Casting.BuffActiveByID(spell.RankName.ID()) end,
                 cond = function(self, spell)
                     if not Config:GetSetting('DoTempHP') or not Casting.CastReady(spell) then return false end
-                    return Casting.SpellStacksOnMe(spell.RankName) and (mq.TLO.Me.Buff(spell).Duration.TotalSeconds() or 0) < 45
+                    return spell.RankName.Stacks() and (mq.TLO.Me.Buff(spell).Duration.TotalSeconds() or 0) < 45
                 end,
             },
             {
@@ -979,7 +977,7 @@ local _ClassConfig = {
                 tooltip = Tooltips.HealBurn,
                 active_cond = function(self, spell) return Casting.BuffActiveByID(spell.RankName.ID()) end,
                 cond = function(self, spell)
-                    return Casting.SpellStacksOnMe(spell.RankName) and (mq.TLO.Me.Buff(spell).Duration.TotalSeconds() or 0) < 30
+                    return spell.RankName.Stacks() and (mq.TLO.Me.Buff(spell).Duration.TotalSeconds() or 0) < 30
                 end,
             },
             {
@@ -1007,7 +1005,7 @@ local _ClassConfig = {
                 type = "Item",
                 cond = function(self, itemName, target)
                     if not Config:GetSetting('DoCharmClick') or not Casting.ItemHasClicky(itemName) then return false end
-                    return Casting.ItemSpellCheck(itemName, target)
+                    return Casting.SelfBuffItemCheck(itemName)
                 end,
             },
             {
@@ -1040,14 +1038,14 @@ local _ClassConfig = {
                 tooltip = Tooltips.PetHaste,
                 active_cond = function(self, spell) return mq.TLO.Me.PetBuff(spell.RankName) ~= nil end,
                 cond = function(self, spell)
-                    return Casting.SelfBuffPetCheck(spell)
+                    return Casting.PetBuffCheck(spell)
                 end,
             },
             {
                 name = "Fortify Companion",
                 type = "AA",
                 cond = function(self, aaName)
-                    return Casting.SelfBuffPetCheck(mq.TLO.Me.AltAbility(aaName).Spell)
+                    return Casting.PetBuffAACheck(aaName)
                 end,
             },
         },
@@ -1075,8 +1073,7 @@ local _ClassConfig = {
                     end
                 end,
                 cond = function(self, discSpell)
-                    return mq.TLO.Me.PctHPs() <= Config:GetSetting('EmergencyLockout') and not mq.TLO.Me.ActiveDisc.ID() and
-                        (mq.TLO.Me.AltAbilityTimer("Shield Flash")() or 0) < 234000
+                    return Casting.NoDiscActive() and mq.TLO.Me.PctHPs() <= Config:GetSetting('EmergencyLockout') and (mq.TLO.Me.AltAbilityTimer("Shield Flash")() or 0) < 234000
                 end,
             },
             {
@@ -1097,7 +1094,7 @@ local _ClassConfig = {
                 type = "Disc",
                 tooltip = Tooltips.LeechCurse,
                 cond = function(self)
-                    return mq.TLO.Me.PctHPs() <= Config:GetSetting('EmergencyLockout') and not mq.TLO.Me.ActiveDisc.ID()
+                    return Casting.NoDiscActive() and mq.TLO.Me.PctHPs() <= Config:GetSetting('EmergencyLockout')
                 end,
             },
             --Influence is in an odd place with Carapace. Usage is very subjective and may be more nuanced than automation can support. Placed here as an alternative to Carapace in low health situations to get you topped back off again for tanks. Should be used in burn for non-tanks (adding non-tank stuff is TODO)
@@ -1106,7 +1103,7 @@ local _ClassConfig = {
                 type = "Disc",
                 tooltip = Tooltips.InfluenceDisc,
                 cond = function(self)
-                    return not mq.TLO.Me.ActiveDisc.ID() and Core.IsTanking()
+                    return Casting.NoDiscActive() and Core.IsTanking()
                 end,
             },
             {
@@ -1114,7 +1111,7 @@ local _ClassConfig = {
                 type = "Disc",
                 tooltip = Tooltips.Carapace,
                 cond = function(self)
-                    return not mq.TLO.Me.ActiveDisc.ID()
+                    return Casting.NoDiscActive()
                 end,
             },
             {
@@ -1122,7 +1119,7 @@ local _ClassConfig = {
                 type = "Item",
                 cond = function(self, itemName, target)
                     if not Config:GetSetting('DoChestClick') or not Casting.ItemHasClicky(itemName) then return false end
-                    return Casting.ItemSpellCheck(itemName, target)
+                    return Casting.SelfBuffItemCheck(itemName)
                 end,
             },
             {
@@ -1130,7 +1127,7 @@ local _ClassConfig = {
                 type = "Disc",
                 tooltip = Tooltips.Mantle,
                 cond = function(self)
-                    return not mq.TLO.Me.ActiveDisc.ID()
+                    return Casting.NoDiscActive()
                 end,
             },
             --if we made it this far let's reset our dicho/dire and hope for the best!
@@ -1301,7 +1298,7 @@ local _ClassConfig = {
                 type = "Disc",
                 tooltip = Tooltips.SpikeStrike,
                 cond = function(self)
-                    return not Core.IsTanking() and not mq.TLO.Me.ActiveDisc.ID()
+                    return not Core.IsTanking() and Casting.NoDiscActive()
                 end,
             },
             {
@@ -1309,7 +1306,7 @@ local _ClassConfig = {
                 type = "Disc",
                 tooltip = Tooltips.UnholyAura,
                 cond = function(self)
-                    return not Core.IsTanking() and not mq.TLO.Me.ActiveDisc.ID()
+                    return not Core.IsTanking() and Casting.NoDiscActive()
                 end,
             },
             {
@@ -1317,7 +1314,7 @@ local _ClassConfig = {
                 type = "Disc",
                 tooltip = Tooltips.InfluenceDisc,
                 cond = function(self)
-                    return not Core.IsTanking() and not mq.TLO.Me.ActiveDisc.ID()
+                    return not Core.IsTanking() and Casting.NoDiscActive()
                 end,
             },
         },
@@ -1327,7 +1324,7 @@ local _ClassConfig = {
                 tooltip = Tooltips.EncroachingDarkness,
                 type = "AA",
                 cond = function(self, aaName)
-                    return Casting.DetSpellCheck(mq.TLO.Me.AltAbility(aaName).Spell)
+                    return Casting.DetSpellAACheck(aaName)
                 end,
             },
             {
@@ -1372,7 +1369,7 @@ local _ClassConfig = {
                 tooltip = Tooltips.Carapace,
                 cond = function(self, discSpell, target)
                     if not Core.IsTanking() then return false end
-                    return not mq.TLO.Me.ActiveDisc.ID() and (Targeting.IsNamed(target) or self.ClassConfig.HelperFunctions.DefensiveDiscCheck(true))
+                    return Casting.NoDiscActive() and (Targeting.IsNamed(target) or self.ClassConfig.HelperFunctions.DefensiveDiscCheck(true))
                 end,
             },
             {
@@ -1381,7 +1378,7 @@ local _ClassConfig = {
                 tooltip = Tooltips.Mantle,
                 cond = function(self, discSpell, target)
                     if not Core.IsTanking() then return false end
-                    return not mq.TLO.Me.ActiveDisc.ID() and (Targeting.IsNamed(target) or self.ClassConfig.HelperFunctions.DefensiveDiscCheck(true))
+                    return Casting.NoDiscActive() and (Targeting.IsNamed(target) or self.ClassConfig.HelperFunctions.DefensiveDiscCheck(true))
                 end,
             },
             {
@@ -1390,7 +1387,7 @@ local _ClassConfig = {
                 tooltip = Tooltips.Guardian,
                 cond = function(self, discSpell, target)
                     if not Core.IsTanking() then return false end
-                    return not mq.TLO.Me.ActiveDisc.ID() and (Targeting.IsNamed(target) or self.ClassConfig.HelperFunctions.DefensiveDiscCheck(true))
+                    return Casting.NoDiscActive() and (Targeting.IsNamed(target) or self.ClassConfig.HelperFunctions.DefensiveDiscCheck(true))
                 end,
             },
             {
@@ -1398,7 +1395,7 @@ local _ClassConfig = {
                 type = "Item",
                 cond = function(self, itemName, target)
                     if not Config:GetSetting('DoCoating') then return false end
-                    return Casting.ItemSpellCheck(itemName, target) and self.ClassConfig.HelperFunctions.LeechCheck(self)
+                    return Casting.SelfBuffItemCheck(itemName) and self.ClassConfig.HelperFunctions.LeechCheck(self)
                 end,
             },
             {
@@ -1407,7 +1404,7 @@ local _ClassConfig = {
                 tooltip = Tooltips.UnholyAura,
                 cond = function(self, discSpell, target)
                     if not Core.IsTanking() then return false end
-                    return not mq.TLO.Me.ActiveDisc.ID() and (Targeting.IsNamed(target) or self.ClassConfig.HelperFunctions.DefensiveDiscCheck(true))
+                    return Casting.NoDiscActive() and (Targeting.IsNamed(target) or self.ClassConfig.HelperFunctions.DefensiveDiscCheck(true))
                 end,
             },
             {
@@ -1439,7 +1436,7 @@ local _ClassConfig = {
                 cond = function(self, spell)
                     if not Config:GetSetting('DoDicho') then return false end
                     local myHP = mq.TLO.Me.PctHPs()
-                    return (myHP <= Config:GetSetting('EmergencyStart') or ((Casting.HaveManaToNuke() or Casting.BurnCheck()) and myHP <= Config:GetSetting('StartDicho')))
+                    return myHP <= Config:GetSetting('EmergencyStart') or (Casting.HaveManatoNuke() and myHP <= Config:GetSetting('StartDicho'))
                 end,
             },
             {
@@ -1449,7 +1446,7 @@ local _ClassConfig = {
                 cond = function(self, spell, target)
                     if not Config:GetSetting('DoDireTap') then return false end
                     local myHP = mq.TLO.Me.PctHPs()
-                    return (myHP <= Config:GetSetting('EmergencyStart') or ((Casting.HaveManaToNuke() or Casting.BurnCheck()) and myHP <= Config:GetSetting('StartDireTap')))
+                    return myHP <= Config:GetSetting('EmergencyStart') or (Casting.HaveManaToNuke() and myHP <= Config:GetSetting('StartDireTap'))
                 end,
             },
             {
@@ -1458,7 +1455,7 @@ local _ClassConfig = {
                 tooltip = Tooltips.LifeTap,
                 cond = function(self, spell)
                     local myHP = mq.TLO.Me.PctHPs()
-                    return (myHP <= Config:GetSetting('EmergencyStart') or ((Casting.HaveManaToNuke() or Casting.BurnCheck()) and myHP <= Config:GetSetting('StartLifeTap')))
+                    return myHP <= Config:GetSetting('EmergencyStart') or (Casting.HaveManaToNuke() and myHP <= Config:GetSetting('StartLifeTap'))
                 end,
             },
             {
@@ -1467,8 +1464,7 @@ local _ClassConfig = {
                 tooltip = Tooltips.AELifeTap,
                 cond = function(self, spell)
                     if not (Config:GetSetting('DoAELifeTap') and Config:GetSetting('DoAEDamage')) or not spell or not spell() then return false end
-                    return not mq.TLO.Me.Buff(spell.Trigger())() and Casting.SpellStacksOnMe(spell.Trigger) and
-                        self.ClassConfig.HelperFunctions.AETargetCheck(true)
+                    return Casting.SelfBuffCheck(spell) and self.ClassConfig.HelperFunctions.AETargetCheck(true)
                 end,
             },
             { --This entry solely for emergencies on SK as a fallback, group has a different entry.
@@ -1485,7 +1481,7 @@ local _ClassConfig = {
                 tooltip = Tooltips.LifeTap,
                 cond = function(self, spell)
                     local myHP = mq.TLO.Me.PctHPs()
-                    return (myHP <= Config:GetSetting('EmergencyStart') or ((Casting.HaveManaToNuke() or Casting.BurnCheck()) and myHP <= Config:GetSetting('StartLifeTap')))
+                    return (myHP <= Config:GetSetting('EmergencyStart') or (Casting.HaveManaToNuke() and myHP <= Config:GetSetting('StartLifeTap')))
                 end,
             },
         },
@@ -1554,7 +1550,7 @@ local _ClassConfig = {
                 tooltip = Tooltips.BondTap,
                 cond = function(self, spell)
                     if not Config:GetSetting('DoBondTap') then return false end
-                    return (Casting.DotHaveManaToNuke() or Casting.BurnCheck()) and Casting.DotSpellCheck(spell)
+                    return Casting.HaveManaToDot() and Casting.DotSpellCheck(spell)
                 end,
             },
             {
@@ -1563,7 +1559,7 @@ local _ClassConfig = {
                 tooltip = Tooltips.SpearNuke,
                 cond = function(self)
                     if not (Config:GetSetting('DoAESpearNuke') and Config:GetSetting('DoAEDamage')) then return false end
-                    return (Casting.HaveManaToNuke() or Casting.BurnCheck())
+                    return Casting.HaveManaToNuke()
                 end,
             },
             {
@@ -1571,7 +1567,7 @@ local _ClassConfig = {
                 type = "Spell",
                 tooltip = Tooltips.AESpearNuke,
                 cond = function(self, spell, target)
-                    return (Casting.HaveManaToNuke() or Casting.BurnCheck())
+                    return Casting.HaveManaToNuke()
                 end,
             },
             {
@@ -1580,7 +1576,7 @@ local _ClassConfig = {
                 tooltip = Tooltips.PoisonDot,
                 cond = function(self, spell)
                     if not Config:GetSetting('DoPoisonDot') then return false end
-                    return (Casting.DotHaveManaToNuke() or Casting.BurnCheck()) and Casting.DotSpellCheck(spell)
+                    return Casting.HaveManaToDot() and Casting.DotSpellCheck(spell)
                 end,
             },
             {
@@ -1589,7 +1585,7 @@ local _ClassConfig = {
                 tooltip = Tooltips.PoisonDot,
                 cond = function(self, spell)
                     if not Config:GetSetting('DoCorruptionDot') then return false end
-                    return (Casting.DotHaveManaToNuke() or Casting.BurnCheck()) and Casting.DotSpellCheck(spell)
+                    return Casting.HaveManaToDot() and Casting.DotSpellCheck(spell)
                 end,
             },
             {
@@ -1598,7 +1594,7 @@ local _ClassConfig = {
                 tooltip = Tooltips.DireDot,
                 cond = function(self, spell, target)
                     if not Config:GetSetting('DoDireDot') then return false end
-                    return (Casting.DotHaveManaToNuke() or Casting.BurnCheck()) and Casting.DotSpellCheck(spell)
+                    return Casting.HaveManaToDot() and Casting.DotSpellCheck(spell)
                 end,
             },
             {
@@ -1615,7 +1611,7 @@ local _ClassConfig = {
                 tooltip = Tooltips.PowerTapAC,
                 cond = function(self, spell, target)
                     if not Config:GetSetting('DoACTap') or not spell or not spell() then return false end
-                    return not mq.TLO.Me.Buff(spell.Trigger())()
+                    return not Casting.IHaveBuff(spell.Trigger())
                 end,
             },
             {
@@ -1624,7 +1620,7 @@ local _ClassConfig = {
                 tooltip = Tooltips.PowerTapAtk,
                 cond = function(self, spell, target)
                     if not Config:GetSetting('DoAtkTap') or not spell or not spell() then return false end
-                    return not mq.TLO.Me.Buff(spell.Trigger())()
+                    return not Casting.IHaveBuff(spell.Trigger())
                 end,
             },
         },

@@ -51,16 +51,19 @@ function Casting.TargetHasBuff(effect, target, bAllowTargetChange)
     return mq.TLO.Target.Buff(effect)() and true or false
 end
 
---- Complex buff check that will check for presence and stacking of the buff (and any triggers) on the PC.
+--- Complex buff check that will check for presence and stacking of the buff (and any triggers) on the PC or the PC's pet.
 --- @param spell MQSpell The name of the spell to check.
+--- @param checkPet boolean|nil Use the pet as the checked entity if true, use the PC otherwise.
 --- @return boolean True if the PC checking should cast the buff, false otherwise.
-function Casting.SelfBuffCheck(spell)
+function Casting.LocalBuffCheck(spell, checkPet)
     if not (spell and spell()) then return false end
+    if checkPet and mq.TLO.Me.Pet.ID() == 0 then return false end
 
+    local entity = checkPet and mq.TLO.Me.Pet or mq.TLO.Me
     local spellName = spell.RankName.Name()
     local spellID = spell.RankName.ID()
 
-    if not mq.TLO.Me.FindBuff("id " .. spellID)() then
+    if not entity.FindBuff("id " .. spellID)() then
         Logger.log_verbose("%s(ID:%d) not found, let's check for triggers.", spellName, spellID)
         local numEffects = mq.TLO.Spell(spellID).NumEffects()
         local triggerCount = 0
@@ -71,7 +74,7 @@ function Casting.SelfBuffCheck(spell)
             if triggerSpell and triggerSpell() and triggerSpell.ID() > 0 then
                 local triggerName = triggerSpell.Name()
                 local triggerID = triggerSpell.ID()
-                if not mq.TLO.Me.FindBuff("id" .. triggerID)() then
+                if not entity.FindBuff("id" .. triggerID)() then
                     Logger.log_verbose("%s(ID:%d) not found, checking stacking.", triggerName, triggerID)
                     if triggerSpell.Stacks() then
                         Logger.log_verbose("%s(ID:%d) seems to stack, let's do it!", triggerName, triggerID)
@@ -261,7 +264,7 @@ function Casting.GroupBuffCheck(spell, target)
     local ret = false
     if target.ID() == mq.TLO.Me.ID() then
         Logger.log_verbose("Target is myself, using SelfBuffCheck.")
-        ret = Casting.SelfSpellCheck(spell)
+        ret = Casting.LocalBuffCheck(spell)
     elseif mq.TLO.DanNet(mq.TLO.Spawn(target.ID()).CleanName())() then
         Logger.log_verbose("Target is a DanNet peer, using PeerBuffCheck.")
         ret = Casting.PeerSpellCheck(spell, target)
@@ -270,6 +273,60 @@ function Casting.GroupBuffCheck(spell, target)
         ret = Casting.TargetSpellCheck(spell, target, true)
     end
     return ret
+end
+
+function Casting.GroupBuffAACheck(aaName, target)
+    if not Casting.CanUseAA(aaName) then return false end
+    return Casting.GroupBuffCheck(mq.TLO.Me.AltAbility(aaName).Spell, target)
+end
+
+function Casting.SelfBuffCheck(spell)
+    if not (spell and spell()) then return false end
+    return Casting.LocalBuffCheck(spell)
+end
+
+function Casting.SelfBuffAACheck(aaName)
+    if not Casting.CanUseAA(aaName) then return false end
+    return Casting.LocalBuffCheck(mq.TLO.Me.AltAbility(aaName).Spell)
+end
+
+function Casting.SelfBuffItemCheck(itemName)
+    local clickySpell = Casting.GetClickySpell(itemName)
+    if not (clickySpell and clickySpell()) then return false end
+    return Casting.LocalBuffCheck(clickySpell)
+end
+
+function Casting.PetBuffCheck(spell)
+    if not (spell and spell()) then return false end
+    return Casting.LocalBuffCheck(spell, true)
+end
+
+function Casting.PetBuffAACheck(aaName)
+    if not Casting.CanUseAA(aaName) then return false end
+    return Casting.LocalBuffCheck(mq.TLO.Me.AltAbility(aaName).Spell, true)
+end
+
+function Casting.PetBuffItemCheck(itemName)
+    local clickySpell = Casting.GetClickySpell(itemName)
+    if not (clickySpell and clickySpell()) then return false end
+    return Casting.LocalBuffCheck(clickySpell, true)
+end
+
+--- DetGOMCheck performs a check if Gift of Mana is active
+--- This function does not take any parameters.
+---
+--- @return boolean
+function Casting.GOMCheck()
+    return Casting.IHaveBuff("Gift of Mana") and true or false
+end
+
+--- DetGambitCheck performs a check for a specific gambit condition.
+--- @return boolean Returns true if the gambit condition is met, false otherwise.
+function Casting.GambitCheck()
+    local gambitSpell = Modules:ExecModule("Class", "GetResolvedActionMapItem", "GambitSpell")
+    if not gambitSpell and gambitSpell() then return false end
+
+    return Casting.IHaveBuff(gambitSpell) and true or false
 end
 
 --- Checks if we should be casting buffs.
@@ -341,23 +398,6 @@ end
 --- @return boolean True if you have more mana than Mana To Debuff or are burning, false otherwise
 function Casting.HaveManaToDebuff(bRestrictBurns)
     return mq.TLO.Me.PctMana() >= Config:GetSetting('ManaToDebuff') or (not bRestrictBurns and Casting.BurnCheck())
-end
-
---- DetGOMCheck performs a check if Gift of Mana is active
---- This function does not take any parameters.
----
---- @return boolean
-function Casting.GOMCheck()
-    return Casting.IHaveBuff("Gift of Mana") and true or false
-end
-
---- DetGambitCheck performs a check for a specific gambit condition.
---- @return boolean Returns true if the gambit condition is met, false otherwise.
-function Casting.GambitCheck()
-    local gambitSpell = Modules:ExecModule("Class", "GetResolvedActionMapItem", "GambitSpell")
-    if not gambitSpell and gambitSpell() then return false end
-
-    return Casting.IHaveBuff(gambitSpell) and true or false
 end
 
 --- Checks if the required reagents for a given spell are available.
@@ -1147,26 +1187,6 @@ function Casting.SetLastCastResult(result)
     Config.Globals.CastResult = result
 end
 
---- Checks if a self-buff spell can be cast on a pet.
----
---- @param spell MQSpell The name of the spell to check.
---- @return boolean Returns true if the spell can be cast on a pet, false otherwise.
-function Casting.SelfBuffPetCheck(spell)
-    if not spell or not spell() then return false end
-
-    -- Skip if the spell is set as a blocked pet buff, otherwise the bot loops forever
-    if mq.TLO.Me.BlockedPetBuff(spell.ID())() then
-        return false
-    end
-    Logger.log_verbose("\atSelfBuffPetCheck(%s) RankPetBuff(%s) PetBuff(%s) Stacks(%s)",
-        spell.RankName.Name(),
-        Strings.BoolToColorString(not mq.TLO.Me.PetBuff(spell.RankName.Name())()),
-        Strings.BoolToColorString(not mq.TLO.Me.PetBuff(spell.Name())()),
-        Strings.BoolToColorString(spell.StacksPet()))
-
-    return (not mq.TLO.Me.PetBuff(spell.RankName.Name())()) and (not mq.TLO.Me.PetBuff(spell.Name())()) and spell.StacksPet() and mq.TLO.Me.Pet.ID() > 0
-end
-
 --- Checks if the burn condition is met for RGMercs.
 --- This function evaluates certain criteria to determine if the burn phase should be initiated.
 --- @return boolean True if the burn condition is met, false otherwise.
@@ -1533,17 +1553,6 @@ function Casting.GetAASpell(aaName)
     return mq.TLO.Me.AltAbility(aaName).Spell
 end
 
-function Casting.SelfBuffAACheck(aaName)
-    if not Casting.CanUseAA(aaName) then return false end
-    return Casting.SelfBuffCheck(mq.TLO.Me.AltAbility(aaName).Spell)
-end
-
-function Casting.SelfBuffItemCheck(itemName)
-    local clickySpell = Casting.GetClickySpell(itemName)
-    if not clickySpell or not clickySpell() then return false end
-    return Casting.SelfBuffCheck(clickySpell)
-end
-
 function Casting.DetSpellCheck(spell, target)
     if not spell or not spell() then return false end
     return Casting.TargetSpellCheck(spell, target)
@@ -1557,7 +1566,7 @@ end
 function Casting.DotSpellCheck(spell, target)
     if not spell or not spell() then return false end
     local threshold = Targeting.IsNamed(target) and Config:GetSetting('NamedStopDOT') or Config:GetSetting('HPStopDOT')
-    if threshold < Targeting.GetTargetPctHPs() then return false end
+    if threshold < Targeting.GetTargetPctHPs(target) then return false end
 
     return Casting.TargetSpellCheck(spell, target)
 end
@@ -1566,6 +1575,10 @@ function Casting.DetItemCheck(itemName, target)
     local clickySpell = Casting.GetClickySpell(itemName)
     if not clickySpell or not clickySpell() then return false end
     return Casting.TargetSpellCheck(clickySpell, target)
+end
+
+function Casting.NoDiscActive()
+    return not mq.TLO.Me.ActiveDisc.ID()
 end
 
 return Casting

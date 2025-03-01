@@ -863,7 +863,7 @@ return {
                 name = "Spire of Chivalry",
                 type = "AA",
                 cond = function(self, aaName)
-                    return mq.TLO.Me.Level() < 80 and not Casting.SongActiveByName('Group Armor of the Inquisitor') and not Casting.SongActiveByName('Armor of the Inquisitor') and
+                    return mq.TLO.Me.Level() < 80 and not Casting.IHaveBuff('Group Armor of the Inquisitor') and not Casting.IHaveBuff('Armor of the Inquisitor') and
                         not Casting.BuffActiveByName('Spire of Chivalry')
                 end,
             },
@@ -887,14 +887,14 @@ return {
                 name = "Undeadburn",
                 type = "Disc",
                 cond = function(self, discSpell)
-                    return not mq.TLO.Me.ActiveDisc.ID()
+                    return Casting.NoDiscActive()
                 end,
             },
             {
                 name = "Righteousstrike",
                 type = "Disc",
                 cond = function(self, discSpell)
-                    return not mq.TLO.Me.ActiveDisc.ID()
+                    return Casting.NoDiscActive()
                 end,
             },
             {
@@ -943,7 +943,7 @@ return {
                 type = "Disc",
                 cond = function(self, discSpell, target)
                     return Core.IsModeActive('Tank') and
-                        (mq.TLO.SpawnCount("NPC radius 60 zradius 50")() > 2 or Targeting.IsNamed(target)) and not mq.TLO.Me.ActiveDisc.ID()
+                        (mq.TLO.SpawnCount("NPC radius 60 zradius 50")() > 2 or Targeting.IsNamed(target)) and Casting.NoDiscActive()
                 end,
             },
             {
@@ -951,7 +951,7 @@ return {
                 type = "Disc",
                 cond = function(self, discSpell, target)
                     return Core.IsModeActive('Tank') and
-                        (mq.TLO.SpawnCount("NPC radius 60 zradius 50")() > 2 or Targeting.IsNamed(target)) and not mq.TLO.Me.ActiveDisc.ID()
+                        (mq.TLO.SpawnCount("NPC radius 60 zradius 50")() > 2 or Targeting.IsNamed(target)) and Casting.NoDiscActive()
                 end,
             },
             {
@@ -959,7 +959,7 @@ return {
                 type = "Disc",
                 cond = function(self, discSpell, target)
                     return Core.IsModeActive('Tank') and
-                        (mq.TLO.SpawnCount("NPC radius 60 zradius 50")() > 2 or Targeting.IsNamed(target)) and not mq.TLO.Me.ActiveDisc.ID()
+                        (mq.TLO.SpawnCount("NPC radius 60 zradius 50")() > 2 or Targeting.IsNamed(target)) and Casting.NoDiscActive()
                 end,
             },
             {
@@ -967,7 +967,7 @@ return {
                 type = "Disc",
                 cond = function(self, discSpell, target)
                     return Core.IsModeActive('Tank') and
-                        (mq.TLO.SpawnCount("NPC radius 60 zradius 50")() > 2 or Targeting.IsNamed(target)) and not mq.TLO.Me.ActiveDisc.ID()
+                        (mq.TLO.SpawnCount("NPC radius 60 zradius 50")() > 2 or Targeting.IsNamed(target)) and Casting.NoDiscActive()
                 end,
             },
             {
@@ -1113,7 +1113,7 @@ return {
                 type = "Item",
                 cond = function(self, itemName, target)
                     if not Config:GetSetting('DoChestClick') or not Casting.ItemHasClicky(itemName) then return false end
-                    return Casting.ItemSpellCheck(itemName, target)
+                    return Casting.SelfBuffItemCheck(itemName)
                 end,
             },
         },
@@ -1212,7 +1212,7 @@ return {
                 type = "Item",
                 cond = function(self, itemName, target)
                     if not Config:GetSetting('DoChestClick') or not Casting.ItemHasClicky(itemName) then return false end
-                    return Casting.ItemSpellCheck(itemName, target)
+                    return Casting.SelfBuffItemCheck(itemName)
                 end,
             },
         },

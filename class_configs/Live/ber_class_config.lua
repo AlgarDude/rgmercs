@@ -596,7 +596,7 @@ return {
                 name = "HHEBuff",
                 type = "Disc",
                 cond = function(self, discSpell)
-                    return not Casting.AAReady("War Cry of the Braxi") and (not mq.TLO.Me.ActiveDisc.ID()) and Casting.SpellStacksOnMe(discSpell)
+                    return not Casting.AAReady("War Cry of the Braxi") and (Casting.NoDiscActive()) and Casting.SpellStacksOnMe(discSpell)
                 end,
             },
         },
@@ -606,7 +606,7 @@ return {
                 type = "Item",
                 cond = function(self, itemName, target)
                     if not Config:GetSetting('DoEpic') then return false end
-                    return Casting.ItemSpellCheck(itemName, target)
+                    return Casting.SelfBuffItemCheck(itemName)
                 end,
             },
             {
@@ -633,7 +633,7 @@ return {
                 name = "SharedBuff",
                 type = "Disc",
                 cond = function(self, discSpell)
-                    return not Casting.SongActiveByName(discSpell.RankName())
+                    return not Casting.IHaveBuff(discSpell.RankName())
                 end,
             },
             {
@@ -671,10 +671,10 @@ return {
             },
             {
                 name = "Alliance",
-                type = "AA",
-                cond = function(self, aaName)
+                type = "spell",
+                cond = function(self, spell)
                     return Config:GetSetting('DoAlliance') and Casting.CanAlliance() and
-                        not Casting.TargetHasBuff(mq.TLO.Me.AltAbility(aaName).Spell)
+                        not Casting.TargetHasBuff(spell)
                 end,
             },
             {
@@ -715,7 +715,7 @@ return {
                 name = "CryDmg",
                 type = "Disc",
                 cond = function(self, discSpell)
-                    return not Casting.SongActiveByName(discSpell.Name() or "None")
+                    return not Casting.IHaveBuff(discSpell.Name() or "None")
                 end,
             },
             {
@@ -745,8 +745,8 @@ return {
                 name = "Battle Leap",
                 type = "AA",
                 cond = function(self, aaName)
-                    return Config:GetSetting('DoBattleLeap') and not Casting.SongActiveByName("Battle Leap Warcry") and
-                        not Casting.SongActiveByName("Group Bestial Alignment")
+                    return Config:GetSetting('DoBattleLeap') and not Casting.IHaveBuff("Battle Leap Warcry") and
+                        not Casting.IHaveBuff("Group Bestial Alignment")
                         ---@diagnostic disable-next-line: undefined-field --Defs are not updated with HeadWet
                         and not mq.TLO.Me.HeadWet() --Stops Leap from launching us above the water's surface
                 end,
