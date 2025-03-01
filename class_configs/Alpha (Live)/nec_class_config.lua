@@ -821,7 +821,7 @@ local _ClassConfig = {
             {
                 name = "LichSpell",
                 type = "Spell",
-                active_cond = function(self, spell) return Casting.BuffActiveByID(spell.RankName.ID()) end,
+                active_cond = function(self, spell) return Casting.IHaveBuff(spell.RankName.ID()) end,
                 cond = function(self, spell)
                     return Config:GetSetting('DoLich') and Casting.SelfBuffCheck(spell) and
                         (not Config:GetSetting('DoUnity') or not Casting.AAReady("Mortifier's Unity")) and
@@ -835,7 +835,7 @@ local _ClassConfig = {
                 cond = function(self, _)
                     local lichSpell = self:GetResolvedActionMapItem('LichSpell')
 
-                    return lichSpell and lichSpell() and Casting.BuffActive(lichSpell) and
+                    return lichSpell and lichSpell() and Casting.IHaveBuff(lichSpell) and
                         (mq.TLO.Me.PctHPs() <= Config:GetSetting('StopLichHP') or mq.TLO.Me.PctMana() >= Config:GetSetting('StopLichMana'))
                 end,
                 custom_func = function(self)
@@ -849,7 +849,7 @@ local _ClassConfig = {
                 cond = function(self, _)
                     local fleshSpell = self:GetResolvedActionMapItem('FleshBuff')
 
-                    return fleshSpell and fleshSpell() and Casting.BuffActive(fleshSpell) and mq.TLO.Me.PctHPs() <= Config:GetSetting('StopLichHP')
+                    return fleshSpell and fleshSpell() and Casting.IHaveBuff(fleshSpell) and mq.TLO.Me.PctHPs() <= Config:GetSetting('StopLichHP')
                 end,
                 custom_func = function(self)
                     Core.SafeCallFunc("Stop Flesh Buff", self.ClassConfig.HelperFunctions.CancelFlesh, self)
@@ -903,7 +903,7 @@ local _ClassConfig = {
                 name = "ManaDrain",
                 type = "Spell",
                 cond = function(self, spell, target)
-                    return not Casting.BuffActiveByName(spell.Name() .. " Recourse") and
+                    return not Casting.IHaveBuff(spell.Name() .. " Recourse") and
                         (mq.TLO.Target.PctMana() or -1) > 0 and mq.TLO.Group.LowMana(40)() > 2
                 end,
             },
@@ -1063,19 +1063,19 @@ local _ClassConfig = {
             {
                 name = "SelfHPBuff",
                 type = "Spell",
-                active_cond = function(self, spell) return Casting.BuffActiveByID(spell.RankName.ID()) end,
+                active_cond = function(self, spell) return Casting.IHaveBuff(spell.RankName.ID()) end,
                 cond = function(self, spell) return Casting.SelfBuffCheck(spell) end,
             },
             {
                 name = "SelfRune1",
                 type = "Spell",
-                active_cond = function(self, spell) return Casting.BuffActiveByID(spell.RankName.ID()) end,
+                active_cond = function(self, spell) return Casting.IHaveBuff(spell.RankName.ID()) end,
                 cond = function(self, spell) return Casting.SelfBuffCheck(spell) end,
             },
             {
                 name = "SelfSpellShield1",
                 type = "Spell",
-                active_cond = function(self, spell) return Casting.BuffActiveByID(spell.RankName.ID()) end,
+                active_cond = function(self, spell) return Casting.IHaveBuff(spell.RankName.ID()) end,
                 cond = function(self, spell) return Casting.SelfBuffCheck(spell) end,
             },
             {
@@ -1093,7 +1093,7 @@ local _ClassConfig = {
             {
                 name = "FleshBuff",
                 type = "Spell",
-                active_cond = function(self, spell) return Casting.BuffActiveByID(spell.RankName.ID()) end,
+                active_cond = function(self, spell) return Casting.IHaveBuff(spell.RankName.ID()) end,
                 cond = function(self, spell)
                     return mq.TLO.Me.PctHPs() > Config:GetSetting('EmergencyStart') and Casting.SelfBuffCheck(spell)
                 end,

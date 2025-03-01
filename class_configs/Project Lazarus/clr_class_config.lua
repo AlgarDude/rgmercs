@@ -1249,7 +1249,7 @@ local _ClassConfig = {
                 allowDead = true,
                 cond = function(self, spell)
                     if (mq.TLO.Me.Level() < 101 and not Casting.GOMCheck()) then return false end
-                    return Casting.SpellStacksOnMe(spell.RankName) and (mq.TLO.Me.Song(spell).Duration.TotalSeconds() or 0) < 15
+                    return spell.RankName.Stacks() and (mq.TLO.Me.Song(spell).Duration.TotalSeconds() or 0) < 15
                 end,
             },
             {
@@ -1296,7 +1296,7 @@ local _ClassConfig = {
             -- {
             --     name = "GroupHealProcBuff",
             --     type = "Spell",
-            --     active_cond = function(self, spell) return Casting.BuffActiveByID(spell.ID()) end,
+            --     active_cond = function(self, spell) return Casting.IHaveBuff(spell.ID()) end,
             --     cond = function(self, spell)
             --         return Casting.SelfBuffCheck(spell)
             --     end,

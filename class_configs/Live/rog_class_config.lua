@@ -428,7 +428,7 @@ return {
                 cond = function(self, _)
                     local poisonItem = mq.TLO.FindItem(Config:GetSetting('PoisonName'))
                     return poisonItem and poisonItem() and poisonItem.Timer.TotalSeconds() == 0 and
-                        not Casting.BuffActiveByID(poisonItem.Spell.ID())
+                        not Casting.IHaveBuff(poisonItem.Spell.ID())
                 end,
             },
             {
@@ -565,12 +565,12 @@ return {
                 type = "ClickyItem",
                 active_cond = function(self, _)
                     local poisonItem = mq.TLO.FindItem(Config:GetSetting('PoisonName'))
-                    return poisonItem and poisonItem() and Casting.BuffActiveByID(poisonItem.Spell.ID() or 0)
+                    return poisonItem and poisonItem() and Casting.IHaveBuff(poisonItem.Spell.ID() or 0)
                 end,
                 cond = function(self, _)
                     local poisonItem = mq.TLO.FindItem(Config:GetSetting('PoisonName'))
                     return mq.TLO.Me.ItemReady(Config:GetSetting('PoisonName'))() and
-                        not Casting.BuffActiveByID(poisonItem.Spell.ID())
+                        not Casting.IHaveBuff(poisonItem.Spell.ID())
                 end,
             },
             {

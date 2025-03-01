@@ -837,7 +837,7 @@ local _ClassConfig = {
             local named = Targeting.IsNamed(Targeting.GetAutoTarget())
             local targethp = Targeting.GetTargetPctHPs()
 
-            return Casting.SpellStacksOnTarget(songSpell) and ((named and (Config:GetSetting('NamedStopDOT') < targethp)) or
+            return songSpell.StacksTarget() and ((named and (Config:GetSetting('NamedStopDOT') < targethp)) or
                 (not named and Config:GetSetting('HPStopDOT') < targethp))
         end,
         GetDetSongDuration = function(songSpell) -- Checks target for duration remaining on dot songs
@@ -1049,7 +1049,7 @@ local _ClassConfig = {
                 cond = function(self, aaName, target)
                     if Config:GetSetting('UseBellow') == 1 then return false end
                     return ((Config:GetSetting('UseBellow') == 3 and mq.TLO.Me.PctEndurance() > Config:GetSetting('SelfEndPct')) or (Config:GetSetting('UseBellow') == 2 and Casting.BurnCheck())) and
-                        Casting.DetSpellAACheck(aaName)
+                        Casting.DetAACheck(aaName)
                 end,
             },
             {
@@ -1067,7 +1067,7 @@ local _ClassConfig = {
                 cond = function(self, songSpell)
                     if Config:GetSetting('UseDicho') == 1 then return false end
                     return (Config:GetSetting('UseDicho') == 3 and (mq.TLO.Me.PctEndurance() > Config:GetSetting('SelfEndPct') or Casting.BurnCheck()))
-                        or (Config:GetSetting('UseDicho') == 2 and Casting.BuffActiveByID(mq.TLO.Me.AltAbility("Quick Time").Spell.ID()))
+                        or (Config:GetSetting('UseDicho') == 2 and Casting.IHaveBuff(mq.TLO.Me.AltAbility("Quick Time").Spell.ID()))
                 end,
             },
             {

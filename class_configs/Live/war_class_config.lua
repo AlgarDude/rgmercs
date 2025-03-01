@@ -586,14 +586,14 @@ local _ClassConfig = {
                 type = "Disc",
                 cond = function(self, discSpell)
                     return mq.TLO.Me.PctHPs() <= Config:GetSetting('EmergencyLockout') and not Casting.IHaveBuff("Flash of Anger") and
-                        not Casting.BuffActiveByID(mq.TLO.AltAbility("Blade Guardian").Spell.Base(1)())
+                        not Casting.IHaveBuff(mq.TLO.AltAbility("Blade Guardian").Spell.Base(1)())
                 end,
             },
             {
                 name = "Flash",
                 type = "Disc",
                 cond = function(self, discSpell)
-                    return not mq.TLO.Me.ActiveDisc.Name() ~= "Fortitude Discipline" and not Casting.BuffActiveByID(mq.TLO.AltAbility("Blade Guardian").Spell.Base(1)())
+                    return not mq.TLO.Me.ActiveDisc.Name() ~= "Fortitude Discipline" and not Casting.IHaveBuff(mq.TLO.AltAbility("Blade Guardian").Spell.Base(1)())
                 end,
             },
             {
@@ -696,8 +696,8 @@ local _ClassConfig = {
                 cond = function(self, aaName)
                     local absorbDisc = Core.GetResolvedActionMapItem('AbsorbDisc')
                     local standDisc = Core.GetResolvedActionMapItem('StandDisc')
-                    return mq.TLO.Me.ActiveDisc.Name() ~= standDisc.RankName() and mq.TLO.Me.Song(absorbDisc)() and not Casting.BuffActiveByName("Guardian's Boon") and
-                        not Casting.BuffActiveByName("Guardian's Bravery")
+                    return mq.TLO.Me.ActiveDisc.Name() ~= standDisc.RankName() and mq.TLO.Me.Song(absorbDisc)() and not Casting.IHaveBuff("Guardian's Boon") and
+                        not Casting.IHaveBuff("Guardian's Bravery")
                 end,
             },
             {
@@ -852,7 +852,7 @@ local _ClassConfig = {
                 type = "AA",
                 cond = function(self, aaName, target)
                     if not Config:GetSetting('DoSnare') then return false end
-                    return Casting.DetSpellAACheck(aaName)
+                    return Casting.DetAACheck(aaName)
                 end,
             },
             {

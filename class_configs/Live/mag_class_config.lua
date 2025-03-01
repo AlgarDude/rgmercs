@@ -1300,8 +1300,7 @@ _ClassConfig      = {
                 name = "PetManaConv",
                 type = "Spell",
                 cond = function(self, spell)
-                    if not spell or not spell() then return false end
-                    return not mq.TLO.Me.Buff(spell.Name() .. " Recourse")() and Casting.SpellStacksOnMe(spell)
+                    return Casting.SelfBuffCheck(spell)
                 end,
             },
             {
@@ -1612,7 +1611,7 @@ _ClassConfig      = {
                 name = "Malaise",
                 type = "AA",
                 cond = function(self, aaName, target)
-                    return Casting.DetSpellAACheck(aaName)
+                    return Casting.DetAACheck(aaName)
                 end,
             },
             {
@@ -1628,7 +1627,7 @@ _ClassConfig      = {
                 type = "AA",
                 cond = function(self, aaName, target)
                     if not Config:GetSetting('DoAEMalo') then return false end
-                    return Casting.DetSpellAACheck(aaName)
+                    return Casting.DetAACheck(aaName)
                 end,
             },
         },
@@ -1637,7 +1636,7 @@ _ClassConfig      = {
                 name = "LongDurDmgShield",
                 type = "Spell",
                 active_cond = function(self, spell)
-                    return Casting.BuffActive(spell)
+                    return Casting.IHaveBuff(spell)
                 end,
                 cond = function(self, spell, target)
                     return Casting.GroupBuffCheck(spell, target)

@@ -589,14 +589,14 @@ return {
                 name = "War Cry of the Braxi",
                 type = "Disc",
                 cond = function(self, aaName)
-                    return Casting.SpellStacksOnMe(mq.TLO.Spell(aaName))
+                    return Casting.SelfBuffAACheck(aaName)
                 end,
             },
             {
                 name = "HHEBuff",
                 type = "Disc",
                 cond = function(self, discSpell)
-                    return not Casting.AAReady("War Cry of the Braxi") and (Casting.NoDiscActive()) and Casting.SpellStacksOnMe(discSpell)
+                    return not Casting.AAReady("War Cry of the Braxi") and Casting.NoDiscActive() and Casting.SelfBuffCheck(discSpell)
                 end,
             },
         },
@@ -708,7 +708,7 @@ return {
                 name = "FrenzyBoost",
                 type = "Disc",
                 cond = function(self, discSpell)
-                    return not Casting.BuffActive(discSpell)
+                    return not Casting.IHaveBuff(discSpell)
                 end,
             },
             {

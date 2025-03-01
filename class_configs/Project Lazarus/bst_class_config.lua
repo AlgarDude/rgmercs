@@ -737,7 +737,7 @@ return {
             cond = function(self, combat_state)
                 local downtime = combat_state == "Downtime" and Config:GetSetting('DowntimeFP') and Casting.DoBuffCheck()
                 local combat = combat_state == "Combat" and not Casting.IAmFeigning()
-                return (downtime or combat) and not Casting.BuffActive(mq.TLO.Me.AltAbility('Paragon of Spirit').Spell)
+                return (downtime or combat) and not Casting.IHaveBuff(mq.TLO.Me.AltAbility('Paragon of Spirit').Spell)
             end,
         },
         {
@@ -788,7 +788,7 @@ return {
         DmgModActive = function(self) --Song active by name will check both Bestial Alignments (Self and Group)
             local disc = self.ResolvedActionMap['DmgModDisc']
             return Casting.IHaveBuff("Bestial Alignment") or (disc and disc() and Casting.IHaveBuff(disc.Name()))
-                or Casting.BuffActiveByName("Ferociousness")
+                or Casting.IHaveBuff("Ferociousness")
         end,
         --function to make sure we don't have non-hostiles in range before we use AE damage or non-taunt AE hate abilities
         AETargetCheck = function(printDebug)
@@ -866,7 +866,7 @@ return {
                 cond = function(self, spell, target)
                     local vinDisc = self.ResolvedActionMap['VinDisc']
                     if not vinDisc then return false end
-                    return Casting.BuffActive(vinDisc)
+                    return Casting.IHaveBuff(vinDisc)
                 end,
             },
             {
@@ -1166,7 +1166,7 @@ return {
                 name = "BestialBuffDisc",
                 type = "Disc",
                 cond = function(self, discSpell, target)
-                    return not Casting.BuffActive(discSpell)
+                    return not Casting.IHaveBuff(discSpell)
                 end,
             },
             {

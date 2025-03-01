@@ -959,15 +959,14 @@ local _ClassConfig = {
                 tooltip = Tooltips.UnityBuff,
                 active_cond = function(self, aaName) return Casting.TargetHasBuff(mq.TLO.Me.AltAbility(aaName).Spell, mq.TLO.Me) end,
                 cond = function(self, aaName)
-                    return castWSU() and not Casting.SpellStacksOnMe(mq.TLO.Me.AltAbility(aaName).Spell) and
-                        not Casting.TargetHasBuff(mq.TLO.Me.AltAbility(aaName).Spell, mq.TLO.Me)
+                    return castWSU() and Casting.SelfBuffAACheck(aaName)
                 end,
             },
             {
                 name = "Protectionbuff",
                 type = "Spell",
                 tooltip = Tooltips.Protectionbuff,
-                active_cond = function(self, spell) return Casting.BuffActiveByID(spell.RankName.ID()) end,
+                active_cond = function(self, spell) return Casting.IHaveBuff(spell.RankName.ID()) end,
                 cond = function(self, spell)
                     return not castWSU() and Casting.SelfBuffCheck(spell)
                 end,
@@ -976,7 +975,7 @@ local _ClassConfig = {
                 name = "ParryProcBuff",
                 type = "Spell",
                 tooltip = Tooltips.ParryProcBuff,
-                active_cond = function(self, spell) return Casting.BuffActiveByID(spell.RankName.ID()) end,
+                active_cond = function(self, spell) return Casting.IHaveBuff(spell.RankName.ID()) end,
                 cond = function(self, spell)
                     return not castWSU() and Casting.SelfBuffCheck(spell)
                 end,
@@ -985,7 +984,7 @@ local _ClassConfig = {
                 name = "Hunt",
                 type = "Spell",
                 tooltip = Tooltips.Hunt,
-                active_cond = function(self, spell) return Casting.BuffActiveByID(spell.RankName.ID()) end,
+                active_cond = function(self, spell) return Casting.IHaveBuff(spell.RankName.ID()) end,
                 cond = function(self, spell)
                     return not castWSU() and Casting.SelfBuffCheck(spell)
                 end,
@@ -994,52 +993,52 @@ local _ClassConfig = {
                 name = "Eyes",
                 type = "Spell",
                 tooltip = Tooltips.Eyes,
-                active_cond = function(self, spell) return Casting.BuffActiveByID(spell.RankName.ID()) end,
+                active_cond = function(self, spell) return Casting.IHaveBuff(spell.RankName.ID()) end,
                 cond = function(self, spell)
-                    return not castWSU() and Casting.SelfBuffCheck(spell) and not Casting.BuffActiveByID(spell.ID()) and not Config:GetSetting('DoMask')
+                    return not castWSU() and Casting.SelfBuffCheck(spell) and not Casting.IHaveBuff(spell.ID()) and not Config:GetSetting('DoMask')
                 end,
             },
             {
                 name = "GroupPredatorBuff",
                 type = "Spell",
                 tooltip = Tooltips.GroupPredatorBuff,
-                active_cond = function(self, spell) return Casting.BuffActiveByID(spell.RankName.ID()) end,
+                active_cond = function(self, spell) return Casting.IHaveBuff(spell.RankName.ID()) end,
                 cond = function(self, spell)
-                    return Casting.SelfBuffCheck(spell) and Casting.SpellStacksOnMe(spell)
+                    return Casting.SelfBuffCheck(spell)
                 end,
             },
             {
                 name = "ShoutBuff",
                 type = "Spell",
                 tooltip = Tooltips.ShoutBuff,
-                active_cond = function(self, spell) return Casting.BuffActiveByID(spell.RankName.ID()) end,
+                active_cond = function(self, spell) return Casting.IHaveBuff(spell.RankName.ID()) end,
                 cond = function(self, spell)
-                    return Casting.SelfBuffCheck(spell) and Casting.SpellStacksOnMe(spell) and not Casting.BuffActiveByName("Shared " .. spell.Name())
+                    return Casting.SelfBuffCheck(spell) and not Casting.IHaveBuff("Shared " .. spell.Name())
                 end,
             },
             {
                 name = "GroupStrengthBuff",
                 type = "Spell",
                 tooltip = Tooltips.GroupStrengthBuff,
-                active_cond = function(self, spell) return Casting.BuffActiveByID(spell.RankName.ID()) end,
+                active_cond = function(self, spell) return Casting.IHaveBuff(spell.RankName.ID()) end,
                 cond = function(self, spell)
-                    return Casting.SelfBuffCheck(spell) and not Casting.BuffActiveByName("Shared " .. spell.Name()) and Casting.SpellStacksOnMe(spell)
+                    return Casting.SelfBuffCheck(spell) and not Casting.IHaveBuff("Shared " .. spell.Name())
                 end,
             },
             {
                 name = "Rathe",
                 type = "Spell",
                 tooltip = Tooltips.Rathe,
-                active_cond = function(self, spell) return Casting.BuffActiveByID(spell.RankName.ID()) end,
+                active_cond = function(self, spell) return Casting.IHaveBuff(spell.RankName.ID()) end,
                 cond = function(self, spell)
-                    return Casting.SelfBuffCheck(spell) and not Casting.BuffActiveByName("Shared " .. spell.Name())
+                    return Casting.SelfBuffCheck(spell) and not Casting.IHaveBuff("Shared " .. spell.Name())
                 end,
             },
             {
                 name = "GroupEnrichmentBuff",
                 type = "Spell",
                 tooltip = Tooltips.GroupEnrichmentBuff,
-                active_cond = function(self, spell) return Casting.BuffActiveByID(spell.RankName.ID()) end,
+                active_cond = function(self, spell) return Casting.IHaveBuff(spell.RankName.ID()) end,
                 cond = function(self, spell)
                     return Casting.SelfBuffCheck(spell)
                 end,
@@ -1048,25 +1047,25 @@ local _ClassConfig = {
                 name = "Coat",
                 type = "Spell",
                 tooltip = Tooltips.Coat,
-                active_cond = function(self, spell) return Casting.BuffActiveByID(spell.RankName.ID()) end,
+                active_cond = function(self, spell) return Casting.IHaveBuff(spell.RankName.ID()) end,
                 cond = function(self, spell)
-                    return Casting.SelfBuffCheck(spell) and Casting.SpellStacksOnMe(spell)
+                    return Casting.SelfBuffCheck(spell)
                 end,
             },
             {
                 name = "Mask",
                 type = "Spell",
                 tooltip = Tooltips.Mask,
-                active_cond = function(self, spell) return Casting.BuffActiveByID(spell.RankName.ID()) end,
+                active_cond = function(self, spell) return Casting.IHaveBuff(spell.RankName.ID()) end,
                 cond = function(self, spell)
-                    return Casting.SelfBuffCheck(spell) and Config:GetSetting('DoMask') and Casting.SpellStacksOnMe(spell)
+                    return Casting.SelfBuffCheck(spell) and Config:GetSetting('DoMask')
                 end,
             },
             {
                 name = "FireFist",
                 type = "Spell",
                 tooltip = Tooltips.FireFist,
-                active_cond = function(self, spell) return Casting.BuffActiveByID(spell.RankName.ID()) end,
+                active_cond = function(self, spell) return Casting.IHaveBuff(spell.RankName.ID()) end,
                 cond = function(self, spell)
                     return Config:GetSetting('DoFireFist')
                         and Casting.SelfBuffCheck(spell)
@@ -1076,25 +1075,25 @@ local _ClassConfig = {
                 name = "DsBuff",
                 type = "Spell",
                 tooltip = Tooltips.DsBuff,
-                active_cond = function(self, spell) return Casting.BuffActiveByID(spell.RankName.ID()) end,
+                active_cond = function(self, spell) return Casting.IHaveBuff(spell.RankName.ID()) end,
                 cond = function(self, spell)
-                    return Casting.SelfBuffCheck(spell) and Casting.SpellStacksOnMe(spell)
+                    return Casting.SelfBuffCheck(spell)
                 end,
             },
             {
                 name = "SkinLike",
                 type = "Spell",
                 tooltip = Tooltips.SkinLike,
-                active_cond = function(self, spell) return Casting.BuffActiveByID(spell.RankName.ID()) end,
+                active_cond = function(self, spell) return Casting.IHaveBuff(spell.RankName.ID()) end,
                 cond = function(self, spell)
-                    return Casting.SelfBuffCheck(spell) and Casting.SpellStacksOnMe(spell)
+                    return Casting.SelfBuffCheck(spell)
                 end,
             },
             {
                 name = "MoveSpells",
                 type = "Spell",
                 tooltip = Tooltips.MoveSpells,
-                active_cond = function(self, spell) return Config:GetSetting('DoRunSpeed') and Casting.BuffActiveByID(spell.RankName.ID()) end,
+                active_cond = function(self, spell) return Config:GetSetting('DoRunSpeed') and Casting.IHaveBuff(spell.RankName.ID()) end,
                 cond = function(self, spell)
                     return Casting.SelfBuffCheck(spell)
                 end,
@@ -1103,7 +1102,7 @@ local _ClassConfig = {
                 name = "AgiBuff",
                 type = "Spell",
                 tooltip = Tooltips.AgiBuff,
-                active_cond = function(self, spell) return Casting.BuffActiveByID(spell.RankName.ID()) end,
+                active_cond = function(self, spell) return Casting.IHaveBuff(spell.RankName.ID()) end,
                 cond = function(self, spell)
                     return Casting.SelfBuffCheck(spell)
                 end,
@@ -1112,7 +1111,7 @@ local _ClassConfig = {
                 name = "Cloak",
                 type = "Spell",
                 tooltip = Tooltips.Cloak,
-                active_cond = function(self, spell) return Casting.BuffActiveByID(spell.RankName.ID()) end,
+                active_cond = function(self, spell) return Casting.IHaveBuff(spell.RankName.ID()) end,
                 cond = function(self, spell)
                     return Casting.SelfBuffCheck(spell)
                 end,
@@ -1121,7 +1120,7 @@ local _ClassConfig = {
                 name = "Veil",
                 type = "Spell",
                 tooltip = Tooltips.Veil,
-                active_cond = function(self, spell) return Casting.BuffActiveByID(spell.RankName.ID()) end,
+                active_cond = function(self, spell) return Casting.IHaveBuff(spell.RankName.ID()) end,
                 cond = function(self, spell)
                     return Casting.SelfBuffCheck(spell)
                 end,
@@ -1177,10 +1176,9 @@ local _ClassConfig = {
                 name = "Rathe",
                 type = "Spell",
                 tooltip = Tooltips.Rathe,
-                active_cond = function(self, spell) return Casting.BuffActiveByID(spell.RankName.ID()) end,
+                active_cond = function(self, spell) return Casting.IHaveBuff(spell.RankName.ID()) end,
                 cond = function(self, spell, target)
-                    Targeting.SetTarget(target.ID() or 0)
-                    return Casting.SpellStacksOnTarget(spell) and not Casting.TargetHasBuff(spell) and not Casting.TargetHasBuffByName("Shared " .. spell.Name())
+                    return Casting.GroupBuffCheck(spell)
                 end,
             },
         },
@@ -1344,7 +1342,7 @@ local _ClassConfig = {
                 type = "Spell",
                 tooltip = Tooltips.Fireboon,
                 cond = function(self, spell)
-                    return Casting.DetSpellCheck(spell) and not Casting.BuffActiveByName("FireboonBuff")
+                    return Casting.DetSpellCheck(spell) and not Casting.IHaveBuff("FireboonBuff")
                 end,
             },
             {
@@ -1352,7 +1350,7 @@ local _ClassConfig = {
                 type = "Spell",
                 tooltip = Tooltips.Iceboon,
                 cond = function(self, spell)
-                    return Casting.DetSpellCheck(spell) and not Casting.BuffActiveByName("IceboonBuff")
+                    return Casting.DetSpellCheck(spell) and not Casting.IHaveBuff("IceboonBuff")
                 end,
             },
             {
