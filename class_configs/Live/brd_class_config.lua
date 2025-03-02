@@ -884,7 +884,7 @@ local _ClassConfig = {
             load_cond = function() return Config:GetSetting("DoSTSlow") or Config:GetSetting("DoAESlow") or Config:GetSetting("DoDispel") end,
             targetId = function(self) return mq.TLO.Target.ID() == Config.Globals.AutoTargetID and { Config.Globals.AutoTargetID, } or {} end,
             cond = function(self, combat_state)
-                return combat_state == "Combat" and not Casting.IAmFeigning() and Casting.DebuffConCheck()
+                return combat_state == "Combat" and not Casting.IAmFeigning() and Casting.OkayToDebuff()
             end,
         },
         {
@@ -1056,7 +1056,7 @@ local _ClassConfig = {
                 name = "Intimidation",
                 type = "Ability",
                 cond = function(self, abilityName)
-                    return (mq.TLO.Me.AltAbility("Intimidation").Rank() or 0) > 1
+                    return Casting.AARank("Intimidation") > 1
                 end,
             },
         },
@@ -1067,7 +1067,7 @@ local _ClassConfig = {
                 cond = function(self, songSpell)
                     if Config:GetSetting('UseDicho') == 1 then return false end
                     return (Config:GetSetting('UseDicho') == 3 and (mq.TLO.Me.PctEndurance() > Config:GetSetting('SelfEndPct') or Casting.BurnCheck()))
-                        or (Config:GetSetting('UseDicho') == 2 and Casting.IHaveBuff(mq.TLO.Me.AltAbility("Quick Time").Spell.ID()))
+                        or (Config:GetSetting('UseDicho') == 2 and Casting.IHaveBuff(Casting.GetAASpell("Quick Time")))
                 end,
             },
             {

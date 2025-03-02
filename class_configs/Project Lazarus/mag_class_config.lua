@@ -834,7 +834,7 @@ _ClassConfig      = {
             name = 'PetSummon',
             targetId = function(self) return { mq.TLO.Me.ID(), } end,
             cond = function(self, combat_state)
-                return combat_state == "Downtime" and Casting.DoPetCheck() and (mq.TLO.Me.Pet.ID() == 0 or Config:GetSetting('DoPocketPet'))
+                return combat_state == "Downtime" and Casting.OkayToPetBuff()() and (mq.TLO.Me.Pet.ID() == 0 or Config:GetSetting('DoPocketPet'))
                     and Casting.AmIBuffable()
             end,
         },
@@ -849,7 +849,7 @@ _ClassConfig      = {
             name = 'Downtime',
             targetId = function(self) return { mq.TLO.Me.ID(), } end,
             cond = function(self, combat_state)
-                return combat_state == "Downtime" and Casting.DoBuffCheck() and Casting.AmIBuffable()
+                return combat_state == "Downtime" and Casting.OkayToBuff() and Casting.AmIBuffable()
             end,
         },
         { --Pet Buffs if we have one, timer because we don't need to constantly check this. Timer lowered for mage due to high volume of actions
@@ -857,7 +857,7 @@ _ClassConfig      = {
             timer = 30,
             targetId = function(self) return mq.TLO.Me.Pet.ID() > 0 and { mq.TLO.Me.Pet.ID(), } or {} end,
             cond = function(self, combat_state)
-                return combat_state == "Downtime" and mq.TLO.Me.Pet.ID() > 0 and Casting.DoPetCheck()
+                return combat_state == "Downtime" and mq.TLO.Me.Pet.ID() > 0 and Casting.OkayToPetBuff()()
             end,
         },
         {
@@ -867,7 +867,7 @@ _ClassConfig      = {
                 return Casting.GetBuffableGroupIDs()
             end,
             cond = function(self, combat_state)
-                return combat_state == "Downtime" and Casting.DoBuffCheck()
+                return combat_state == "Downtime" and Casting.OkayToBuff()
             end,
         },
         {
@@ -886,7 +886,7 @@ _ClassConfig      = {
             load_cond = function() return Config:GetSetting('DoMalo') end,
             targetId = function(self) return mq.TLO.Target.ID() == Config.Globals.AutoTargetID and { Config.Globals.AutoTargetID, } or {} end,
             cond = function(self, combat_state)
-                return combat_state == "Combat" and not Casting.IAmFeigning() and Casting.DebuffConCheck() and
+                return combat_state == "Combat" and not Casting.IAmFeigning() and Casting.OkayToDebuff() and
                     (Casting.HaveManaToDebuff() or Targeting.IsNamed(Targeting.GetAutoTarget()))
             end,
         },
@@ -954,7 +954,7 @@ _ClassConfig      = {
                 return groupIds
             end,
             cond = function(self, combat_state)
-                local downtime = combat_state == "Downtime" and Casting.DoBuffCheck()
+                local downtime = combat_state == "Downtime" and Casting.OkayToBuff()
                 local pct = Config:GetSetting('GroupManaPct')
                 local combat = combat_state == "Combat" and Config:GetSetting('CombatModRod') and (mq.TLO.Group.LowMana(pct)() or -1) >= Config:GetSetting('GroupManaCt') and
                     not Casting.IAmFeigning()

@@ -242,7 +242,7 @@ return {
             name = 'Downtime',
             targetId = function(self) return { mq.TLO.Me.ID(), } end,
             cond = function(self, combat_state)
-                return combat_state == "Downtime" and Casting.DoBuffCheck() and Casting.AmIBuffable()
+                return combat_state == "Downtime" and Casting.OkayToBuff() and Casting.AmIBuffable()
             end,
         },
         {
@@ -425,10 +425,8 @@ return {
             {
                 name = "PoisonName",
                 type = "ClickyItem",
-                cond = function(self, _)
-                    local poisonItem = mq.TLO.FindItem(Config:GetSetting('PoisonName'))
-                    return poisonItem and poisonItem() and poisonItem.Timer.TotalSeconds() == 0 and
-                        not Casting.IHaveBuff(poisonItem.Spell.ID())
+                cond = function(self)
+                    return Casting.SelfBuffItemCheck(Config:GetSetting('PoisonName'))
                 end,
             },
             {
@@ -486,7 +484,7 @@ return {
                 name = "Intimidation",
                 type = "Ability",
                 cond = function(self, abilityName)
-                    return (mq.TLO.Me.AltAbility("Intimidation").Rank() or 0) > 1
+                    return Casting.AARank("Intimidation") > 1
                 end,
             },
         },
@@ -567,10 +565,8 @@ return {
                     local poisonItem = mq.TLO.FindItem(Config:GetSetting('PoisonName'))
                     return poisonItem and poisonItem() and Casting.IHaveBuff(poisonItem.Spell.ID() or 0)
                 end,
-                cond = function(self, _)
-                    local poisonItem = mq.TLO.FindItem(Config:GetSetting('PoisonName'))
-                    return mq.TLO.Me.ItemReady(Config:GetSetting('PoisonName'))() and
-                        not Casting.IHaveBuff(poisonItem.Spell.ID())
+                cond = function(self)
+                    return Casting.SelfBuffItemCheck(Config:GetSetting('PoisonName'))
                 end,
             },
             {

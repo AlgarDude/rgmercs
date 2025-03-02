@@ -911,7 +911,7 @@ local _ClassConfig = {
             name = 'Downtime',
             targetId = function(self) return { mq.TLO.Me.ID(), } end,
             cond = function(self, combat_state)
-                return combat_state == "Downtime" and Casting.DoBuffCheck() and Casting.AmIBuffable()
+                return combat_state == "Downtime" and Casting.OkayToBuff() and Casting.AmIBuffable()
             end,
         },
         { --Summon pet even when buffs are off on emu
@@ -920,7 +920,7 @@ local _ClassConfig = {
             load_cond = function(self) return Core.OnEMU() end,
             cond = function(self, combat_state)
                 if not Config:GetSetting('DoPet') or mq.TLO.Me.Pet.ID() ~= 0 then return false end
-                return combat_state == "Downtime" and (not Core.IsModeActive('Heal') or Core.OkayToNotHeal()) and Casting.DoPetCheck() and Casting.AmIBuffable()
+                return combat_state == "Downtime" and (not Core.IsModeActive('Heal') or Core.OkayToNotHeal()) and Casting.OkayToPetBuff()() and Casting.AmIBuffable()
             end,
         },
         {
@@ -930,7 +930,7 @@ local _ClassConfig = {
                 return Casting.GetBuffableGroupIDs()
             end,
             cond = function(self, combat_state)
-                return combat_state == "Downtime" and Casting.DoBuffCheck()
+                return combat_state == "Downtime" and Casting.OkayToBuff()
             end,
         },
         {
@@ -939,7 +939,7 @@ local _ClassConfig = {
             steps = 1,
             targetId = function(self) return mq.TLO.Target.ID() == Config.Globals.AutoTargetID and { Config.Globals.AutoTargetID, } or {} end,
             cond = function(self, combat_state)
-                return combat_state == "Combat" and not Casting.IAmFeigning() and Casting.DebuffConCheck()
+                return combat_state == "Combat" and not Casting.IAmFeigning() and Casting.OkayToDebuff()
             end,
         },
         {
@@ -979,7 +979,8 @@ local _ClassConfig = {
                 name = "SunrayDot",
                 type = "Spell",
                 cond = function(self, spell)
-                    return Core.IsModeActive("Heal") and Config:GetSetting('DoFire') and Casting.DotSpellCheck(spell) and Config:GetSetting('DoDot') and Casting.ReagentCheck(spell)
+                    return Core.IsModeActive("Heal") and Config:GetSetting('DoFire') and Casting.DotSpellCheck(spell) and Config:GetSetting('DoDot') and
+                        Casting.ReagentCheck(spell)
                 end,
             },
             {
@@ -1004,7 +1005,8 @@ local _ClassConfig = {
                 name = "SunDot",
                 type = "Spell",
                 cond = function(self, spell)
-                    return Core.IsModeActive("Mana") or (Core.IsModeActive("Heal") and Config:GetSetting('DoFire')) and Casting.DotSpellCheck(spell) and Config:GetSetting('DoDot')
+                    return Core.IsModeActive("Mana") or
+                        (Core.IsModeActive("Heal") and Config:GetSetting('DoFire')) and Casting.DotSpellCheck(spell) and Config:GetSetting('DoDot')
                 end,
             },
             {
@@ -1166,14 +1168,14 @@ local _ClassConfig = {
             {
                 name = "RoDebuff",
                 type = "Spell",
-                cond = function(self, spell) return Casting.DotSpellCheck(spell) end,
+                cond = function(self, spell) return Casting.DetSpellCheck(spell) end,
             },
             {
                 name = "Blessing of Ro",
                 type = "AA",
                 cond = function(self, aaName, target)
                     local aaSpell = Casting.GetAASpell(aaName)
-                    return Casting.DetAACheck(aaName, target) and Casting.ReagentCheck(aaSpell and aaSpell.Trigger(1) or aaName)
+                    return Casting.DetAACheck(aaName) and Casting.ReagentCheck(aaSpell and aaSpell.Trigger(1) or aaName)
                 end,
             },
             {

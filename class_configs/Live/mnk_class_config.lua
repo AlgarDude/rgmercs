@@ -252,7 +252,7 @@ local _ClassConfig = {
             name = 'Downtime',
             targetId = function(self) return { mq.TLO.Me.ID(), } end,
             cond = function(self, combat_state)
-                return combat_state == "Downtime" and Casting.DoBuffCheck() and Casting.AmIBuffable()
+                return combat_state == "Downtime" and Casting.OkayToBuff() and Casting.AmIBuffable()
             end,
         },
         {
@@ -523,7 +523,7 @@ local _ClassConfig = {
                 type = "Disc",
                 cond = function(self, discSpell)
                     if not Config:GetSetting('DoAlliance') then return false end
-                    return not Casting.TargetHasBuffByName(discSpell.Trigger(1))
+                    return not Casting.TargetHasBuff(discSpell.Trigger(1))
                 end,
             },
             {
@@ -556,8 +556,8 @@ local _ClassConfig = {
             {
                 name = "Two-Finger Wasp Touch",
                 type = "AA",
-                cond = function(self, aaName, target) --DotSpellCheck used in part to not blow this on low-health mobs
-                    return Casting.DotSpellCheck(mq.TLO.Me.AltAbility(aaName).Spell)
+                cond = function(self, aaName, target) --DotSpellCheck used to not blow this on low-health mobs
+                    return Casting.DotSpellCheck(Casting.GetAASpell(aaName))
                 end,
             },
             {
@@ -580,7 +580,7 @@ local _ClassConfig = {
                 name = "Intimidation",
                 type = "Ability",
                 cond = function(self, abilityName)
-                    return (mq.TLO.Me.AltAbility("Intimidation").Rank() or 0) > 1
+                    return Casting.AARank("Intimidation") > 1
                 end,
             },
             {

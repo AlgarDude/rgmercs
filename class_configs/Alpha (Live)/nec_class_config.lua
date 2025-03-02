@@ -757,7 +757,7 @@ local _ClassConfig = {
             name = 'Downtime',
             targetId = function(self) return { mq.TLO.Me.ID(), } end,
             cond = function(self, combat_state)
-                return combat_state == "Downtime" and Casting.DoBuffCheck() and Casting.AmIBuffable()
+                return combat_state == "Downtime" and Casting.OkayToBuff() and Casting.AmIBuffable()
             end,
         },
         {
@@ -774,7 +774,7 @@ local _ClassConfig = {
             name = 'PetSummon',
             targetId = function(self) return { mq.TLO.Me.ID(), } end,
             cond = function(self, combat_state)
-                return combat_state == "Downtime" and Casting.DoPetCheck() and mq.TLO.Me.Pet.ID() == 0 and not Core.IsCharming() and Casting.AmIBuffable()
+                return combat_state == "Downtime" and Casting.OkayToPetBuff()() and mq.TLO.Me.Pet.ID() == 0 and not Core.IsCharming() and Casting.AmIBuffable()
             end,
         },
         { --Pet Buffs if we have one, timer because we don't need to constantly check this
@@ -782,7 +782,7 @@ local _ClassConfig = {
             timer = 30,
             targetId = function(self) return mq.TLO.Me.Pet.ID() > 0 and { mq.TLO.Me.Pet.ID(), } or {} end,
             cond = function(self, combat_state)
-                return combat_state == "Downtime" and mq.TLO.Me.Pet.ID() > 0 and Casting.DoPetCheck()
+                return combat_state == "Downtime" and mq.TLO.Me.Pet.ID() > 0 and Casting.OkayToPetBuff()()
             end,
         },
         {
@@ -937,7 +937,7 @@ local _ClassConfig = {
                 name = "SwarmPet",
                 type = "Spell",
                 cond = function(self, spell, target)
-                    return (not Casting.DotSpellCheck(spell) or Casting.BurnCheck()) and Casting.HaveManaToNuke()
+                    return (not Casting.EnoughHPToDot() or Targeting.IsNamed(target)) and Casting.HaveManaToNuke()
                 end,
             },
             {
@@ -951,7 +951,7 @@ local _ClassConfig = {
                 name = "FireNuke",
                 type = "Spell",
                 cond = function(self, spell, target)
-                    return (not Casting.DotSpellCheck(spell) or Casting.BurnCheck()) and Casting.HaveManaToNuke()
+                    return not Casting.EnoughHPToDot() and Casting.HaveManaToNuke()
                 end,
             },
             {
@@ -1169,7 +1169,7 @@ local _ClassConfig = {
         end,
 
         DoRez = function(self, corpseId)
-            if Config:GetSetting('DoBattleRez') or Casting.DoBuffCheck() then
+            if Config:GetSetting('DoBattleRez') or Casting.OkayToBuff() then
                 Targeting.SetTarget(corpseId)
 
                 local target = mq.TLO.Target

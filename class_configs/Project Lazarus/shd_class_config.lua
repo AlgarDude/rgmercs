@@ -729,14 +729,14 @@ local _ClassConfig = {
             name = 'Downtime',
             targetId = function(self) return { mq.TLO.Me.ID(), } end,
             cond = function(self, combat_state)
-                return combat_state == "Downtime" and Casting.DoBuffCheck() and Casting.AmIBuffable()
+                return combat_state == "Downtime" and Casting.OkayToBuff() and Casting.AmIBuffable()
             end,
         },
         { --Summon pet even when buffs are off on emu
             name = 'PetSummon',
             targetId = function(self) return { mq.TLO.Me.ID(), } end,
             cond = function(self, combat_state)
-                return combat_state == "Downtime" and mq.TLO.Me.Pet.ID() == 0 and Casting.DoPetCheck() and Casting.AmIBuffable()
+                return combat_state == "Downtime" and mq.TLO.Me.Pet.ID() == 0 and Casting.OkayToPetBuff()() and Casting.AmIBuffable()
             end,
         },
         { --Pet Buffs if we have one, timer because we don't need to constantly check this
@@ -744,7 +744,7 @@ local _ClassConfig = {
             timer = 60,
             targetId = function(self) return mq.TLO.Me.Pet.ID() > 0 and { mq.TLO.Me.Pet.ID(), } or {} end,
             cond = function(self, combat_state)
-                return combat_state == "Downtime" and mq.TLO.Me.Pet.ID() > 0 and Casting.DoPetCheck()
+                return combat_state == "Downtime" and mq.TLO.Me.Pet.ID() > 0 and Casting.OkayToPetBuff()()
             end,
         },
         { --Actions that establish or maintain hatred
@@ -1575,7 +1575,7 @@ local _ClassConfig = {
                 name = "PoisonDot",
                 type = "Spell",
                 tooltip = Tooltips.PoisonDot,
-                cond = function(self, spell)
+                cond = function(self, spell, target)
                     if not Config:GetSetting('DoPoisonDot') then return false end
                     return Casting.HaveManaToDot() and Casting.DotSpellCheck(spell)
                 end,
@@ -1584,7 +1584,7 @@ local _ClassConfig = {
                 name = "CorruptionDot",
                 type = "Spell",
                 tooltip = Tooltips.PoisonDot,
-                cond = function(self, spell)
+                cond = function(self, spell, target)
                     if not Config:GetSetting('DoCorruptionDot') then return false end
                     return Casting.HaveManaToDot() and Casting.DotSpellCheck(spell)
                 end,
