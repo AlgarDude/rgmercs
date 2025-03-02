@@ -1008,23 +1008,19 @@ local _ClassConfig = {
                 name = "Distant Conflagration",
                 type = "AA",
                 cond = function(self)
-                    return not mq.TLO.Me.Buff("Twincast")()
+                    return not Casting.IHaveBuff("Twincast")
                 end,
             },
             {
                 name = "Improved Twincast",
                 type = "AA",
                 cond = function(self)
-                    return not mq.TLO.Me.Buff("Twincast")()
+                    return not Casting.IHaveBuff("Twincast")
                 end,
             },
             {
                 name = "Group Spirit of the Great Wolf",
                 type = "AA",
-                active_cond = function(self, aaName)
-                    return Casting.IHaveBuff(mq.TLO.Me.AltAbility(aaName)
-                        .Spell.ID())
-                end,
                 cond = function(self, aaName)
                     return Casting.SelfBuffAACheck(aaName)
                 end,
@@ -1061,7 +1057,7 @@ local _ClassConfig = {
                 name = "TwincastSpell",
                 type = "Spell",
                 cond = function(self)
-                    return not mq.TLO.Me.Buff("Twincast")()
+                    return not Casting.IHaveBuff("Twincast")
                 end,
             },
         },
@@ -1126,7 +1122,7 @@ local _ClassConfig = {
             {
                 name = "GroupDmgShield",
                 type = "Spell",
-                active_cond = function(self, spell) return Casting.IHaveBuff(spell.ID()) end,
+                active_cond = function(self, spell) return Casting.IHaveBuff(spell) end,
                 cond = function(self, spell, target)
                     return Casting.GroupBuffCheck(spell, target)
                 end,
@@ -1148,7 +1144,7 @@ local _ClassConfig = {
             {
                 name = "MoveSpells",
                 type = "Spell",
-                active_cond = function(self, spell) return Casting.IHaveBuff(spell.ID()) end,
+                active_cond = function(self, spell) return Casting.IHaveBuff(spell) end,
                 cond = function(self, spell, target)
                     local aaSpellLvl = mq.TLO.Me.AltAbility("Spirit of Eagles").Spell.Trigger(1).Level() or 0
                     if not Config:GetSetting("DoMoveBuffs") or aaSpellLvl >= (spell.Level() or 0) then return false end
@@ -1158,7 +1154,7 @@ local _ClassConfig = {
             {
                 name = "AtkBuff",
                 type = "Spell",
-                active_cond = function(self, spell) return Casting.IHaveBuff(spell.ID()) end,
+                active_cond = function(self, spell) return Casting.IHaveBuff(spell) end,
                 cond = function(self, spell, target)
                     return Config.Constants.RGMelee:contains(target.Class.ShortName()) and Casting.GroupBuffCheck(spell, target)
                 end,
@@ -1174,7 +1170,7 @@ local _ClassConfig = {
             {
                 name = "HPTypeOneGroup",
                 type = "Spell",
-                active_cond = function(self, spell) return Casting.IHaveBuff(spell.ID()) end,
+                active_cond = function(self, spell) return Casting.IHaveBuff(spell) end,
                 cond = function(self, spell, target)
                     if not Config:GetSetting('DoHPBuff') then return false end
                     return Casting.GroupBuffCheck(spell, target)
@@ -1183,7 +1179,6 @@ local _ClassConfig = {
             {
                 name = "ReptileCombatInnate",
                 type = "Spell",
-                active_cond = function(self, spell) return true end,
                 cond = function(self, spell, target)
                     return Targeting.TargetClassIs({ "WAR", "SHD", }, target) and Casting.GroupBuffCheck(spell, target) --does not stack with PAL innate buff
                 end,
@@ -1191,7 +1186,7 @@ local _ClassConfig = {
             {
                 name = "GroupRegenBuff",
                 type = "Spell",
-                active_cond = function(self, spell) return Casting.IHaveBuff(spell.ID()) end,
+                active_cond = function(self, spell) return Casting.IHaveBuff(spell) end,
                 cond = function(self, spell, target)
                     if not Config:GetSetting('DoGroupRegen') then return false end
                     return Casting.GroupBuffCheck(spell, target)
@@ -1200,7 +1195,6 @@ local _ClassConfig = {
             {
                 name = "Wrath of the Wild",
                 type = "AA",
-                active_cond = function(self, aaName) return true end,
                 cond = function(self, aaName, target)
                     return Targeting.TargetIsMA(target) and Casting.GroupBuffCheck(mq.TLO.Me.AltAbility(aaName).Spell, target)
                 end,
@@ -1225,16 +1219,13 @@ local _ClassConfig = {
             {
                 name = "ManaBear",
                 type = "Spell",
-                active_cond = function(self, spell) return Casting.IHaveBuff(spell.ID()) end,
+                active_cond = function(self, spell) return Casting.IHaveBuff(spell) end,
                 cond = function(self, spell) return (spell and spell() and spell.MyCastTime() or 999999) < 30000 end,
             },
             {
                 name = "Group Spirit of the Great Wolf",
                 type = "AA",
-                active_cond = function(self, aaName)
-                    return Casting.IHaveBuff(mq.TLO.Me.AltAbility(aaName)
-                        .Spell.ID())
-                end,
+                active_cond = function(self, aaName) return Casting.IHaveBuff(aaName) end,
                 cond = function(self, aaName)
                     return Casting.SelfBuffAACheck(aaName)
                 end,
@@ -1242,10 +1233,7 @@ local _ClassConfig = {
             {
                 name = "Spirit of the Great Wolf",
                 type = "AA",
-                active_cond = function(self, aaName)
-                    return Casting.IHaveBuff(mq.TLO.Me.AltAbility(aaName)
-                        .Spell.ID())
-                end,
+                active_cond = function(self, aaName) return Casting.IHaveBuff(aaName) end,
                 cond = function(self, aaName)
                     return Casting.SelfBuffAACheck(aaName) and mq.TLO.Me.AltAbility(aaName).Spell.RankName.Stacks()
                 end,
@@ -1253,22 +1241,19 @@ local _ClassConfig = {
             {
                 name = "SelfShield",
                 type = "Spell",
-                active_cond = function(self, spell) return Casting.IHaveBuff(spell.ID()) end,
+                active_cond = function(self, spell) return Casting.IHaveBuff(spell) end,
                 cond = function(self, spell) return Casting.SelfBuffCheck(spell) end,
             },
             {
                 name = "SelfManaRegen",
                 type = "Spell",
-                active_cond = function(self, spell) return Casting.IHaveBuff(spell.ID()) end,
+                active_cond = function(self, spell) return Casting.IHaveBuff(spell) end,
                 cond = function(self, spell) return Casting.SelfBuffCheck(spell) end,
             },
             {
                 name = "Preincarnation",
                 type = "AA",
-                active_cond = function(self, aaName)
-                    return Casting.IHaveBuff(mq.TLO.Me.AltAbility(aaName)
-                        .Spell.ID())
-                end,
+                active_cond = function(self, aaName) return Casting.IHaveBuff(aaName) end,
                 cond = function(self, aaName)
                     return Casting.SelfBuffAACheck(aaName)
                 end,

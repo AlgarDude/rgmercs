@@ -1467,7 +1467,7 @@ _ClassConfig      = {
                 name = "Improved Twincast",
                 type = "AA",
                 cond = function(self)
-                    return not mq.TLO.Me.Buff("Twincast")()
+                    return not Casting.IHaveBuff("Twincast")
                 end,
             },
             {

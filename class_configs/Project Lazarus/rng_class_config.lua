@@ -966,7 +966,7 @@ local _ClassConfig = {
                 name = "Protectionbuff",
                 type = "Spell",
                 tooltip = Tooltips.Protectionbuff,
-                active_cond = function(self, spell) return Casting.IHaveBuff(spell.RankName.ID()) end,
+                active_cond = function(self, spell) return Casting.IHaveBuff(spell) end,
                 cond = function(self, spell)
                     return not castWSU() and Casting.SelfBuffCheck(spell)
                 end,
@@ -975,7 +975,7 @@ local _ClassConfig = {
                 name = "ParryProcBuff",
                 type = "Spell",
                 tooltip = Tooltips.ParryProcBuff,
-                active_cond = function(self, spell) return Casting.IHaveBuff(spell.RankName.ID()) end,
+                active_cond = function(self, spell) return Casting.IHaveBuff(spell) end,
                 cond = function(self, spell)
                     return not castWSU() and Casting.SelfBuffCheck(spell)
                 end,
@@ -984,7 +984,7 @@ local _ClassConfig = {
                 name = "Hunt",
                 type = "Spell",
                 tooltip = Tooltips.Hunt,
-                active_cond = function(self, spell) return Casting.IHaveBuff(spell.RankName.ID()) end,
+                active_cond = function(self, spell) return Casting.IHaveBuff(spell) end,
                 cond = function(self, spell)
                     return not castWSU() and Casting.SelfBuffCheck(spell)
                 end,
@@ -993,7 +993,7 @@ local _ClassConfig = {
                 name = "Eyes",
                 type = "Spell",
                 tooltip = Tooltips.Eyes,
-                active_cond = function(self, spell) return Casting.IHaveBuff(spell.RankName.ID()) end,
+                active_cond = function(self, spell) return Casting.IHaveBuff(spell) end,
                 cond = function(self, spell)
                     return not castWSU() and Casting.SelfBuffCheck(spell) and not Casting.IHaveBuff(spell.ID()) and not Config:GetSetting('DoMask')
                 end,
@@ -1002,7 +1002,7 @@ local _ClassConfig = {
                 name = "GroupPredatorBuff",
                 type = "Spell",
                 tooltip = Tooltips.GroupPredatorBuff,
-                active_cond = function(self, spell) return Casting.IHaveBuff(spell.RankName.ID()) end,
+                active_cond = function(self, spell) return Casting.IHaveBuff(spell) end,
                 cond = function(self, spell)
                     return Casting.SelfBuffCheck(spell)
                 end,
@@ -1011,7 +1011,7 @@ local _ClassConfig = {
                 name = "ShoutBuff",
                 type = "Spell",
                 tooltip = Tooltips.ShoutBuff,
-                active_cond = function(self, spell) return Casting.IHaveBuff(spell.RankName.ID()) end,
+                active_cond = function(self, spell) return Casting.IHaveBuff(spell) end,
                 cond = function(self, spell)
                     return Casting.SelfBuffCheck(spell) and not Casting.IHaveBuff("Shared " .. spell.Name())
                 end,
@@ -1020,7 +1020,7 @@ local _ClassConfig = {
                 name = "GroupStrengthBuff",
                 type = "Spell",
                 tooltip = Tooltips.GroupStrengthBuff,
-                active_cond = function(self, spell) return Casting.IHaveBuff(spell.RankName.ID()) end,
+                active_cond = function(self, spell) return Casting.IHaveBuff(spell) end,
                 cond = function(self, spell)
                     return Casting.SelfBuffCheck(spell) and not Casting.IHaveBuff("Shared " .. spell.Name())
                 end,
@@ -1029,7 +1029,7 @@ local _ClassConfig = {
                 name = "Rathe",
                 type = "Spell",
                 tooltip = Tooltips.Rathe,
-                active_cond = function(self, spell) return Casting.IHaveBuff(spell.RankName.ID()) end,
+                active_cond = function(self, spell) return Casting.IHaveBuff(spell) end,
                 cond = function(self, spell)
                     return Casting.SelfBuffCheck(spell) and not Casting.IHaveBuff("Shared " .. spell.Name())
                 end,
@@ -1038,7 +1038,7 @@ local _ClassConfig = {
                 name = "GroupEnrichmentBuff",
                 type = "Spell",
                 tooltip = Tooltips.GroupEnrichmentBuff,
-                active_cond = function(self, spell) return Casting.IHaveBuff(spell.RankName.ID()) end,
+                active_cond = function(self, spell) return Casting.IHaveBuff(spell) end,
                 cond = function(self, spell)
                     return Casting.SelfBuffCheck(spell)
                 end,
@@ -1047,7 +1047,7 @@ local _ClassConfig = {
                 name = "Coat",
                 type = "Spell",
                 tooltip = Tooltips.Coat,
-                active_cond = function(self, spell) return Casting.IHaveBuff(spell.RankName.ID()) end,
+                active_cond = function(self, spell) return Casting.IHaveBuff(spell) end,
                 cond = function(self, spell)
                     return Casting.SelfBuffCheck(spell)
                 end,
@@ -1056,7 +1056,7 @@ local _ClassConfig = {
                 name = "Mask",
                 type = "Spell",
                 tooltip = Tooltips.Mask,
-                active_cond = function(self, spell) return Casting.IHaveBuff(spell.RankName.ID()) end,
+                active_cond = function(self, spell) return Casting.IHaveBuff(spell) end,
                 cond = function(self, spell)
                     return Casting.SelfBuffCheck(spell) and Config:GetSetting('DoMask')
                 end,
@@ -1065,7 +1065,7 @@ local _ClassConfig = {
                 name = "FireFist",
                 type = "Spell",
                 tooltip = Tooltips.FireFist,
-                active_cond = function(self, spell) return Casting.IHaveBuff(spell.RankName.ID()) end,
+                active_cond = function(self, spell) return Casting.IHaveBuff(spell) end,
                 cond = function(self, spell)
                     return Config:GetSetting('DoFireFist')
                         and Casting.SelfBuffCheck(spell)
@@ -1075,7 +1075,7 @@ local _ClassConfig = {
                 name = "DsBuff",
                 type = "Spell",
                 tooltip = Tooltips.DsBuff,
-                active_cond = function(self, spell) return Casting.IHaveBuff(spell.RankName.ID()) end,
+                active_cond = function(self, spell) return Casting.IHaveBuff(spell) end,
                 cond = function(self, spell)
                     return Casting.SelfBuffCheck(spell)
                 end,
@@ -1084,7 +1084,7 @@ local _ClassConfig = {
                 name = "SkinLike",
                 type = "Spell",
                 tooltip = Tooltips.SkinLike,
-                active_cond = function(self, spell) return Casting.IHaveBuff(spell.RankName.ID()) end,
+                active_cond = function(self, spell) return Casting.IHaveBuff(spell) end,
                 cond = function(self, spell)
                     return Casting.SelfBuffCheck(spell)
                 end,
@@ -1093,7 +1093,7 @@ local _ClassConfig = {
                 name = "MoveSpells",
                 type = "Spell",
                 tooltip = Tooltips.MoveSpells,
-                active_cond = function(self, spell) return Config:GetSetting('DoRunSpeed') and Casting.IHaveBuff(spell.RankName.ID()) end,
+                active_cond = function(self, spell) return Config:GetSetting('DoRunSpeed') and Casting.IHaveBuff(spell) end,
                 cond = function(self, spell)
                     return Casting.SelfBuffCheck(spell)
                 end,
@@ -1102,7 +1102,7 @@ local _ClassConfig = {
                 name = "AgiBuff",
                 type = "Spell",
                 tooltip = Tooltips.AgiBuff,
-                active_cond = function(self, spell) return Casting.IHaveBuff(spell.RankName.ID()) end,
+                active_cond = function(self, spell) return Casting.IHaveBuff(spell) end,
                 cond = function(self, spell)
                     return Casting.SelfBuffCheck(spell)
                 end,
@@ -1111,7 +1111,7 @@ local _ClassConfig = {
                 name = "Cloak",
                 type = "Spell",
                 tooltip = Tooltips.Cloak,
-                active_cond = function(self, spell) return Casting.IHaveBuff(spell.RankName.ID()) end,
+                active_cond = function(self, spell) return Casting.IHaveBuff(spell) end,
                 cond = function(self, spell)
                     return Casting.SelfBuffCheck(spell)
                 end,
@@ -1120,7 +1120,7 @@ local _ClassConfig = {
                 name = "Veil",
                 type = "Spell",
                 tooltip = Tooltips.Veil,
-                active_cond = function(self, spell) return Casting.IHaveBuff(spell.RankName.ID()) end,
+                active_cond = function(self, spell) return Casting.IHaveBuff(spell) end,
                 cond = function(self, spell)
                     return Casting.SelfBuffCheck(spell)
                 end,
@@ -1176,7 +1176,7 @@ local _ClassConfig = {
                 name = "Rathe",
                 type = "Spell",
                 tooltip = Tooltips.Rathe,
-                active_cond = function(self, spell) return Casting.IHaveBuff(spell.RankName.ID()) end,
+                active_cond = function(self, spell) return Casting.IHaveBuff(spell) end,
                 cond = function(self, spell, target)
                     return Casting.GroupBuffCheck(spell)
                 end,

@@ -994,7 +994,7 @@ local _ClassConfig = {
             {
                 name = "ArmorSelfBuff",
                 type = "Spell",
-                active_cond = function(self, spell) return Casting.IHaveBuff(spell.RankName.ID()) end,
+                active_cond = function(self, spell) return Casting.IHaveBuff(spell) end,
                 cond = function(self, spell)
                     return self.ClassConfig.HelperFunctions.SingleBuffCheck() and Casting.SelfBuffCheck(spell)
                 end,
@@ -1002,7 +1002,7 @@ local _ClassConfig = {
             {
                 name = "FuryProc",
                 type = "Spell",
-                active_cond = function(self, spell) return Casting.IHaveBuff(spell.RankName.ID()) end,
+                active_cond = function(self, spell) return Casting.IHaveBuff(spell) end,
                 cond = function(self, spell)
                     return self.ClassConfig.HelperFunctions.SingleBuffCheck() and Casting.SelfBuffCheck(spell)
                 end,
@@ -1010,6 +1010,7 @@ local _ClassConfig = {
             {
                 name = "UndeadProc",
                 type = "Spell",
+                active_cond = function(self, spell) return Casting.IHaveBuff(spell) end,
                 cond = function(self, spell) --use this always until we have a Fury proc, and optionally after that, up until the point that Fury is rolled into DPU
                     if (mq.TLO.Me.AltAbility("Divine Protector's Unity").Rank() or 0) > 1 or (Core.GetResolvedActionMapItem("FuryProc") and not Config:GetSetting('DoUndeadProc')) then return false end
                     return Casting.SelfBuffCheck(spell)
@@ -1018,7 +1019,7 @@ local _ClassConfig = {
             {
                 name = "Remorse",
                 type = "Spell",
-                active_cond = function(self, spell) return Casting.IHaveBuff(spell.RankName.ID()) end,
+                active_cond = function(self, spell) return Casting.IHaveBuff(spell) end,
                 cond = function(self, spell)
                     return self.ClassConfig.HelperFunctions.SingleBuffCheck() and Casting.SelfBuffCheck(spell)
                 end,
@@ -1026,7 +1027,7 @@ local _ClassConfig = {
             {
                 name = "Piety",
                 type = "Spell",
-                active_cond = function(self, spell) return Casting.IHaveBuff(spell.RankName.ID()) end,
+                active_cond = function(self, spell) return Casting.IHaveBuff(spell) end,
                 cond = function(self, spell)
                     return self.ClassConfig.HelperFunctions.SingleBuffCheck() and Casting.SelfBuffCheck(spell)
                 end,
@@ -1037,6 +1038,7 @@ local _ClassConfig = {
             {
                 name = "Preservation",
                 type = "Spell",
+                active_cond = function(self, spell) return Casting.IHaveBuff(spell) end,
                 cond = function(self, spell)
                     return Casting.SelfBuffCheck(spell) and Core.IsModeActive("Tank") and (mq.TLO.Me.Buff(spell).Duration.TotalSeconds() or 0) < 30
                 end,
@@ -1044,7 +1046,7 @@ local _ClassConfig = {
             {
                 name = "TempHP",
                 type = "Spell",
-                active_cond = function(self, spell) return Casting.IHaveBuff(spell.RankName.ID()) end,
+                active_cond = function(self, spell) return Casting.IHaveBuff(spell) end,
                 cond = function(self, spell)
                     if not Config:GetSetting('DoTempHP') then return false end
                     return spell.RankName.Stacks() and (mq.TLO.Me.Buff(spell).Duration.TotalSeconds() or 0) < 45
@@ -1053,6 +1055,7 @@ local _ClassConfig = {
             {
                 name = "Incoming",
                 type = "Spell",
+                active_cond = function(self, spell) return Casting.IHaveBuff(spell) end,
                 cond = function(self, spell)
                     return spell.RankName.Stacks() and Core.IsModeActive("Tank") and (mq.TLO.Me.Buff(spell).Duration.TotalSeconds() or 0) < 15
                 end,
@@ -1060,6 +1063,7 @@ local _ClassConfig = {
             {
                 name = "HealWard",
                 type = "Spell",
+                active_cond = function(self, spell) return Casting.IHaveBuff(spell) end,
                 cond = function(self, spell, target)
                     return spell.RankName.Stacks() and Core.IsModeActive("Tank") and (mq.TLO.Me.Song(spell).Duration.TotalSeconds() or 0) < 15
                 end,
@@ -1087,7 +1091,7 @@ local _ClassConfig = {
             {
                 name = "Brells",
                 type = "Spell",
-                active_cond = function(self, spell) return Casting.IHaveBuff(spell.ID()) end,
+                active_cond = function(self, spell) return Casting.IHaveBuff(spell) end,
                 cond = function(self, spell)
                     if not Config:GetSetting('DoBrells') then return false end
                     return Casting.SelfBuffCheck(spell)
@@ -1096,7 +1100,7 @@ local _ClassConfig = {
             {
                 name = "Aego",
                 type = "Spell",
-                active_cond = function(self, spell) return Casting.IHaveBuff(spell.ID()) end,
+                active_cond = function(self, spell) return Casting.IHaveBuff(spell) end,
                 cond = function(self, spell)
                     if Config:GetSetting('AegoSymbol') ~= 1 then return false end
                     return Casting.SelfBuffCheck(spell)
@@ -1105,7 +1109,7 @@ local _ClassConfig = {
             {
                 name = "Symbol",
                 type = "Spell",
-                active_cond = function(self, spell) return Casting.IHaveBuff(spell.ID()) end,
+                active_cond = function(self, spell) return Casting.IHaveBuff(spell) end,
                 cond = function(self, spell)
                     if Config:GetSetting('AegoSymbol') ~= 2 then return false end
                     return Casting.SelfBuffCheck(spell)

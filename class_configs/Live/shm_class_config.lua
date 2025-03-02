@@ -1277,7 +1277,7 @@ local _ClassConfig = {
             {
                 name = "GroupHealProcBuff",
                 type = "Spell",
-                active_cond = function(self, spell) return Casting.IHaveBuff(spell.ID()) end,
+                active_cond = function(self, spell) return Casting.IHaveBuff(spell) end,
                 cond = function(self, spell)
                     return Casting.SelfBuffCheck(spell)
                 end,
@@ -1342,7 +1342,7 @@ local _ClassConfig = {
             {
                 name = "PackSelfBuff",
                 type = "Spell",
-                active_cond = function(self, spell) return Casting.IHaveBuff(spell.ID()) end,
+                active_cond = function(self, spell) return Casting.IHaveBuff(spell) end,
                 cond = function(self, spell)
                     if (mq.TLO.Me.AltAbility("Visionary's Unity").Rank() or 999) > 1 then return false end
                     return Casting.SelfBuffCheck(spell)
@@ -1351,7 +1351,7 @@ local _ClassConfig = {
             {
                 name = "WardBuff",
                 type = "Spell",
-                active_cond = function(self, spell) return Casting.IHaveBuff(spell.ID()) end,
+                active_cond = function(self, spell) return Casting.IHaveBuff(spell) end,
                 cond = function(self, spell)
                     if not Config:GetSetting('DoSelfWard') then return false end
                     return Casting.SelfBuffCheck(spell)
@@ -1425,7 +1425,7 @@ local _ClassConfig = {
             {
                 name = "SingleRegenBuff",
                 type = "Spell",
-                active_cond = function(self, spell) return Casting.IHaveBuff(spell.ID()) end,
+                active_cond = function(self, spell) return Casting.IHaveBuff(spell) end,
                 cond = function(self, spell, target)
                     if Core.GetResolvedActionMapItem('GroupRegenBuff') then return false end --We don't need this once we can use the group version
                     return (Config.Constants.RGTank:contains(target.Class.ShortName()) or target.ID() == mq.TLO.Me.ID()) and Casting.GroupBuffCheck(spell, target)
@@ -1434,7 +1434,7 @@ local _ClassConfig = {
             {
                 name = "GroupRegenBuff",
                 type = "Spell",
-                active_cond = function(self, spell) return Casting.IHaveBuff(spell.ID()) end,
+                active_cond = function(self, spell) return Casting.IHaveBuff(spell) end,
                 cond = function(self, spell, target)
                     if Core.GetResolvedActionMapItem('DichoSpell') or not Config:GetSetting('DoGroupRegen') then return false end --Dicho regen overwrites this
                     return Casting.GroupBuffCheck(spell, target)

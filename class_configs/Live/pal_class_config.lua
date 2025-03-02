@@ -1307,13 +1307,13 @@ return {
             {
                 name = "Brells",
                 type = "Spell",
-                active_cond = function(self, spell) return Casting.IHaveBuff(spell.ID()) end,
+                active_cond = function(self, spell) return Casting.IHaveBuff(spell) end,
                 cond = function(self, spell) return Casting.SelfBuffCheck(spell) and Config:GetSetting('DoBrells') end,
             },
             {
                 name = "Aego",
                 type = "Spell",
-                active_cond = function(self, spell) return Casting.IHaveBuff(spell.ID()) end,
+                active_cond = function(self, spell) return Casting.IHaveBuff(spell) end,
                 cond = function(self, spell)
                     if Config:GetSetting('AegoSymbol') ~= 1 then return false end
                     return Casting.SelfBuffCheck(spell)
@@ -1322,7 +1322,7 @@ return {
             {
                 name = "Symbol",
                 type = "Spell",
-                active_cond = function(self, spell) return Casting.IHaveBuff(spell.ID()) end,
+                active_cond = function(self, spell) return Casting.IHaveBuff(spell) end,
                 cond = function(self, spell)
                     if Config:GetSetting('AegoSymbol') ~= 2 then return false end
                     return Casting.SelfBuffCheck(spell)

@@ -1440,7 +1440,7 @@ _ClassConfig      = {
                 name = "Improved Twincast",
                 type = "AA",
                 cond = function(self)
-                    return not mq.TLO.Me.Buff("Twincast")()
+                    return not Casting.IHaveBuff("Twincast")
                 end,
             },
             {
@@ -1561,7 +1561,7 @@ _ClassConfig      = {
             {
                 name = "TwinCast",
                 type = "Spell",
-                cond = function(self, spell) return not mq.TLO.Me.Buff("Twincast")() end,
+                cond = function(self, spell) return not Casting.IHaveBuff("Twincast") end,
             },
             --   {
             --       name = "AllianceBuff",
