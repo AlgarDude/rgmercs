@@ -978,14 +978,14 @@ return {
                 name = "SnapNuke",
                 type = "Spell",
             },
-            {
+            { --use if GOM procs or if we have extra mana while burning
                 name = "FireEtherealNuke",
                 type = "Spell",
                 cond = function(self)
                     return Casting.GOMCheck() or (Casting.BurnCheck() and Casting.HaveManaToNuke())
                 end,
             },
-            {
+            { --use if GOM procs or if we have extra mana while burning
                 name = "IceEtherealNuke",
                 type = "Spell",
                 cond = function(self)

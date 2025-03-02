@@ -1116,7 +1116,7 @@ local _ClassConfig = {
                 type = "AA",
                 cond = function(self, aaName, target)
                     if not Config:GetSetting('DoSalvation') then return false end
-                    return Casting.GroupBuffCheck(mq.TLO.Me.AltAbility(aaName).Spell, target)
+                    return Casting.GroupBuffAACheck(aaName, target)
                 end,
             },
         },
@@ -1170,14 +1170,14 @@ local _ClassConfig = {
                 name = "Group Armor of The Inquisitor",
                 type = "AA",
                 cond = function(self, aaName)
-                    return not mq.TLO.Me.Song("Armor of the Inquisitor")() --searches for single and group version
+                    return not Casting.IHaveBuff("Armor of the Inquisitor")
                 end,
             },
             {
                 name = "Armor of the Inquisitor",
                 type = "AA",
                 cond = function(self, aaName)
-                    return not mq.TLO.Me.Song("Armor of the Inquisitor")() --searches for single and group version
+                    return not Casting.IHaveBuff("Armor of the Inquisitor")
                 end,
             },
             { --Chest Click, name function stops errors in rotation window when slot is empty
@@ -1301,7 +1301,7 @@ local _ClassConfig = {
                 type = "Disc",
                 cond = function(self, discSpell)
                     if not Core.IsTanking() then return false end
-                    return not ((discSpell.Level() or 0) < 108 and mq.TLO.Me.ActiveDisc.ID())
+                    return not ((discSpell.Level() or 0) < 108 and not Casting.NoDiscActive)
                 end,
             },
             {
@@ -1352,7 +1352,7 @@ local _ClassConfig = {
                 cond = function(self, spell, target)
                     if not Config:GetSetting('DoDicho') then return false end
                     local myHP = mq.TLO.Me.PctHPs()
-                    return (myHP <= Config:GetSetting('EmergencyStart') or (Casting.HaveManaToDot() and myHP <= Config:GetSetting('StartDicho')))
+                    return (myHP <= Config:GetSetting('EmergencyStart') or (Casting.HaveManaToNuke() and myHP <= Config:GetSetting('StartDicho')))
                 end,
             },
             {
@@ -1403,7 +1403,7 @@ local _ClassConfig = {
                 name = "Bash",
                 type = "Ability",
                 cond = function(self, abilityName, target)
-                    return (Core.ShieldEquipped() or Casting.CanUseAA("Improved Bash"))
+                    return Core.ShieldEquipped() or Casting.CanUseAA("Improved Bash")
                 end,
             },
             {
@@ -1443,7 +1443,7 @@ local _ClassConfig = {
                 name = "Disruptive Persecution",
                 type = "AA",
                 cond = function(self, aaName, target)
-                    return Casting.HaveManaToDot()
+                    return Casting.HaveManaToNuke()
                 end,
             },
             {
