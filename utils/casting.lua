@@ -22,11 +22,8 @@ Casting.UseGem        = mq.TLO.Me.NumGems()
 --- @return boolean Returns true if the player has the buff, false otherwise.
 function Casting.IHaveBuff(effect)
     if not effect then return false end
-    if type(effect) ~= "string" then
-        Logger.log_verbose("Non-string passed, converting: " .. effect())
-        effect = mq.TLO.Spell(effect)() or "nil"
-    end
-    Logger.log_verbose("Searching Buff and Song windows for %s.", effect())
+    if type(effect) ~= "string" then effect = mq.TLO.Spell(effect)() or "nil" end
+    Logger.log_verbose("Searching Buff and Song windows for %s.", effect)
     return (mq.TLO.Me.Buff(effect)() or mq.TLO.Me.Song(effect)()) and true or false
 end
 
@@ -62,11 +59,11 @@ function Casting.LocalBuffCheck(spell, checkPet)
     if not (spell and spell()) then return false end
     if checkPet and mq.TLO.Me.Pet.ID() == 0 then return false end
 
-    local entity = checkPet and mq.TLO.Me.Pet or mq.TLO.Me
+    local me = mq.TLO.Me
     local spellName = spell.RankName.Name()
     local spellID = spell.RankName.ID()
 
-    if not entity.FindBuff("id " .. spellID)() then
+    if not (checkPet and me.Pet.Buff(spellName) or me.FindBuff("id " .. spellID)()) then
         Logger.log_verbose("%s(ID:%d) not found, let's check for triggers.", spellName, spellID)
         local numEffects = mq.TLO.Spell(spellID).NumEffects()
         local triggerCount = 0
@@ -77,7 +74,7 @@ function Casting.LocalBuffCheck(spell, checkPet)
             if triggerSpell and triggerSpell() and triggerSpell.ID() > 0 then
                 local triggerName = triggerSpell.Name()
                 local triggerID = triggerSpell.ID()
-                if not entity.FindBuff("id" .. triggerID)() then
+                if not (checkPet and me.Pet.Buff(triggerName) or me.FindBuff("id " .. triggerID)()) then
                     Logger.log_verbose("%s(ID:%d) not found, checking stacking.", triggerName, triggerID)
                     if triggerSpell.Stacks() then
                         Logger.log_verbose("%s(ID:%d) seems to stack, let's do it!", triggerName, triggerID)
@@ -108,7 +105,7 @@ function Casting.LocalBuffCheck(spell, checkPet)
         Logger.log_verbose("%s(ID:%d) seems to stack, let's do it!", spellName, spellID)
         return true
     end
-    Logger.log_error("Tried to check buff stacking for %s(ID:%d), but something seems to have gone horribly wrong! Please report this.", spellName, spellID)
+    Logger.log_verbose("%s(ID:%d) does not seem to stack, ending check.", spellName, spellID)
     return false
 end
 
@@ -148,7 +145,7 @@ function Casting.TargetBuffCheck(spell, target, bAllowTargetChange)
             if triggerSpell and triggerSpell() and triggerSpell.ID() > 0 then
                 local triggerName = triggerSpell.Name()
                 local triggerID = triggerSpell.ID()
-                if not mq.TLO.Target.FindBuff("id" .. triggerID)() then
+                if not mq.TLO.Target.FindBuff("id " .. triggerID)() then
                     Logger.log_verbose("%s(ID:%d) not found on %s(ID:%d), checking stacking.", triggerName, triggerID, targetName, targetId)
                     if triggerSpell.StacksTarget() then
                         Logger.log_verbose("%s(ID:%d) seems to stack on %s(ID:%d), let's do it!", triggerName, triggerID, targetName, targetId)
@@ -178,7 +175,7 @@ function Casting.TargetBuffCheck(spell, target, bAllowTargetChange)
         Logger.log_verbose("%s(ID:%d) seems to stack on %s(ID:%d), let's do it!", spellName, spellID, targetName, targetId)
         return true
     end
-    Logger.log_error("Tried to check buff stacking for %s(ID:%d), but something seems to have gone horribly wrong! Please report this.")
+    Logger.log_verbose("%s(ID:%d) does not seem to stack, ending check.", spellName, spellID)
     return false
 end
 
@@ -751,7 +748,7 @@ function Casting.UseItem(itemName, targetId)
     end
 
     if targetId == mq.TLO.Me.ID() then
-        if Casting.IHaveBuff(item.Clicky.SpellID()) then
+        if Casting.IHaveBuff(item.Clicky.Spell.ID()) then
             Logger.log_debug("\awUseItem(\ag%s\aw): \arTried to use item - but the clicky buff is already active!", itemName)
             return false
         end
@@ -1543,7 +1540,7 @@ function Casting.ItemReady(itemName)
 end
 
 function Casting.ItemHasClicky(itemName)
-    return mq.TLO.FindItem("=" .. (itemName() or "None")).Clicky() and true or false --makes this an explicit boolean function
+    return mq.TLO.FindItem("=" .. (itemName or "None")).Clicky() and true or false --makes this an explicit boolean function
 end
 
 function Casting.GetClickySpell(itemName)

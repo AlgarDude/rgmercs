@@ -904,7 +904,6 @@ function Module:GiveTime(combat_state)
                     mq.TLO.Me.Heading.Degrees(),
                     (xtSpawn.Heading.Degrees() or 0))
                 Core.DoCmd("/stick moveback %d", Config:GetSetting('MovebackDistance'))
-                Logger.info("MoveBack triggered!")
                 mq.delay(500)
             end
         end

@@ -1436,7 +1436,7 @@ local _ClassConfig = {
                 cond = function(self, spell)
                     if not Config:GetSetting('DoDicho') then return false end
                     local myHP = mq.TLO.Me.PctHPs()
-                    return myHP <= Config:GetSetting('EmergencyStart') or (Casting.HaveManatoNuke() and myHP <= Config:GetSetting('StartDicho'))
+                    return myHP <= Config:GetSetting('EmergencyStart') or (Casting.HaveManaToNuke() and myHP <= Config:GetSetting('StartDicho'))
                 end,
             },
             {
