@@ -1197,7 +1197,7 @@ local _ClassConfig = {
                 retries = 0,
                 cond = function(self, spell)
                     if not Config:GetSetting('DoTwinHeal') then return false end
-                    return not mq.TLO.Me.Song("Healing Twincast")()
+                    return not Casting.IHaveBuff("Healing Twincast")
                 end,
             },
             {

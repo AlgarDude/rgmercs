@@ -1033,7 +1033,8 @@ local _ClassConfig = {
                 type = "Spell",
                 active_cond = function(self, spell) return mq.TLO.Me.FindBuff("id " .. tostring(spell.ID()))() ~= nil end,
                 cond = function(self, spell, target)
-                    return Targeting.TargetIsMelee(target) and Casting.GroupBuffCheck(spell, target)
+                    if not Targeting.TargetIsMelee(target) then return false end
+                    return Casting.GroupBuffCheck(spell, target)
                 end,
             },
             {
@@ -1088,7 +1089,7 @@ local _ClassConfig = {
                 type = "Spell",
                 active_cond = function(self, spell) return mq.TLO.Me.FindBuff("id " .. tostring(spell.ID()))() ~= nil end,
                 cond = function(self, spell, target)
-                    if Config:GetSetting('RuneChoice') ~= 2 or ((spell and spell.Level() or 0) > 73 and Targeting.TargetIsTank(target)) then return false end
+                    if Config:GetSetting('RuneChoice') ~= 2 or ((spell.Level() or 0) > 73 and Targeting.TargetIsTank(target)) then return false end
                     return Casting.GroupBuffCheck(spell, target) and Casting.ReagentCheck(spell)
                 end,
             },
@@ -1207,7 +1208,7 @@ local _ClassConfig = {
                 type = "Spell",
                 cond = function(self, spell, target)
                     if Config:GetSetting('TwincastMez') ~= 3 or Modules:ExecModule("Mez", "IsMezImmune", target.ID()) then return false end
-                    return not Casting.IHaveBuff(spell.ID()) and not mq.TLO.Me.Buff("Improved Twincast")()
+                    return not Casting.IHaveBuff(spell) and not Casting.IHaveBuff("Twincast")()
                 end,
             },
             {
@@ -1222,7 +1223,7 @@ local _ClassConfig = {
                 name = "ManaDot",
                 type = "Spell",
                 cond = function(self, spell, target)
-                    if not Config:GetSetting('DoDot') and Targeting.IsNamed(target) then return false end
+                    if not Config:GetSetting('DoDot') and not Targeting.IsNamed(target) then return false end
                     return Casting.DotSpellCheck(spell)
                 end,
             },
@@ -1302,7 +1303,7 @@ local _ClassConfig = {
                 type = "Spell",
                 cond = function(self, spell, target)
                     if Config:GetSetting('TwincastMez') ~= 3 or Modules:ExecModule("Mez", "IsMezImmune", target.ID()) then return false end
-                    return not Casting.IHaveBuff(spell.ID()) and not mq.TLO.Me.Buff("Improved Twincast")()
+                    return not Casting.IHaveBuff(spell) and not mq.TLO.Me.Buff("Improved Twincast")()
                 end,
             },
             { --used when the chanter or group members are low mana
@@ -1388,8 +1389,8 @@ local _ClassConfig = {
                 type = "AA",
                 cond = function(self, aaName, target)
                     if not Config:GetSetting('DoSlow') then return false end
-                    local aaSpell = mq.TLO.Me.AltAbility(aaName).Spell
-                    return Casting.DetSpellCheck(aaSpell) and (aaSpell.SlowPct() or 0) > (Targeting.GetTargetSlowedPct())
+                    local aaSpell = Casting.GetAASpell(aaName)
+                    return Casting.DetAACheck(aaName) and (aaSpell.SlowPct() or 0) > (Targeting.GetTargetSlowedPct())
                 end,
             },
             {

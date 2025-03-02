@@ -1135,10 +1135,10 @@ local _ClassConfig = {
                 end,
                 cond = function(self, aaName, target)
                     local bookSpell = self:GetResolvedActionMapItem('MoveSpells')
-                    local aaSpell = mq.TLO.Me.AltAbility(aaName).Spell
+                    local aaSpell = Casting.GetAASpell(aaName)
                     if not Config:GetSetting('DoMoveBuffs') or (bookSpell and bookSpell.Level() or 999) > (aaSpell.Level() or 0) then return false end
 
-                    return Casting.GroupBuffCheck(aaSpell, target)
+                    return Casting.GroupBuffAACheck(aaName, target)
                 end,
             },
             {

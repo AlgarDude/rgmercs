@@ -1415,7 +1415,7 @@ local _ClassConfig = {
                 name = "Dreary Deeds",
                 type = "AA",
                 cond = function(self, aaName)
-                    local aaSpell = mq.TLO.Me.AltAbility(aaName).Spell
+                    local aaSpell = Casting.GetAASpell(aaName)
                     return Casting.DetAACheck(aaName) and (aaSpell.SlowPct() or 0) > Targeting.GetTargetSlowedPct()
                 end,
             },
