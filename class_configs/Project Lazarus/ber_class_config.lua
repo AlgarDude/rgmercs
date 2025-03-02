@@ -445,6 +445,13 @@ return {
                     end
                 end,
             },
+            {
+                name = "ReflexDisc",
+                type = "Disc",
+                cond = function(self, discSpell)
+                    return Casting.SelfBuffCheck(discSpell)
+                end,
+            },
         },
         ['Burn'] = { --If this burn rotation is optimal, we may wish to refactor with a helper function, a lot of duplicate code near the end. Fixing broken functionality first. - Algar
             {
@@ -452,7 +459,7 @@ return {
                 type = "Disc",
                 cond = function(self, discSpell)
                     local discondisc = self:GetResolvedActionMapItem('DisconDisc')
-                    return not mq.TLO.Me.ActiveDisc() or mq.TLO.Me.ActiveDisc() == mq.TLO.Spell(discondisc).RankName()
+                    return Casting.NoDiscActive() or mq.TLO.Me.ActiveDisc() == mq.TLO.Spell(discondisc).RankName()
                 end,
             },
             {
@@ -460,7 +467,7 @@ return {
                 type = "AA",
                 cond = function(self, aaName)
                     local burndisc = self:GetResolvedActionMapItem('PrimaryBurnDisc')
-                    return (not mq.TLO.Me.ActiveDisc() or mq.TLO.Me.ActiveDisc() == mq.TLO.Spell(burndisc).RankName())
+                    return (Casting.NoDiscActive() or mq.TLO.Me.ActiveDisc() == mq.TLO.Spell(burndisc).RankName())
                 end,
             },
             {
@@ -468,7 +475,7 @@ return {
                 type = "AA",
                 cond = function(self, aaName)
                     local burndisc = self:GetResolvedActionMapItem('PrimaryBurnDisc')
-                    return (not mq.TLO.Me.ActiveDisc() or mq.TLO.Me.ActiveDisc() == mq.TLO.Spell(burndisc).RankName())
+                    return (Casting.NoDiscActive() or mq.TLO.Me.ActiveDisc() == mq.TLO.Spell(burndisc).RankName())
                 end,
             },
             {
@@ -476,7 +483,7 @@ return {
                 type = "AA",
                 cond = function(self, aaName)
                     local burndisc = self:GetResolvedActionMapItem('PrimaryBurnDisc')
-                    return (not mq.TLO.Me.ActiveDisc() or mq.TLO.Me.ActiveDisc() == mq.TLO.Spell(burndisc).RankName())
+                    return (Casting.NoDiscActive() or mq.TLO.Me.ActiveDisc() == mq.TLO.Spell(burndisc).RankName())
                 end,
             },
             {
@@ -484,7 +491,7 @@ return {
                 type = "AA",
                 cond = function(self, aaName)
                     local burndisc = self:GetResolvedActionMapItem('PrimaryBurnDisc')
-                    return (not mq.TLO.Me.ActiveDisc() or mq.TLO.Me.ActiveDisc() == mq.TLO.Spell(burndisc).RankName())
+                    return (Casting.NoDiscActive() or mq.TLO.Me.ActiveDisc() == mq.TLO.Spell(burndisc).RankName())
                 end,
             },
             {
@@ -492,7 +499,7 @@ return {
                 type = "AA",
                 cond = function(self, aaName)
                     local burndisc = self:GetResolvedActionMapItem('PrimaryBurnDisc')
-                    return (not mq.TLO.Me.ActiveDisc() or mq.TLO.Me.ActiveDisc() == mq.TLO.Spell(burndisc).RankName())
+                    return (Casting.NoDiscActive() or mq.TLO.Me.ActiveDisc() == mq.TLO.Spell(burndisc).RankName())
                 end,
             },
             {
@@ -500,7 +507,7 @@ return {
                 type = "AA",
                 cond = function(self, aaName)
                     local burndisc = self:GetResolvedActionMapItem('PrimaryBurnDisc')
-                    return (not mq.TLO.Me.ActiveDisc() or mq.TLO.Me.ActiveDisc() == mq.TLO.Spell(burndisc).RankName())
+                    return (Casting.NoDiscActive() or mq.TLO.Me.ActiveDisc() == mq.TLO.Spell(burndisc).RankName())
                 end,
             },
             {
@@ -508,7 +515,7 @@ return {
                 type = "AA",
                 cond = function(self, aaName)
                     local burndisc = self:GetResolvedActionMapItem('PrimaryBurnDisc')
-                    return (not mq.TLO.Me.ActiveDisc() or mq.TLO.Me.ActiveDisc() == mq.TLO.Spell(burndisc).RankName())
+                    return (Casting.NoDiscActive() or mq.TLO.Me.ActiveDisc() == mq.TLO.Spell(burndisc).RankName())
                 end,
             },
             {
@@ -516,7 +523,7 @@ return {
                 type = "AA",
                 cond = function(self, aaName)
                     local burndisc = self:GetResolvedActionMapItem('PrimaryBurnDisc')
-                    return (not mq.TLO.Me.ActiveDisc() or mq.TLO.Me.ActiveDisc() == mq.TLO.Spell(burndisc).RankName())
+                    return (Casting.NoDiscActive() or mq.TLO.Me.ActiveDisc() == mq.TLO.Spell(burndisc).RankName())
                 end,
             },
             {
@@ -524,7 +531,7 @@ return {
                 type = "AA",
                 cond = function(self, aaName)
                     local burndisc = self:GetResolvedActionMapItem('PrimaryBurnDisc')
-                    return (not mq.TLO.Me.ActiveDisc() or mq.TLO.Me.ActiveDisc() == mq.TLO.Spell(burndisc).RankName())
+                    return (Casting.NoDiscActive() or mq.TLO.Me.ActiveDisc() == mq.TLO.Spell(burndisc).RankName())
                 end,
             },
             {
@@ -539,7 +546,7 @@ return {
                 type = "Disc",
                 cond = function(self, discSpell)
                     local burndisc = self:GetResolvedActionMapItem('PrimaryBurnDisc')
-                    return not mq.TLO.Me.ActiveDisc() and not Casting.DiscReady(burndisc)
+                    return Casting.NoDiscActive() and not Casting.DiscReady(burndisc)
                 end,
             },
             {
@@ -547,7 +554,7 @@ return {
                 type = "AA",
                 cond = function(self, aaName)
                     local burndisc = self:GetResolvedActionMapItem('PrimaryBurnDisc')
-                    return (not mq.TLO.Me.ActiveDisc() or mq.TLO.Me.ActiveDisc() == mq.TLO.Spell(burndisc).RankName())
+                    return (Casting.NoDiscActive() or mq.TLO.Me.ActiveDisc() == mq.TLO.Spell(burndisc).RankName())
                 end,
             },
             {
@@ -555,7 +562,7 @@ return {
                 type = "AA",
                 cond = function(self, aaName)
                     local burndisc = self:GetResolvedActionMapItem('PrimaryBurnDisc')
-                    return (not mq.TLO.Me.ActiveDisc() or mq.TLO.Me.ActiveDisc() == mq.TLO.Spell(burndisc).RankName())
+                    return (Casting.NoDiscActive() or mq.TLO.Me.ActiveDisc() == mq.TLO.Spell(burndisc).RankName())
                 end,
             },
             {
@@ -565,7 +572,7 @@ return {
                     local burndisc = self:GetResolvedActionMapItem('PrimaryBurnDisc')
                     local cleavingdisc = self:GetResolvedActionMapItem('CleavingDisc')
                     local discondisc = self:GetResolvedActionMapItem('DisconDisc')
-                    return (not mq.TLO.Me.ActiveDisc() or mq.TLO.Me.ActiveDisc() == mq.TLO.Spell(discondisc).RankName())
+                    return (Casting.NoDiscActive() or mq.TLO.Me.ActiveDisc() == mq.TLO.Spell(discondisc).RankName())
                         and not (Casting.DiscReady(burndisc) or Casting.DiscReady(cleavingdisc))
                 end,
             },
@@ -577,7 +584,7 @@ return {
                     local cleavingdisc = self:GetResolvedActionMapItem('CleavingDisc')
                     local discondisc = self:GetResolvedActionMapItem('DisconDisc')
                     local resolvedisc = self:GetResolvedActionMapItem('ResolveDisc')
-                    return (not mq.TLO.Me.ActiveDisc() or mq.TLO.Me.ActiveDisc() == mq.TLO.Spell(discondisc).RankName())
+                    return (Casting.NoDiscActive() or mq.TLO.Me.ActiveDisc() == mq.TLO.Spell(discondisc).RankName())
                         and not (Casting.DiscReady(burndisc) or Casting.DiscReady(cleavingdisc) or Casting.DiscReady(resolvedisc))
                 end,
             },
@@ -698,7 +705,7 @@ return {
                 type = "Disc",
                 cond = function(self, discSpell)
                     if not Config:GetSetting('DoDisconDisc') then return false end
-                    return not mq.TLO.Me.ActiveDisc()
+                    return Casting.NoDiscActive()
                 end,
             },
             {
@@ -734,13 +741,6 @@ return {
                 type = "AA",
                 cond = function(self, aaName)
                     return mq.TLO.Me.PctEndurance() <= 75
-                end,
-            },
-            {
-                name = "<<None>>",
-                name_func = function(self)
-                    if not self.ModuleLoaded then return "" end
-                    return mq.TLO.Spell("Reflexive Retaliation").RankName()
                 end,
             },
             {

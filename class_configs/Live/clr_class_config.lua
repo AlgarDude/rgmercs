@@ -1310,7 +1310,10 @@ local _ClassConfig = {
             {
                 name = "GroupHealProcBuff",
                 type = "Spell",
-                active_cond = function(self, spell) return Casting.IHaveBuff(spell.ID()) end,
+                active_cond = function(self, spell)
+                    return
+                        Casting.IHaveBuff(spell)
+                end,
                 cond = function(self, spell)
                     return Casting.SelfBuffCheck(spell)
                 end,

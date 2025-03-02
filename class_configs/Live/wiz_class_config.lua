@@ -753,7 +753,7 @@ return {
                 name = "Improved Twincast",
                 type = "AA",
                 cond = function(self)
-                    return not mq.TLO.Me.Buff("Twincast")()
+                    return not Casting.IHaveBuff("Twincast")
                 end,
             },
             {
@@ -955,7 +955,7 @@ return {
                 name = "DichoSpell",
                 type = "Spell",
                 cond = function(self, spell)
-                    return not Casting.GambitCheck() and not mq.TLO.Me.Buff("Twincast")()
+                    return not Casting.GambitCheck() and not Casting.IHaveBuff("Twincast")
                 end,
             },
             {
@@ -1059,7 +1059,7 @@ return {
             {
                 name = "SelfHPBuff",
                 type = "Spell",
-                active_cond = function(self, spell) return Casting.IHaveBuff(spell.RankName.ID()) end,
+                active_cond = function(self, spell) return Casting.IHaveBuff(spell) end,
                 cond = function(self, spell)
                     return (spell.Level() or 0) > (mq.TLO.Me.AltAbility("Etherealist's Unity").Spell.Trigger(1).Level() or 0) and Casting.SelfBuffCheck(spell)
                 end,
@@ -1077,7 +1077,7 @@ return {
             {
                 name = "SelfRune1",
                 type = "Spell",
-                active_cond = function(self, spell) return Casting.IHaveBuff(spell.RankName.ID()) end,
+                active_cond = function(self, spell) return Casting.IHaveBuff(spell) end,
                 cond = function(self, spell)
                     return Casting.SelfBuffCheck(spell)
                 end,
@@ -1092,9 +1092,9 @@ return {
             {
                 name = "FamiliarBuff",
                 type = "Spell",
-                active_cond = function(self, spell) return Casting.IHaveBuff(spell.RankName.ID()) end,
+                active_cond = function(self, spell) return Casting.IHaveBuff(spell) end,
                 cond = function(self, spell)
-                    return spell.Stacks() and spell.Level() > (mq.TLO.Me.AltAbility("Improved Familiar").Spell.Level() or 0) and not Casting.IHaveBuff(spell.RankName.ID())
+                    return spell.Stacks() and spell.Level() > (mq.TLO.Me.AltAbility("Improved Familiar").Spell.Level() or 0) and not Casting.IHaveBuff(spell)
                 end,
             },
             {

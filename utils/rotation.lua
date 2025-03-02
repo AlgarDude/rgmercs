@@ -326,7 +326,7 @@ function Rotation.Run(caller, rotationTable, targetId, resolvedActionMap, steps,
         end
     end
 
-    if Targeting.GetXTHaterCount() == 0 and oldSpellInSlot() and mq.TLO.Me.Gem(Casting.UseGem)() ~= oldSpellInSlot.Name() then
+    if Config:GetSetting('RememLastSlot') and Targeting.GetXTHaterCount() == 0 and oldSpellInSlot() and mq.TLO.Me.Gem(Casting.UseGem)() ~= oldSpellInSlot.Name() then
         Logger.log_debug("\ayRestoring %s in slot %d", oldSpellInSlot, Casting.UseGem)
         Casting.MemorizeSpell(Casting.UseGem, oldSpellInSlot.Name(), false, 15000)
     end
@@ -439,11 +439,6 @@ function Rotation.SetLoadOut(caller, spellGemList, itemSets, abilitySets)
             Logger.log_debug("\agGem %d will not be loaded.", gem)
         end
     end
-
-    --if #spellLoadOut >= mq.TLO.Me.NumGems() then
-    --    Logger.log_error(
-    --        "\aoYour spell loadout count is the same as your number of gems.")
-    --end
 
     return resolvedActionMap, spellLoadOut
 end

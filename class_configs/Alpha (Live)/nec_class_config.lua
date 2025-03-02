@@ -821,7 +821,7 @@ local _ClassConfig = {
             {
                 name = "LichSpell",
                 type = "Spell",
-                active_cond = function(self, spell) return Casting.IHaveBuff(spell.RankName.ID()) end,
+                active_cond = function(self, spell) return Casting.IHaveBuff(spell) end,
                 cond = function(self, spell)
                     return Config:GetSetting('DoLich') and Casting.SelfBuffCheck(spell) and
                         (not Config:GetSetting('DoUnity') or not Casting.AAReady("Mortifier's Unity")) and
@@ -831,7 +831,6 @@ local _ClassConfig = {
             {
                 name = "LichControl",
                 type = "CustomFunc",
-                active_cond = function(self, spell) return true end,
                 cond = function(self, _)
                     local lichSpell = self:GetResolvedActionMapItem('LichSpell')
 
@@ -845,7 +844,6 @@ local _ClassConfig = {
             {
                 name = "FleshControl",
                 type = "CustomFunc",
-                active_cond = function(self, spell) return true end,
                 cond = function(self, _)
                     local fleshSpell = self:GetResolvedActionMapItem('FleshBuff')
 
@@ -1041,7 +1039,6 @@ local _ClassConfig = {
             {
                 name = "BestowBuff",
                 type = "Spell",
-                active_cond = function(self, spell) return Casting.IHaveBuff(spell.RankName()) end,
                 cond = function(self, spell) return Casting.SelfBuffCheck(spell) end,
             },
             {
@@ -1063,37 +1060,37 @@ local _ClassConfig = {
             {
                 name = "SelfHPBuff",
                 type = "Spell",
-                active_cond = function(self, spell) return Casting.IHaveBuff(spell.RankName.ID()) end,
+                active_cond = function(self, spell) return Casting.IHaveBuff(spell) end,
                 cond = function(self, spell) return Casting.SelfBuffCheck(spell) end,
             },
             {
                 name = "SelfRune1",
                 type = "Spell",
-                active_cond = function(self, spell) return Casting.IHaveBuff(spell.RankName.ID()) end,
+                active_cond = function(self, spell) return Casting.IHaveBuff(spell) end,
                 cond = function(self, spell) return Casting.SelfBuffCheck(spell) end,
             },
             {
                 name = "SelfSpellShield1",
                 type = "Spell",
-                active_cond = function(self, spell) return Casting.IHaveBuff(spell.RankName.ID()) end,
+                active_cond = function(self, spell) return Casting.IHaveBuff(spell) end,
                 cond = function(self, spell) return Casting.SelfBuffCheck(spell) end,
             },
             {
                 name = "Death Bloom",
                 type = "AA",
-                active_cond = function(self, aaName) return Casting.IHaveBuff(mq.TLO.AltAbility(aaName).Spell()) end,
+                active_cond = function(self, aaName) return Casting.IHaveBuff(aaName) end,
                 cond = function(self, aaName) return mq.TLO.Me.PctMana() < Config:GetSetting('DeathBloomPercent') end,
             },
             {
                 name = "BestowBuff",
                 type = "Spell",
-                active_cond = function(self, spell) return Casting.IHaveBuff(spell.RankName()) end,
+                active_cond = function(self, spell) return Casting.IHaveBuff(spell) end,
                 cond = function(self, spell) return Casting.SelfBuffCheck(spell) end,
             },
             {
                 name = "FleshBuff",
                 type = "Spell",
-                active_cond = function(self, spell) return Casting.IHaveBuff(spell.RankName.ID()) end,
+                active_cond = function(self, spell) return Casting.IHaveBuff(spell) end,
                 cond = function(self, spell)
                     return mq.TLO.Me.PctHPs() > Config:GetSetting('EmergencyStart') and Casting.SelfBuffCheck(spell)
                 end,
@@ -1133,13 +1130,13 @@ local _ClassConfig = {
             {
                 name = "PetHaste",
                 type = "Spell",
-                active_cond = function(self, spell) return mq.TLO.Me.PetBuff(spell.RankName())() ~= nil end,
+                active_cond = function(self, spell) return mq.TLO.Me.PetBuff(spell.RankName())() end,
                 cond = function(self, spell) return Casting.PetBuffCheck(spell) end,
             },
             {
                 name = "PetBuff",
                 type = "Spell",
-                active_cond = function(self, spell) return mq.TLO.Me.PetBuff(spell.RankName())() ~= nil end,
+                active_cond = function(self, spell) return mq.TLO.Me.PetBuff(spell.RankName())() end,
                 cond = function(self, spell) return Casting.PetBuffCheck(spell) end,
             },
             {
