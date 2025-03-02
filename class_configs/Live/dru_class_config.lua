@@ -1297,7 +1297,7 @@ local _ClassConfig = {
                 type = "Spell",
                 active_cond = function(self, spell) return Casting.IHaveBuff(spell) end,
                 cond = function(self, spell, target)
-                    return Config.Constants.RGMelee:contains(target.Class.ShortName()) and Casting.GroupBuffCheck(spell, target)
+                    return Targeting.TargetIsMelee(target) and Casting.GroupBuffCheck(spell, target)
                 end,
             },
             {

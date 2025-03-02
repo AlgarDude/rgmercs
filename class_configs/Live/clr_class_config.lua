@@ -855,7 +855,7 @@ local _ClassConfig = {
                 type = "Item",
                 cond = function(self, itemName, target)
                     if not Targeting.GroupedWithTarget(target) then return false end
-                    return target.ID() == Core.GetMainAssistId
+                    return Targeting.TargetIsMA(target)
                 end,
             },
             {
@@ -869,7 +869,7 @@ local _ClassConfig = {
                 name = "Veturika's Perseverence",
                 type = "AA",
                 cond = function(self, aaName, target)
-                    return (target.ID() or 0) == mq.TLO.Me.ID()
+                    return Targeting.TargetIsMyself(target)
                 end,
             },
             { --The stuff above is down, lets make mainhealpoint chonkier. Homework: Wondering if we should be using this more/elsewhere.
@@ -1000,7 +1000,7 @@ local _ClassConfig = {
                 type = "Item",
                 cond = function(self, itemName, target)
                     if not Targeting.GroupedWithTarget(target) then return false end
-                    return target.ID() == Core.GetMainAssistId and (target.PctHPs() or 999) <= Config:GetSetting('BigHealPoint')
+                    return Targeting.TargetIsMA(target) and (target.PctHPs() or 999) <= Config:GetSetting('BigHealPoint')
                 end,
             },
             {
@@ -1105,14 +1105,14 @@ local _ClassConfig = {
                 name = "Veturika's Perseverence",
                 type = "AA",
                 cond = function(self, aaName, target)
-                    return (target.ID() or 0) == mq.TLO.Me.ID() and Casting.AmIBuffable()
+                    return Targeting.TargetIsMyself(target) and Casting.AmIBuffable()
                 end,
             },
             {
                 name = "Quiet Prayer",
                 type = "AA",
                 cond = function(self, aaName, target)
-                    if target.ID() == mq.TLO.Me.ID() then return false end
+                    if Targeting.TargetIsMyself(target) then return false end
                     local rezSearch = string.format("pccorpse %s radius 100 zradius 50", target.DisplayName())
                     return mq.TLO.SpawnCount(rezSearch)() == 0
                 end,

@@ -814,7 +814,7 @@ local _ClassConfig = {
                 name = "Ancestral Guard",
                 type = "AA",
                 cond = function(self, aaName, target)
-                    return (target.ID() or 0) == mq.TLO.Me.ID()
+                    return Targeting.TargetIsMyself(target)
                 end,
             },
             {
@@ -1379,7 +1379,7 @@ local _ClassConfig = {
                 name = "SlowProcBuff",
                 type = "Spell",
                 cond = function(self, spell, target)
-                    return Config.Constants.RGTank:contains(target.Class.ShortName()) and Casting.GroupBuffCheck(spell, target)
+                    return Targeting.TargetIsTank(target) and Casting.GroupBuffCheck(spell, target)
                 end,
             },
             { --Used on the entire group
@@ -1393,14 +1393,14 @@ local _ClassConfig = {
                 name = "SingleFocusSpell",
                 type = "Spell",
                 cond = function(self, spell, target)
-                    return Config.Constants.RGTank:contains(target.Class.ShortName()) and Casting.GroupBuffCheck(spell, target)
+                    return Targeting.TargetIsTank(target) and Casting.GroupBuffCheck(spell, target)
                 end,
             },
             { --Only cast below 86 because past that our focus spells take over
                 name = "LowLvlAtkBuff",
                 type = "Spell",
                 cond = function(self, spell, target)
-                    return mq.TLO.Me.Level() < 86 and Config.Constants.RGMelee:contains(target.Class.ShortName()) and Casting.CastReady(spell) and
+                    return mq.TLO.Me.Level() < 86 and Targeting.TargetIsMelee(target) and Casting.CastReady(spell) and
                         Casting.GroupBuffCheck(spell, target)
                 end,
             },
@@ -1428,7 +1428,7 @@ local _ClassConfig = {
                 active_cond = function(self, spell) return Casting.IHaveBuff(spell) end,
                 cond = function(self, spell, target)
                     if Core.GetResolvedActionMapItem('GroupRegenBuff') then return false end --We don't need this once we can use the group version
-                    return (Config.Constants.RGTank:contains(target.Class.ShortName()) or target.ID() == mq.TLO.Me.ID()) and Casting.GroupBuffCheck(spell, target)
+                    return (Targeting.TargetIsTank(target) or Targeting.TargetIsMyself(target)) and Casting.GroupBuffCheck(spell, target)
                 end,
             },
             {
@@ -1495,7 +1495,7 @@ local _ClassConfig = {
                 type = "Spell",
                 cond = function(self, spell, target)
                     if not Config:GetSetting('DoLLHPBuff') then return false end
-                    return mq.TLO.Me.Level() < 71 and Config.Constants.RGTank:contains(target.Class.ShortName()) and Casting.GroupBuffCheck(spell, target)
+                    return mq.TLO.Me.Level() < 71 and Targeting.TargetIsTank(target) and Casting.GroupBuffCheck(spell, target)
                 end,
             },
             {
@@ -1503,7 +1503,7 @@ local _ClassConfig = {
                 type = "Spell",
                 cond = function(self, spell, target)
                     if not Config:GetSetting('DoLLAgiBuff') then return false end
-                    return mq.TLO.Me.Level() < 71 and Config.Constants.RGTank:contains(target.Class.ShortName()) and Casting.GroupBuffCheck(spell, target)
+                    return mq.TLO.Me.Level() < 71 and Targeting.TargetIsTank(target) and Casting.GroupBuffCheck(spell, target)
                 end,
             },
             {
@@ -1511,7 +1511,7 @@ local _ClassConfig = {
                 type = "Spell",
                 cond = function(self, spell, target)
                     if not Config:GetSetting('DoLLStaBuff') then return false end
-                    return mq.TLO.Me.Level() < 71 and Config.Constants.RGTank:contains(target.Class.ShortName()) and Casting.GroupBuffCheck(spell, target)
+                    return mq.TLO.Me.Level() < 71 and Targeting.TargetIsTank(target) and Casting.GroupBuffCheck(spell, target)
                 end,
             },
             {
@@ -1519,7 +1519,7 @@ local _ClassConfig = {
                 type = "Spell",
                 cond = function(self, spell, target)
                     if not Config:GetSetting('DoLLStrBuff') then return false end
-                    return mq.TLO.Me.Level() < 71 and Config.Constants.RGMelee:contains(target.Class.ShortName()) and Casting.GroupBuffCheck(spell, target)
+                    return mq.TLO.Me.Level() < 71 and Targeting.TargetIsMelee(target) and Casting.GroupBuffCheck(spell, target)
                 end,
             },
         },

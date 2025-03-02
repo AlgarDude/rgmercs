@@ -1037,7 +1037,7 @@ local _ClassConfig = {
                 type = "Spell",
                 active_cond = function(self, spell) return mq.TLO.Me.FindBuff("id " .. tostring(spell.ID()))() ~= nil end,
                 cond = function(self, spell, target)
-                    if self:GetResolvedActionMapItem('HasteManaCombo') or not Config.Constants.RGCasters:contains(target.Class.ShortName()) then return false end
+                    if self:GetResolvedActionMapItem('HasteManaCombo') or not Targeting.TargetIsCaster(target) then return false end
                     return Casting.GroupBuffCheck(spell, target)
                 end,
             },
@@ -1046,7 +1046,7 @@ local _ClassConfig = {
                 type = "Spell",
                 active_cond = function(self, spell) return mq.TLO.Me.FindBuff("id " .. tostring(spell.ID()))() ~= nil end,
                 cond = function(self, spell, target)
-                    if self:GetResolvedActionMapItem('HasteManaCombo') or not Config.Constants.RGMelee:contains(target.Class.ShortName()) then return false end
+                    if self:GetResolvedActionMapItem('HasteManaCombo') or not Targeting.TargetIsMelee(target) then return false end
                     return Casting.GroupBuffCheck(spell, target) and Casting.GroupBuffCheck(mq.TLO.Spell("Unified Alacrity"), target) -- Fixes bad stacking check
                 end,
             },
@@ -1083,7 +1083,7 @@ local _ClassConfig = {
                     --NDT will not be cast or memorized if it isn't already on the bar due to a very long refresh time
                     if not Config:GetSetting('DoNDTBuff') or not Casting.CastReady(spell) then return false end
                     --Single target versions of the spell will only be used on Melee, group versions will be cast if they are missing from any groupmember
-                    if (spell and spell() and ((spell.TargetType() or ""):lower() ~= "group v2")) and not Config.Constants.RGMelee:contains(target.Class.ShortName()) then
+                    if (spell and spell() and ((spell.TargetType() or ""):lower() ~= "group v2")) and not Targeting.TargetIsMelee(target) then
                         return false
                     end
 
@@ -1095,7 +1095,7 @@ local _ClassConfig = {
                 type = "Spell",
                 active_cond = function(self, spell) return Casting.IHaveBuff(spell) end,
                 cond = function(self, spell, target)
-                    if not Config:GetSetting('DoProcBuff') or not Config.Constants.RGCasters:contains(target.Class.ShortName()) then return false end
+                    if not Config:GetSetting('DoProcBuff') or not Targeting.TargetIsCaster(target) then return false end
                     return Casting.GroupBuffCheck(spell, target)
                 end,
             },
@@ -1113,7 +1113,7 @@ local _ClassConfig = {
             --     type = "Spell",
             --     active_cond = function(self, spell) return mq.TLO.Me.FindBuff("id " .. tostring(spell.ID()))() ~= nil end,
             --     cond = function(self, spell, target)
-            --         if not Config:GetSetting('DoAggroRune') or not Config.Constants.RGTank:contains(target.Class.ShortName()) then return false end
+            --         if not Config:GetSetting('DoAggroRune') or not Targeting.TargetIsTank(target) then return false end
             --         return Casting.GroupBuffCheck(spell, target)
             --     end,
             -- },

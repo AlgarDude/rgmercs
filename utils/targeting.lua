@@ -441,8 +441,28 @@ function Targeting.SetForceBurn(targetId)
 end
 
 function Targeting.TargetIsMA(target)
-    if not target or not target() then return false end
+    if not (target and target()) then return false end
     return target.ID() == Core.GetMainAssistId()
+end
+
+function Targeting.TargetIsCaster(target)
+    if not (target and target()) then return false end
+    return Config.Constants.RGCasters:contains(target.Class.ShortName())
+end
+
+function Targeting.TargetIsMelee(target)
+    if not (target and target()) then return false end
+    return Config.Constants.RGMelee:contains(target.Class.ShortName())
+end
+
+function Targeting.TargetIsTank(target)
+    if not (target and target()) then return false end
+    return Config.Constants.RGTank:contains(target.Class.ShortName())
+end
+
+function Targeting.TargetIsMyself(target)
+    if not (target and target()) then return false end
+    return target.ID() == mq.TLO.Me.ID()
 end
 
 return Targeting
