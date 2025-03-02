@@ -1350,7 +1350,7 @@ local _ClassConfig = {
                 type = "AA",
                 cond = function(self, aaName, target)
                     if not Targeting.TargetIsMA(target) then return false end
-                    return Casting.GroupBuffCheck(mq.TLO.Me.AltAbility(aaName).Spell, target)
+                    return Casting.GroupBuffAACheck(aaName, target)
                 end,
             },
             {
@@ -1358,8 +1358,7 @@ local _ClassConfig = {
                 type = "Spell",
                 cond = function(self, spell, target)
                     if Config:GetSetting('AegoSymbol') > 2 then return false end
-                    ---@diagnostic disable-next-line: undefined-field
-                    return Casting.GroupBuffCheck(spell, target, mq.TLO.Me.Spell(spell).ID())
+                    return Casting.GroupBuffCheck(spell, target)
                 end,
             },
             {

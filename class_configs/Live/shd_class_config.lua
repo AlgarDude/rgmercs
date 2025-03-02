@@ -895,7 +895,7 @@ local _ClassConfig = {
                 cond = function(self, aaName, target)
                     if Config:GetSetting('ProcChoice') ~= 1 then return false end
                     --SelfBuffAACheck does not work for this specific AA, it returns a strange spell in the stacking check
-                    return Casting.GroupBuffCheck(mq.TLO.Me.AltAbility(aaName).Spell, target)
+                    return Casting.GroupBuffAACheck(aaName, target)
                 end,
             },
             {
@@ -906,7 +906,7 @@ local _ClassConfig = {
                 cond = function(self, aaName, target)
                     if Config:GetSetting('ProcChoice') ~= 2 then return false end
                     --SelfBuffAACheck does not work for this specific AA, it returns a strange spell in the stacking check
-                    return Casting.GroupBuffCheck(mq.TLO.Me.AltAbility(aaName).Spell, target)
+                    return Casting.GroupBuffAACheck(aaName, target)
                 end,
             },
             {
