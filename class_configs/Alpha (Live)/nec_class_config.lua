@@ -774,7 +774,7 @@ local _ClassConfig = {
             name = 'PetSummon',
             targetId = function(self) return { mq.TLO.Me.ID(), } end,
             cond = function(self, combat_state)
-                return combat_state == "Downtime" and Casting.DoPetCheck() and not Core.IsCharming() and Casting.AmIBuffable()
+                return combat_state == "Downtime" and Casting.DoPetCheck() and mq.TLO.Me.Pet.ID() == 0 and not Core.IsCharming() and Casting.AmIBuffable()
             end,
         },
         { --Pet Buffs if we have one, timer because we don't need to constantly check this
@@ -939,7 +939,7 @@ local _ClassConfig = {
                 name = "SwarmPet",
                 type = "Spell",
                 cond = function(self, spell, target)
-                    return ((not Casting.DotSpellCheck(spell) and Casting.HaveManaToNuke()) or Casting.BurnCheck())
+                    return (not Casting.DotSpellCheck(spell) or Casting.BurnCheck()) and Casting.HaveManaToNuke()
                 end,
             },
             {
@@ -953,7 +953,7 @@ local _ClassConfig = {
                 name = "FireNuke",
                 type = "Spell",
                 cond = function(self, spell, target)
-                    return ((not Casting.DotSpellCheck(spell) and Casting.HaveManaToNuke()) or Casting.BurnCheck())
+                    return (not Casting.DotSpellCheck(spell) or Casting.BurnCheck()) and Casting.HaveManaToNuke()
                 end,
             },
             {
@@ -1042,7 +1042,7 @@ local _ClassConfig = {
                 name = "BestowBuff",
                 type = "Spell",
                 active_cond = function(self, spell) return Casting.IHaveBuff(spell.RankName()) end,
-                cond = function(self, spell) return not Casting.SelfBuffCheck(spell) end,
+                cond = function(self, spell) return Casting.SelfBuffCheck(spell) end,
             },
             {
                 name = "Silent Casting",
@@ -1088,7 +1088,7 @@ local _ClassConfig = {
                 name = "BestowBuff",
                 type = "Spell",
                 active_cond = function(self, spell) return Casting.IHaveBuff(spell.RankName()) end,
-                cond = function(self, spell) return not Casting.IHaveBuff(spell.RankName()) end,
+                cond = function(self, spell) return Casting.SelfBuffCheck(spell) end,
             },
             {
                 name = "FleshBuff",
@@ -1105,7 +1105,7 @@ local _ClassConfig = {
                 type = "Spell",
                 active_cond = function(self, _) return mq.TLO.Me.Pet.ID() ~= 0 and mq.TLO.Me.Pet.Class.ShortName():lower() == ("war" or "mnk") end,
                 cond = function(self, spell)
-                    return Config:GetSetting('PetType') == 1 and mq.TLO.Me.Pet.ID() == 0 and Casting.ReagentCheck(spell)
+                    return Config:GetSetting('PetType') == 1 and Casting.ReagentCheck(spell)
                 end,
                 post_activate = function(self, spell, success)
                     local pet = mq.TLO.Me.Pet
@@ -1119,7 +1119,7 @@ local _ClassConfig = {
                 type = "Spell",
                 active_cond = function(self, _) return mq.TLO.Me.Pet.ID() ~= 0 and mq.TLO.Me.Pet.Class.ShortName():lower() == "rog" end,
                 cond = function(self, spell)
-                    return Config:GetSetting('PetType') == 2 and mq.TLO.Me.Pet.ID() == 0 and Casting.ReagentCheck(spell)
+                    return Config:GetSetting('PetType') == 2 and Casting.ReagentCheck(spell)
                 end,
                 post_activate = function(self, spell, success)
                     local pet = mq.TLO.Me.Pet

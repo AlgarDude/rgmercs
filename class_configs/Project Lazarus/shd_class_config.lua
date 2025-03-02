@@ -880,6 +880,7 @@ local _ClassConfig = {
                 tooltip = Tooltips.Shroud,
                 active_cond = function(self, spell) return Casting.IHaveBuff(spell.RankName.ID()) end,
                 cond = function(self, spell)
+                    -- return self.ClassConfig.HelperFunctions.SingleBuffCheck() and Casting.SelfBuffCheck(spell)
                     return self.ClassConfig.HelperFunctions.SingleBuffCheck() and Casting.SelfBuffCheck(spell)
                 end,
             },
