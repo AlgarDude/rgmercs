@@ -125,9 +125,11 @@ function Casting.LocalBuffCheck(spell, checkPet)
     return false
 end
 
+--- "xBuffxCheck"s are helper functions that wrap buff spells and checks in an easy-to-understand system for simpler class configs
+
 function Casting.SelfBuffCheck(spell)
     if not (spell and spell()) then return false end
-    return Casting.LocalBuffCheck(spell)
+    return Casting.LocalBuffCheck(spell, false)
 end
 
 function Casting.SelfBuffAACheck(aaName)
@@ -157,7 +159,7 @@ function Casting.PetBuffItemCheck(itemName)
     return Casting.LocalBuffCheck(clickySpell, true)
 end
 
---- Complex buff check that will check for presence and stacking of the buff (and any triggers) using the best (determined) method available.
+--- Helper that will perform complex checks for presence and stacking of buffs (and any triggers) using the best (determined) method available.
 --- @param spell MQSpell The name of the spell to check.
 --- @param target MQTarget|MQSpawn|MQCharacter? The target to check for the buff.
 --- @return boolean True if the PC checking should cast the buff, false otherwise.
@@ -387,18 +389,18 @@ function Casting.ReagentCheck(spell)
     return true
 end
 
---- Determines whether the utility should shrink.
---- @return boolean True if the utility should shrink, false otherwise.
+--- Determines whether the the PC should be shrunk.
+--- @return boolean True if the PC should be shrunk, false otherwise.
 function Casting.ShouldShrink()
     return Config:GetSetting('DoShrink') and mq.TLO.Me.Height() > 2.2 and
-        (Config:GetSetting('ShrinkItem'):len() > 0) and Casting.DoBuffCheck()
+        (Config:GetSetting('ShrinkItem'):len() > 0) and Casting.OkayToBuff()
 end
 
 --- Determines whether the pet should be shrunk.
 --- @return boolean True if the pet should be shrunk, false otherwise.
 function Casting.ShouldShrinkPet()
     return Config:GetSetting('DoShrinkPet') and mq.TLO.Me.Pet.ID() > 0 and mq.TLO.Me.Pet.Height() > 1.8 and
-        (Config:GetSetting('ShrinkPetItem'):len() > 0) and Casting.DoPetCheck()
+        (Config:GetSetting('ShrinkPetItem'):len() > 0) and Casting.OkayToPetBuff()()
 end
 
 --- Checks if the burn condition is met for RGMercs.
@@ -415,16 +417,16 @@ function Casting.BurnCheck()
     return Casting.LastBurnCheck
 end
 
---- GOMCheck performs a check if Gift of Mana is active
+--- GOMCheck performs a check if Gift of Mana is active.
 --- This function does not take any parameters.
 --- @return boolean
 function Casting.GOMCheck()
     return Casting.IHaveBuff("Gift of Mana")
 end
 
---- DetGambitCheck performs a check for a specific gambit condition.
+--- Checks if a gambit spell is active.
 --- @return boolean Returns true if the gambit condition is met, false otherwise.
-function Casting.GambitCheck()
+function Casting.GambitCheck() -- This should probably be moved to wizard as a helper --Algar
     local gambitSpell = Modules:ExecModule("Class", "GetResolvedActionMapItem", "GambitSpell")
     if not gambitSpell and gambitSpell() then return false end
 
@@ -437,42 +439,47 @@ function Casting.CanAlliance()
     return true
 end
 
---- Checks if we should be casting buffs.
---- This function checks if we should be casting buffs - Enabled by user and not moving or trying to move or follow..
----
+--- Determine if the time is opportune to cast buffs.
 --- @return boolean
-function Casting.DoBuffCheck()
+function Casting.OkayToBuff()
     if not Config:GetSetting('DoBuffs') then return false end
-
-    if mq.TLO.Me.Invis() or Config:GetSetting('BuffWaitMoveTimer') > Config:GetTimeSinceLastMove() then return false end
-
-    if Targeting.GetXTHaterCount() > 0 or Config.Globals.AutoTargetID > 0 then return false end
-
-    if (mq.TLO.MoveTo.Moving() or mq.TLO.Me.Moving() or mq.TLO.AdvPath.Following() or mq.TLO.Navigation.Active()) and not Core.MyClassIs("brd") then return false end
-
-    if Config.Constants.RGCasters:contains(mq.TLO.Me.Class.ShortName()) and mq.TLO.Me.PctMana() < 10 then return false end
-
-    return true
+    return Casting.CheckOkayToBuff()
 end
 
---- Performs a check on the pet status.
---- This function checks various conditions related to the pet.
+--- Determine if the time is opportune to summon or buff pets.
 --- @return boolean Returns true if the pet check is successful, false otherwise.
-function Casting.DoPetCheck()
+function Casting.OkayToPetBuff()
     if not Config:GetSetting('DoPet') then return false end
-
-    if mq.TLO.Me.Invis() or Config:GetSetting('BuffWaitMoveTimer') > Config:GetTimeSinceLastMove() then return false end
-
-    if Targeting.GetXTHaterCount() > 0 or Config.Globals.AutoTargetID > 0 then return false end
-
-    if mq.TLO.MoveTo.Moving() or mq.TLO.Me.Moving() or mq.TLO.AdvPath.Following() or mq.TLO.Navigation.Active() then return false end
-
-    if Config.Constants.RGCasters:contains(mq.TLO.Me.Class.ShortName()) and mq.TLO.Me.PctMana() < 10 then return false end
-
-    return true
+    return Casting.CheckOkayToBuff()
 end
 
---- Determines if the current entity can receive buffs.
+--- Perform ancillary checks to facilitate OkaytoBuff checks.
+function Casting.CheckOkayToBuff()
+    local visible = not mq.TLO.Me.Invis()
+    local safe = Targeting.GetXTHaterCount() == 0 and Config.Globals.AutoTargetID == 0
+    local stationary = not (Config:GetSetting('BuffWaitMoveTimer') > Config:GetTimeSinceLastMove() or mq.TLO.MoveTo.Moving() or mq.TLO.Me.Moving() or mq.TLO.AdvPath.Following() or mq.TLO.Navigation.Active())
+    local able = not (Config.Constants.RGCasters:contains(mq.TLO.Me.Class.ShortName()) and mq.TLO.Me.PctMana() < 10)
+
+    return visible and safe and stationary and able
+end
+
+--- Checks if the PC should use debuffs based off of con color or named settings.
+--- @return boolean True if the target matches the Con requirements for debuffing.
+function Casting.OkayToDebuff()
+    local conLevel = (Config.Constants.ConColorsNameToId[mq.TLO.Target.ConColor() or "Grey"] or 0)
+    return conLevel >= Config:GetSetting('DebuffMinCon') or (Targeting.IsNamed(Targeting.GetAutoTarget()) and Config:GetSetting('DebuffNamedAlways'))
+end
+
+--- Checks if target health exceeds minimum thresholds to use Dots.
+function Casting.EnoughHPToDot(target)
+    if not target then target = Targeting.GetAutoTarget or mq.TLO.Target end
+    if not (target and target()) then return false end
+
+    local threshold = Targeting.IsNamed(target) and Config:GetSetting('NamedStopDOT') or Config:GetSetting('HPStopDOT')
+    return Targeting.GetTargetPctHPs(target) < threshold
+end
+
+--- Determines if the PC can/should use buffs if their corpse is nearby.
 --- @return boolean True if the entity can be buffed, false otherwise.
 function Casting.AmIBuffable()
     local myCorpseCount = Config:GetSetting('BuffRezables') and 0 or mq.TLO.SpawnCount(string.format('pccorpse %s radius 100 zradius 50', mq.TLO.Me.CleanName()))()
@@ -480,8 +487,7 @@ function Casting.AmIBuffable()
     return myCorpseCount == 0
 end
 
---- Retrieves the list of group IDs that can be buffed.
----
+--- Retrieves the list of group IDs that should be buffed.
 --- @return table A table containing the IDs of the groups that can receive buffs.
 function Casting.GetBuffableGroupIDs()
     local groupIds = {}
@@ -524,8 +530,7 @@ function Casting.IAmFeigning()
     return mq.TLO.Me.State():lower() == "feign"
 end
 
---- Checks if a spell is loaded.
----
+--- Checks if a spell is loaded on the spellbar.
 --- @param spell MQSpell The name of the spell to check.
 --- @return boolean Returns true if the spell is loaded, false otherwise.
 function Casting.SpellLoaded(spell)
@@ -534,6 +539,7 @@ function Casting.SpellLoaded(spell)
     return mq.TLO.Me.Gem(spell.RankName.Name())() ~= nil
 end
 
+--- Checks if the spell is ready to cast (not in refresh, no gem timer)
 function Casting.CastReady(spell)
     if not spell or not spell() then return false end
     return mq.TLO.Me.SpellReady(spell.RankName.Name())()
@@ -592,13 +598,13 @@ function Casting.AARank(aaName)
     return Casting.CanUseAA(aaName) and mq.TLO.Me.AltAbility(aaName).Rank() or 0
 end
 
+--- Helper to retrive an AA spell to be used in other checks.
 function Casting.GetAASpell(aaName)
     if not Casting.CanUseAA(aaName) then return "None" end
     return mq.TLO.Me.AltAbility(aaName).Spell
 end
 
---- Checks if the given name corresponds to a discipline.
----
+--- Checks if the disc in question is an active disc (not a buff; displayed in the disc window)
 --- @param name string The name to check.
 --- @return boolean True if the name is a discipline, false otherwise.
 function Casting.IsActiveDisc(name)
@@ -608,14 +614,17 @@ function Casting.IsActiveDisc(name)
         true or false
 end
 
+-- helper to check if a disc is currently active in the disc window
 function Casting.NoDiscActive()
     return not mq.TLO.Me.ActiveDisc.ID()
 end
 
+-- Check if an item has a clicky effect.
 function Casting.ItemHasClicky(itemName)
     return mq.TLO.FindItem("=" .. (itemName or "None")).Clicky() ~= nil
 end
 
+-- Helper to retrieve a Clicky spell to be used in other checks.
 function Casting.GetClickySpell(itemName)
     local itemClicky = mq.TLO.FindItem("=" .. itemName()).Clicky
     if not itemClicky then return false end
@@ -623,7 +632,6 @@ function Casting.GetClickySpell(itemName)
 end
 
 --- Retrieves the ID of the item summoned by a given spell.
----
 --- @param spell MQSpell The name or identifier of the spell.
 --- @return number The ID of the summoned item.
 function Casting.GetSummonedItemIDFromSpell(spell)
@@ -660,54 +668,38 @@ function Casting.HaveManaToDebuff(bRestrictBurns)
     return mq.TLO.Me.PctMana() >= Config:GetSetting('ManaToDebuff') or (not bRestrictBurns and Casting.BurnCheck())
 end
 
---- Checks the debuff condition for the Target
---- This function evaluates the current debuff status and performs necessary actions.
---- @return boolean True if the target matches the Con requirements for debuffing.
-function Casting.DebuffConCheck()
-    local conLevel = (Config.Constants.ConColorsNameToId[mq.TLO.Target.ConColor() or "Grey"] or 0)
-    return conLevel >= Config:GetSetting('DebuffMinCon') or (Targeting.IsNamed(Targeting.GetAutoTarget()) and Config:GetSetting('DebuffNamedAlways'))
-end
+---- "DetXChecks"s are helper functions that wrap debuff spells and checks in an easy-to-understand system for simpler class configs
 
 function Casting.DetSpellCheck(spell, target)
-    if not spell or not spell() then return false end
+    if not (spell and spell()) then return false end
+    if not target then target = Targeting.GetAutoTarget or mq.TLO.Target end
+
     return Casting.TargetBuffCheck(spell, target)
 end
 
 function Casting.DetAACheck(aaName, target)
     if not Casting.CanUseAA(aaName) then return false end
+    if not target then target = Targeting.GetAutoTarget or mq.TLO.Target end
+
     return Casting.TargetBuffCheck(mq.TLO.Me.AltAbility(aaName).Spell, target)
 end
 
 function Casting.DetItemCheck(itemName, target)
     local clickySpell = Casting.GetClickySpell(itemName)
     if not clickySpell or not clickySpell() then return false end
+    if not target then target = Targeting.GetAutoTarget or mq.TLO.Target end
+
     return Casting.TargetBuffCheck(clickySpell, target)
 end
 
+-- Checks HP thresholds and presence/stacking for Dots.
 function Casting.DotSpellCheck(spell, target)
-    if not spell or not spell() then return false end
-    local threshold = Targeting.IsNamed(target) and Config:GetSetting('NamedStopDOT') or Config:GetSetting('HPStopDOT')
-    if threshold < Targeting.GetTargetPctHPs(target) then return false end
+    if not (spell and spell()) then return false end
+    if not target then target = Targeting.GetAutoTarget or mq.TLO.Target end
+
+    if not Casting.EnoughHPToDot(target) then return false end
 
     return Casting.TargetBuffCheck(spell, target)
-end
-
-function Casting.CastCheck(spell, bAllowMove)
-    if not spell or not spell() then return false end
-
-    local me = mq.TLO.Me
-    local castingCheck = not (me.Casting() or mq.TLO.Window("CastingWindow").Open())
-    local movingCheck = bAllowMove or Core.MyClassIs("brd") or not (me.Moving() and (spell.MyCastTime() or -1) > 0)
-    local manaCheck = (Config.Globals.InMedState and (me.CurrentMana() - (2 * me.ManaRegen())) or me.CurrentMana()) >= spell.Mana()
-    local endCheck = (Config.Globals.InMedState and (me.CurrentEndurance() - (2 * me.EnduranceRegen())) or me.CurrentEndurance()) >= spell.EnduranceCost()
-    ---@diagnostic disable-next-line: undefined-field -- Feared is a valid data member
-    local controlCheck = not (me.Stunned() or me.Feared() or me.Charmed() or me.Mezzed())
-
-    Logger.log_verbose("CastCheck for %s (%d): CastingCheck(%s), MovingCheck(%s), ManaCheck(%s), EndCheck(%s), ControlCheck(%s)", spell.Name(), spell.ID(),
-        Strings.BoolToColorString(castingCheck), Strings.BoolToColorString(movingCheck), Strings.BoolToColorString(manaCheck), Strings.BoolToColorString(endCheck),
-        Strings.BoolToColorString(controlCheck))
-
-    return castingCheck and movingCheck and manaCheck and endCheck and controlCheck
 end
 
 --- Checks if a player character's spell is ready to be cast.
@@ -791,6 +783,7 @@ function Casting.AbilityReady(abilityName, target)
     return Targeting.GetTargetDistance(target) <= Targeting.GetTargetMaxRangeTo(target) or abilityName:lower() == "taunt"
 end
 
+--- Checks if a given item is ready to be used.
 function Casting.ItemReady(itemName)
     if not Casting.ItemHasClicky(itemName) then return false end
 
@@ -802,6 +795,25 @@ function Casting.ItemReady(itemName)
     if not ready then return false end
 
     return levelCheck
+end
+
+-- Helper function for use in determining whether we are ready to perform other actions.
+function Casting.CastCheck(spell, bAllowMove)
+    if not spell or not spell() then return false end
+
+    local me = mq.TLO.Me
+    local castingCheck = not (me.Casting() or mq.TLO.Window("CastingWindow").Open())
+    local movingCheck = bAllowMove or Core.MyClassIs("brd") or not (me.Moving() and (spell.MyCastTime() or -1) > 0)
+    local manaCheck = (Config.Globals.InMedState and (me.CurrentMana() - (2 * me.ManaRegen())) or me.CurrentMana()) >= spell.Mana()
+    local endCheck = (Config.Globals.InMedState and (me.CurrentEndurance() - (2 * me.EnduranceRegen())) or me.CurrentEndurance()) >= spell.EnduranceCost()
+    ---@diagnostic disable-next-line: undefined-field -- Feared is a valid data member
+    local controlCheck = not (me.Stunned() or me.Feared() or me.Charmed() or me.Mezzed())
+
+    Logger.log_verbose("CastCheck for %s (%d): CastingCheck(%s), MovingCheck(%s), ManaCheck(%s), EndCheck(%s), ControlCheck(%s)", spell.Name(), spell.ID(),
+        Strings.BoolToColorString(castingCheck), Strings.BoolToColorString(movingCheck), Strings.BoolToColorString(manaCheck), Strings.BoolToColorString(endCheck),
+        Strings.BoolToColorString(controlCheck))
+
+    return castingCheck and movingCheck and manaCheck and endCheck and controlCheck
 end
 
 --- Uses a specified spell on a target.
@@ -1090,7 +1102,6 @@ function Casting.UseSong(songName, targetId, bAllowMem, retryCount)
 end
 
 --- Uses a discipline spell on a specified target.
----
 --- @param discSpell MQSpell The name of the discipline spell to use.
 --- @param targetId number The ID of the target on which to use the discipline spell.
 --- @return boolean True if we were able to fire the Disc false otherwise.
@@ -1229,7 +1240,6 @@ function Casting.UseAA(aaName, targetId, bAllowDead, retryCount)
 end
 
 --- Uses the specified ability.
----
 --- @param abilityName string The name of the ability to use.
 function Casting.UseAbility(abilityName)
     local me = mq.TLO.Me
@@ -1358,7 +1368,6 @@ function Casting.ActionPrep()
 end
 
 --- Waits for the casting to finish on the specified target.
----
 --- @param target MQSpawn The target to wait for the casting to finish.
 --- @param bAllowDead boolean Whether to allow the target to be dead.
 function Casting.WaitCastFinish(target, bAllowDead, spellRange) --I am not vested in the math below, I simply converted the existing entry from sec to ms
@@ -1443,9 +1452,7 @@ function Casting.WaitCastReady(spell, maxWait)
 end
 
 --- Waits for the global cooldown to complete.
----
 --- This function pauses execution until the global cooldown period has elapsed.
----
 --- @param logPrefix string|nil: An optional prefix to be used in log messages.
 function Casting.WaitGlobalCoolDown(logPrefix)
     while mq.TLO.Me.SpellInCooldown() do
@@ -1456,14 +1463,12 @@ function Casting.WaitGlobalCoolDown(logPrefix)
 end
 
 --- Retrieves the name of the last cast result.
----
 --- @return string The name of the last cast result.
 function Casting.GetLastCastResultName()
     return Config.Constants.CastResultsIdToName[Config.Globals.CastResult]
 end
 
 --- Retrieves the ID of the last cast result.
----
 --- @return number The ID of the last cast result.
 function Casting.GetLastCastResultId()
     return Config.Globals.CastResult
@@ -1477,7 +1482,6 @@ function Casting.SetLastCastResult(result)
 end
 
 --- Retrieves the last used spell.
----
 --- @return string The name of the last used spell.
 function Casting.GetLastUsedSpell()
     return Config.Globals.LastUsedSpell
@@ -1485,7 +1489,6 @@ end
 
 --- Automatically manages the medication process for the character.
 --- This function handles the logic for ensuring the character takes the necessary medication at the appropriate times.
----
 function Casting.AutoMed()
     local me = mq.TLO.Me
     if Config:GetSetting('DoMed') == 1 then return end
@@ -1590,6 +1593,7 @@ function Casting.AutoMed()
     end
 end
 
+--- Function to execute use of modrods.
 function Casting.ClickModRod()
     local me = mq.TLO.Me
     if not Config.Constants.RGCasters:contains(me.Class.ShortName()) or me.PctMana() > Config:GetSetting('ModRodManaPct') or me.PctHPs() < 60 or Casting.IAmFeigning() or mq.TLO.Me.Invis() then

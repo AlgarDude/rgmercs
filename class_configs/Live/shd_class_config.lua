@@ -762,14 +762,14 @@ local _ClassConfig = {
             name = 'Downtime',
             targetId = function(self) return { mq.TLO.Me.ID(), } end,
             cond = function(self, combat_state)
-                return combat_state == "Downtime" and Casting.DoBuffCheck() and Casting.AmIBuffable()
+                return combat_state == "Downtime" and Casting.OkayToBuff() and Casting.AmIBuffable()
             end,
         },
         { --Summon pet even when buffs are off on emu
             name = 'PetSummon',
             targetId = function(self) return { mq.TLO.Me.ID(), } end,
             cond = function(self, combat_state)
-                return combat_state == "Downtime" and mq.TLO.Me.Pet.ID() == 0 and Casting.DoPetCheck() and Casting.AmIBuffable()
+                return combat_state == "Downtime" and mq.TLO.Me.Pet.ID() == 0 and Casting.OkayToPetBuff()() and Casting.AmIBuffable()
             end,
         },
         { --Pet Buffs if we have one, timer because we don't need to constantly check this
@@ -777,7 +777,7 @@ local _ClassConfig = {
             timer = 60,
             targetId = function(self) return mq.TLO.Me.Pet.ID() > 0 and { mq.TLO.Me.Pet.ID(), } or {} end,
             cond = function(self, combat_state)
-                return combat_state == "Downtime" and mq.TLO.Me.Pet.ID() > 0 and Casting.DoPetCheck()
+                return combat_state == "Downtime" and mq.TLO.Me.Pet.ID() > 0 and Casting.OkayToPetBuff()()
             end,
         },
         { --Actions that establish or maintain hatred
@@ -894,8 +894,7 @@ local _ClassConfig = {
                 active_cond = function(self, aaName) return Casting.IHaveBuff(mq.TLO.Me.AltAbility(aaName).Spell.Trigger(2).ID() or 0) end,
                 cond = function(self, aaName, target)
                     if Config:GetSetting('ProcChoice') ~= 1 then return false end
-                    --SelfBuffAACheck does not work for this specific AA, it returns a strange spell in the stacking check
-                    return Casting.GroupBuffAACheck(aaName, target)
+                    return Casting.SelfBuffAACheck(aaName)
                 end,
             },
             {
@@ -905,8 +904,7 @@ local _ClassConfig = {
                 active_cond = function(self, aaName) return Casting.IHaveBuff(mq.TLO.Me.AltAbility(aaName).Spell.Trigger(2).ID() or 0) end,
                 cond = function(self, aaName, target)
                     if Config:GetSetting('ProcChoice') ~= 2 then return false end
-                    --SelfBuffAACheck does not work for this specific AA, it returns a strange spell in the stacking check
-                    return Casting.GroupBuffAACheck(aaName, target)
+                    return Casting.SelfBuffAACheck(aaName)
                 end,
             },
             {
@@ -1130,8 +1128,8 @@ local _ClassConfig = {
                 name = "LeechCurse",
                 type = "Disc",
                 tooltip = Tooltips.LeechCurse,
-                cond = function(self, discSpell)
-                    return mq.TLO.Me.PctHPs() <= Config:GetSetting('EmergencyLockout') and Casting.NoDiscActive()
+                cond = function(self)
+                    return Casting.NoDiscActive() and mq.TLO.Me.PctHPs() <= Config:GetSetting('EmergencyLockout')
                 end,
             },
             --Influence is in an odd place with Carapace. Usage is very subjective and may be more nuanced than automation can support. Placed here as an alternative to Carapace in low health situations to get you topped back off again for tanks. Should be used in burn for non-tanks (adding non-tank stuff is TODO)

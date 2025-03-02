@@ -252,7 +252,7 @@ local _ClassConfig = {
             name = 'Downtime',
             targetId = function(self) return { mq.TLO.Me.ID(), } end,
             cond = function(self, combat_state)
-                return combat_state == "Downtime" and Casting.DoBuffCheck() and Casting.AmIBuffable()
+                return combat_state == "Downtime" and Casting.OkayToBuff() and Casting.AmIBuffable()
             end,
         },
         {
@@ -580,7 +580,7 @@ local _ClassConfig = {
                 name = "Intimidation",
                 type = "Ability",
                 cond = function(self, abilityName)
-                    return (mq.TLO.Me.AltAbility("Intimidation").Rank() or 0) > 1
+                    return Casting.AARank("Intimidation") > 1
                 end,
             },
             {

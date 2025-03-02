@@ -878,7 +878,7 @@ local _ClassConfig = {
             name = 'Downtime',
             targetId = function(self) return { mq.TLO.Me.ID(), } end,
             cond = function(self, combat_state)
-                return combat_state == "Downtime" and (not Core.IsModeActive('Heal') or Core.OkayToNotHeal()) and Casting.DoBuffCheck() and
+                return combat_state == "Downtime" and (not Core.IsModeActive('Heal') or Core.OkayToNotHeal()) and Casting.OkayToBuff() and
                     Casting.AmIBuffable()
             end,
         },
@@ -886,7 +886,7 @@ local _ClassConfig = {
             name = 'PetSummon',
             targetId = function(self) return { mq.TLO.Me.ID(), } end,
             cond = function(self, combat_state)
-                return combat_state == "Downtime" and (not Core.IsModeActive('Heal') or Core.OkayToNotHeal()) and mq.TLO.Me.Pet.ID() == 0 and Casting.DoPetCheck() and
+                return combat_state == "Downtime" and (not Core.IsModeActive('Heal') or Core.OkayToNotHeal()) and mq.TLO.Me.Pet.ID() == 0 and Casting.OkayToPetBuff()() and
                     Casting.AmIBuffable()
             end,
         },
@@ -895,7 +895,7 @@ local _ClassConfig = {
             timer = 60,
             targetId = function(self) return mq.TLO.Me.Pet.ID() > 0 and { mq.TLO.Me.Pet.ID(), } or {} end,
             cond = function(self, combat_state)
-                return combat_state == "Downtime" and (not Core.IsModeActive('Heal') or Core.OkayToNotHeal()) and mq.TLO.Me.Pet.ID() > 0 and Casting.DoPetCheck()
+                return combat_state == "Downtime" and (not Core.IsModeActive('Heal') or Core.OkayToNotHeal()) and mq.TLO.Me.Pet.ID() > 0 and Casting.OkayToPetBuff()()
             end,
         },
         { --Downtime buffs that don't need constant checks
@@ -904,7 +904,7 @@ local _ClassConfig = {
             targetId = function(self) return { mq.TLO.Me.ID(), } end,
             cond = function(self, combat_state)
                 return combat_state == "Downtime" and
-                    (not Core.IsModeActive('Heal') or Core.OkayToNotHeal()) and Casting.DoBuffCheck() and Casting.AmIBuffable()
+                    (not Core.IsModeActive('Heal') or Core.OkayToNotHeal()) and Casting.OkayToBuff() and Casting.AmIBuffable()
             end,
         },
         { --Spells that should be checked on group members
@@ -914,7 +914,7 @@ local _ClassConfig = {
                 return Casting.GetBuffableGroupIDs()
             end,
             cond = function(self, combat_state)
-                return combat_state == "Downtime" and (not Core.IsModeActive('Heal') or Core.OkayToNotHeal()) and Casting.DoBuffCheck()
+                return combat_state == "Downtime" and (not Core.IsModeActive('Heal') or Core.OkayToNotHeal()) and Casting.OkayToBuff()
             end,
         },
         {
@@ -924,7 +924,7 @@ local _ClassConfig = {
             load_cond = function() return Config:GetSetting('DoSTMalo') or Config:GetSetting('DoAEMalo') end,
             targetId = function(self) return mq.TLO.Target.ID() == Config.Globals.AutoTargetID and { Config.Globals.AutoTargetID, } or {} end,
             cond = function(self, combat_state)
-                return combat_state == "Combat" and not Casting.IAmFeigning() and Casting.DebuffConCheck() and
+                return combat_state == "Combat" and not Casting.IAmFeigning() and Casting.OkayToDebuff() and
                     (not Core.IsModeActive('Heal') or Core.OkayToNotHeal())
             end,
         },
@@ -935,7 +935,7 @@ local _ClassConfig = {
             load_cond = function() return Config:GetSetting('DoSTSlow') or Config:GetSetting('DoAESlow') end,
             targetId = function(self) return mq.TLO.Target.ID() == Config.Globals.AutoTargetID and { Config.Globals.AutoTargetID, } or {} end,
             cond = function(self, combat_state)
-                return combat_state == "Combat" and not Casting.IAmFeigning() and Casting.DebuffConCheck() and
+                return combat_state == "Combat" and not Casting.IAmFeigning() and Casting.OkayToDebuff() and
                     (not Core.IsModeActive('Heal') or Core.OkayToNotHeal())
             end,
         },
@@ -1213,10 +1213,9 @@ local _ClassConfig = {
                 name = "GroupRenewalHoT",
                 type = "Spell",
                 allowDead = true,
-                cond = function(self, spell)
+                cond = function(self, spell, target)
                     if not Casting.CanUseAA("Luminary's Synergy") and Config:GetSetting('DoHealOverTime') then return false end
-                    return not Casting.DotSpellCheck(spell) and spell.RankName.Stacks()
-                        and (mq.TLO.Me.Song(spell).Duration.TotalSeconds() or 0) < 30
+                    return not Casting.EnoughHPToDot(target) and spell.RankName.Stacks() and (mq.TLO.Me.Song(spell).Duration.TotalSeconds() or 0) < 30
                 end,
             },
             {
@@ -1231,7 +1230,7 @@ local _ClassConfig = {
                 type = "Spell",
                 cond = function(self, spell, target)
                     if Core.IsModeActive("Heal") and Core.GetResolvedActionMapItem('FastPoisonNuke') then return false end
-                    return not Casting.DotSpellCheck(spell) and Casting.HaveManaToNuke()
+                    return not Casting.EnoughHPToDot(target) and Casting.HaveManaToNuke()
                 end,
             },
             {
@@ -1239,7 +1238,7 @@ local _ClassConfig = {
                 type = "Spell",
                 cond = function(self, spell, target)
                     if Core.GetResolvedActionMapItem('PoisonNuke') then return false end
-                    return not Casting.DotSpellCheck(spell) and Casting.HaveManaToNuke()
+                    return not Casting.EnoughHPToDot(target) and Casting.HaveManaToNuke()
                 end,
             },
         },

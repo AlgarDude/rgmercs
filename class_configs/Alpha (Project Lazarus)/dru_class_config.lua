@@ -816,7 +816,7 @@ local _ClassConfig = {
             name = 'Downtime',
             targetId = function(self) return { mq.TLO.Me.ID(), } end,
             cond = function(self, combat_state)
-                return combat_state == "Downtime" and Core.OkayToNotHeal() and Casting.DoBuffCheck() and Casting.AmIBuffable()
+                return combat_state == "Downtime" and Core.OkayToNotHeal() and Casting.OkayToBuff() and Casting.AmIBuffable()
             end,
         },
         { --Summon pet even when buffs are off on emu
@@ -825,7 +825,7 @@ local _ClassConfig = {
             load_cond = function(self) return Core.OnEMU() end,
             cond = function(self, combat_state)
                 if not Config:GetSetting('DoPet') or mq.TLO.Me.Pet.ID() ~= 0 then return false end
-                return combat_state == "Downtime" and (not Core.IsModeActive('Heal') or Core.OkayToNotHeal()) and Casting.DoPetCheck() and Casting.AmIBuffable()
+                return combat_state == "Downtime" and (not Core.IsModeActive('Heal') or Core.OkayToNotHeal()) and Casting.OkayToPetBuff()() and Casting.AmIBuffable()
             end,
         },
         {
@@ -835,7 +835,7 @@ local _ClassConfig = {
                 return Casting.GetBuffableGroupIDs()
             end,
             cond = function(self, combat_state)
-                return combat_state == "Downtime" and Core.OkayToNotHeal() and Casting.DoBuffCheck()
+                return combat_state == "Downtime" and Core.OkayToNotHeal() and Casting.OkayToBuff()
             end,
         },
         {
@@ -845,7 +845,7 @@ local _ClassConfig = {
             targetId = function(self) return mq.TLO.Target.ID() == Config.Globals.AutoTargetID and { Config.Globals.AutoTargetID, } or {} end,
             cond = function(self, combat_state)
                 return combat_state == "Combat" and not Casting.IAmFeigning() and Core.OkayToNotHeal() and
-                    Casting.DebuffConCheck() and (Casting.HaveManaToDebuff() or Targeting.IsNamed(Targeting.GetAutoTarget()))
+                    Casting.OkayToDebuff() and (Casting.HaveManaToDebuff() or Targeting.IsNamed(Targeting.GetAutoTarget()))
             end,
         },
         { --Keep things from running
@@ -990,7 +990,7 @@ local _ClassConfig = {
                 type = "AA",
                 cond = function(self, aaName, target)
                     local aaSpell = Casting.GetAASpell(aaName)
-                    return Casting.DetAACheck(aaName, target) and Casting.ReagentCheck(aaSpell and aaSpell.Trigger(1) or aaName)
+                    return Casting.DetAACheck(aaName) and Casting.ReagentCheck(aaSpell and aaSpell.Trigger(1) or aaName)
                 end,
             },
             {

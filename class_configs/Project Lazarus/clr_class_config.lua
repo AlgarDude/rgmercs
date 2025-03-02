@@ -1043,7 +1043,7 @@ local _ClassConfig = {
             name = 'Downtime',
             targetId = function(self) return { mq.TLO.Me.ID(), } end,
             cond = function(self, combat_state)
-                return combat_state == "Downtime" and (not Core.IsModeActive('Heal') or Core.OkayToNotHeal()) and Casting.DoBuffCheck() and Casting.AmIBuffable()
+                return combat_state == "Downtime" and (not Core.IsModeActive('Heal') or Core.OkayToNotHeal()) and Casting.OkayToBuff() and Casting.AmIBuffable()
             end,
         },
         { --Spells that should be checked on group members
@@ -1051,7 +1051,7 @@ local _ClassConfig = {
             timer = 60,
             targetId = function(self) return Casting.GetBuffableGroupIDs() end,
             cond = function(self, combat_state)
-                return combat_state == "Downtime" and (not Core.IsModeActive('Heal') or Core.OkayToNotHeal()) and Casting.DoBuffCheck()
+                return combat_state == "Downtime" and (not Core.IsModeActive('Heal') or Core.OkayToNotHeal()) and Casting.OkayToBuff()
             end,
         },
         {
@@ -1074,7 +1074,7 @@ local _ClassConfig = {
                     Combat.FindWorstHurtManaXT(Config:GetSetting('ManaRestorePct')), }
             end,
             cond = function(self, combat_state)
-                local downtime = combat_state == "Downtime" and Casting.DoBuffCheck()
+                local downtime = combat_state == "Downtime" and Casting.OkayToBuff()
                 local combat = combat_state == "Combat" and not Casting.IAmFeigning()
                 return (downtime or combat) and (not Core.IsModeActive('Heal') or Core.OkayToNotHeal())
             end,
