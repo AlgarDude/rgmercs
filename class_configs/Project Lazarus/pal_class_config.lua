@@ -1328,7 +1328,7 @@ return {
                 type = "AA",
                 cond = function(self, aaName, target)
                     if not Config:GetSetting('DoSalvation') then return false end
-                    return Casting.GroupBuffCheck(mq.TLO.Me.AltAbility(aaName).Spell, target)
+                    return Casting.GroupBuffAACheck(aaName, target)
                 end,
             },
         },

@@ -1257,7 +1257,7 @@ local _ClassConfig = {
                 name = "Swarm of Fireflies",
                 type = "AA",
                 cond = function(self, aaName, target)
-                    return Targeting.TargetIsMA(target) and Casting.GroupBuffCheck(mq.TLO.Me.AltAbility(aaName).Spell, target)
+                    return Targeting.TargetIsMA(target) and Casting.GroupBuffAACheck(aaName, target)
                 end,
             },
             {
@@ -1340,7 +1340,7 @@ local _ClassConfig = {
                 type = "AA",
                 active_cond = function(self, aaName) return true end,
                 cond = function(self, aaName, target)
-                    return Targeting.TargetIsMA(target) and Casting.GroupBuffCheck(mq.TLO.Me.AltAbility(aaName).Spell, target)
+                    return Targeting.TargetIsMA(target) and Casting.GroupBuffAACheck(aaName, target)
                 end,
             },
         },

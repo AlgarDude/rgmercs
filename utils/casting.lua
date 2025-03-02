@@ -183,7 +183,8 @@ function Casting.GroupBuffCheck(spell, target)
             ret = Casting.PeerBuffCheck(spell, target)
         else
             Logger.log_verbose("GroupBuffCheck: Target is not myself or a DanNet peer, using TargetSpellCheck.")
-            ret = Casting.TargetBuffCheck(spell, target, true)
+            local allowTargetChange = not mq.TLO.Me.CombatState():lower() == "combat"
+            ret = Casting.TargetBuffCheck(spell, target, allowTargetChange)
         end
     end
     return ret

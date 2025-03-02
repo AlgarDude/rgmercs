@@ -1352,7 +1352,7 @@ local _ClassConfig = {
                 type = "Spell",
                 cond = function(self, spell, target)
                     if Config:GetSetting('AegoSymbol') > 2 then return false end
-                    return Casting.GroupBuffCheck(spell.ID, target)
+                    return Casting.GroupBuffCheck(spell, target)
                 end,
             },
             {
