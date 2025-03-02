@@ -913,7 +913,7 @@ return {
                 name = "Sha's Reprisal",
                 type = "AA",
                 cond = function(self, aaName, target)
-                    local aaSpell = mq.TLO.Me.AltAbility(aaName).Spell
+                    local aaSpell = Casting.GetAASpell(aaName)
                     return Casting.DetSpellCheck(aaSpell) and (aaSpell.SlowPct() or 0) > (Targeting.GetTargetSlowedPct())
                 end,
             },
@@ -1145,7 +1145,7 @@ return {
                 name = "BestialBuffDisc",
                 type = "Disc",
                 cond = function(self, discSpell, target)
-                    return not Casting.IHaveBuff(discSpell)
+                    return Casting.SelfBuffCheck(discSpell)
                 end,
             },
             {
@@ -1177,7 +1177,7 @@ return {
                 name = "AvatarSpell",
                 type = "Spell",
                 cond = function(self, spell, target)
-                    if not Config:GetSetting('DoAvatar') or not Config.Constants.RGMelee:contains(target.Class.ShortName()) then return false end
+                    if not Config:GetSetting('DoAvatar') or not Targeting.TargetIsMelee(target) then return false end
                     return Casting.GroupBuffCheck(spell, target)
                 end,
             },
@@ -1186,10 +1186,7 @@ return {
                 type = "Spell",
                 cond = function(self, spell, target)
                     -- Make sure this is gemmed due to long refresh, and only use the single target versions on classes that need it.
-                    if (spell and spell() and ((spell.TargetType() or ""):lower() ~= "group v2")) and (not Casting.CastReady(spell)
-                            or not Config.Constants.RGMelee:contains(target.Class.ShortName())) then
-                        return false
-                    end
+                    if ((spell.TargetType() or ""):lower() ~= "group v2" and not Targeting.TargetIsMelee(target)) or not Casting.CastReady(spell) then return false end
                     return Casting.GroupBuffCheck(spell, target)
                 end,
             },
@@ -1217,10 +1214,7 @@ return {
                 type = "Spell",
                 cond = function(self, spell, target)
                     -- Only use the single target versions on classes that need it
-                    if (spell and spell() and ((spell.TargetType() or ""):lower() ~= "group v2"))
-                        and not Config.Constants.RGMelee:contains(target.Class.ShortName()) then
-                        return false
-                    end
+                    if (spell.TargetType() or ""):lower() ~= "group v2" and not Targeting.TargetIsMelee(target) then return false end
                     return Casting.GroupBuffCheck(spell, target)
                 end,
             },
@@ -1229,10 +1223,7 @@ return {
                 type = "Spell",
                 cond = function(self, spell, target)
                     -- Only use the single target versions on classes that need it
-                    if (spell and spell() and ((spell.TargetType() or ""):lower() ~= "group v2"))
-                        and not Config.Constants.RGMelee:contains(target.Class.ShortName()) then
-                        return false
-                    end
+                    if (spell.TargetType() or ""):lower() ~= "group v2" and not Targeting.TargetIsMelee(target) then return false end
                     return Casting.GroupBuffCheck(spell, target)
                 end,
             },

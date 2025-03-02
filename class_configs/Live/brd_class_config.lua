@@ -1082,7 +1082,7 @@ local _ClassConfig = {
                 name = "FireDotSong",
                 type = "Song",
                 cond = function(self, songSpell)
-                    if not Config:GetSetting('UseFireDots') and Casting.SpellLoaded(songSpell) then return false end
+                    if not Config:GetSetting('UseFireDots') then return false end
                     return self.ClassConfig.HelperFunctions.DotSongCheck(songSpell) and
                         -- If dot is about to wear off, recast
                         self.ClassConfig.HelperFunctions.GetDetSongDuration(songSpell) <= 3
@@ -1092,7 +1092,7 @@ local _ClassConfig = {
                 name = "IceDotSong",
                 type = "Song",
                 cond = function(self, songSpell)
-                    if not Config:GetSetting('UseIceDots') and Casting.SpellLoaded(songSpell) then return false end
+                    if not Config:GetSetting('UseIceDots') then return false end
                     return self.ClassConfig.HelperFunctions.DotSongCheck(songSpell) and
                         -- If dot is about to wear off, recast
                         self.ClassConfig.HelperFunctions.GetDetSongDuration(songSpell) <= 3
@@ -1102,7 +1102,7 @@ local _ClassConfig = {
                 name = "PoisonDotSong",
                 type = "Song",
                 cond = function(self, songSpell)
-                    if not Config:GetSetting('UsePoisonDots') and Casting.SpellLoaded(songSpell) then return false end
+                    if not Config:GetSetting('UsePoisonDots') then return false end
                     return self.ClassConfig.HelperFunctions.DotSongCheck(songSpell) and
                         -- If dot is about to wear off, recast
                         self.ClassConfig.HelperFunctions.GetDetSongDuration(songSpell) <= 3
@@ -1112,7 +1112,7 @@ local _ClassConfig = {
                 name = "DiseaseDotSong",
                 type = "Song",
                 cond = function(self, songSpell)
-                    if not Config:GetSetting('UseDiseaseDots') and Casting.SpellLoaded(songSpell) then return false end
+                    if not Config:GetSetting('UseDiseaseDots') then return false end
                     return self.ClassConfig.HelperFunctions.DotSongCheck(songSpell) and
                         -- If dot is about to wear off, recast
                         self.ClassConfig.HelperFunctions.GetDetSongDuration(songSpell) <= 3
@@ -1130,8 +1130,8 @@ local _ClassConfig = {
                 name = "AllianceSong",
                 type = "Song",
                 cond = function(self, songSpell)
-                    return Casting.SpellLoaded(songSpell) and Config:GetSetting('UseAlliance') and
-                        (mq.TLO.Me.PctMana() > Config:GetSetting('SelfManaPct') or Casting.BurnCheck()) and Casting.DetSpellCheck(songSpell)
+                    if not Config:GetSetting('UseAlliance') then return false end
+                    return (mq.TLO.Me.PctMana() > Config:GetSetting('SelfManaPct') or Casting.BurnCheck()) and Casting.DetSpellCheck(songSpell)
                 end,
             },
             --used in combat when we have nothing else to refresh rather than standing there. Initial testing good, need more to ensure this doesn't interfere with Melody.
