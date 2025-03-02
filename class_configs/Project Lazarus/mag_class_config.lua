@@ -976,7 +976,7 @@ _ClassConfig      = {
     ['HelperFunctions']   = {
         user_tu_spell = function(self, aaName)
             local shroudSpell = self.ResolvedActionMap['ShroudSpell']
-            local aaSpell = mq.TLO.Me.AltAbility(aaName).Spell
+            local aaSpell = Casting.GetAASpell(aaName)
             if not shroudSpell or not shroudSpell() or not aaSpell or not aaSpell() or not Casting.CanUseAA(aaName) then return false end
             -- do we need to lookup the spell basename here? I dont think so but if this doesn't fire right take a look.
             if shroudSpell.Level() > aaSpell.Level() then return false end

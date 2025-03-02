@@ -914,7 +914,7 @@ return {
                 type = "AA",
                 cond = function(self, aaName, target)
                     local aaSpell = Casting.GetAASpell(aaName)
-                    return Casting.DetSpellCheck(aaSpell) and (aaSpell.SlowPct() or 0) > (Targeting.GetTargetSlowedPct())
+                    return Casting.DetAACheck(aaName) and (aaSpell.SlowPct() or 0) > (Targeting.GetTargetSlowedPct())
                 end,
             },
             {
