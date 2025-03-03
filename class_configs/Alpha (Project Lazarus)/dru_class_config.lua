@@ -825,7 +825,7 @@ local _ClassConfig = {
             load_cond = function(self) return Core.OnEMU() end,
             cond = function(self, combat_state)
                 if not Config:GetSetting('DoPet') or mq.TLO.Me.Pet.ID() ~= 0 then return false end
-                return combat_state == "Downtime" and (not Core.IsModeActive('Heal') or Core.OkayToNotHeal()) and Casting.OkayToPetBuff()() and Casting.AmIBuffable()
+                return combat_state == "Downtime" and (not Core.IsModeActive('Heal') or Core.OkayToNotHeal()) and Casting.OkayToPetBuff() and Casting.AmIBuffable()
             end,
         },
         {
@@ -1043,16 +1043,13 @@ local _ClassConfig = {
                 end,
             },
             {
-                name = "Spirit of Eagles", --this needs a helper function
+                name = "Flight of Eagles", --this needs a helper function
                 type = "AA",
                 active_cond = function(self, aaName)
-                    return Casting.IHaveBuff(mq.TLO.Me.AltAbility(aaName).Spell.Trigger(1).ID())
+                    return Casting.IHaveBuff(Casting.GetAASpell())
                 end,
                 cond = function(self, aaName, target)
-                    local bookSpell = self:GetResolvedActionMapItem('MoveSpells')
-                    local aaSpell = Casting.GetAASpell(aaName)
-                    if not Config:GetSetting('DoMoveBuffs') or (bookSpell and bookSpell.Level() or 999) > (aaSpell.Level() or 0) then return false end
-
+                    if not Config:GetSetting('DoMoveBuffs') then return false end
                     return Casting.GroupBuffAACheck(aaName, target)
                 end,
             },
@@ -1061,8 +1058,7 @@ local _ClassConfig = {
                 type = "Spell",
                 active_cond = function(self, spell) return Casting.IHaveBuff(spell) end,
                 cond = function(self, spell, target)
-                    local aaSpellLvl = mq.TLO.Me.AltAbility("Spirit of Eagles").Spell.Trigger(1).Level() or 0
-                    if not Config:GetSetting("DoMoveBuffs") or aaSpellLvl >= (spell.Level() or 0) then return false end
+                    if not Config:GetSetting("DoMoveBuffs") or Casting.CanUseAA("Flight of Eagles") then return false end
                     return Casting.GroupBuffCheck(spell, target)
                 end,
             },

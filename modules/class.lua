@@ -835,8 +835,8 @@ function Module:GiveTime(combat_state)
     local me = mq.TLO.Me
     if me.Hovering() or me.Stunned() or me.Charmed() or me.Feared() or me.Mezzed() then
         Logger.log_super_verbose("Class GiveTime aborted, we aren't in control of ourselves. Hovering(%s) Stunned(%s) Charmed(%s) Feared(%s) Mezzed(%s)",
-            Strings.BoolToColorString(me.Hovering()), Strings.BoolToColorString(me.Stunned()), Strings.BoolToColorString(me.Charmed() and true or false),
-            Strings.BoolToColorString(me.Feared()), Strings.BoolToColorString(me.Mezzed() and true or false))
+            Strings.BoolToColorString(me.Hovering()), Strings.BoolToColorString(me.Stunned()), Strings.BoolToColorString(me.Charmed() ~= nil),
+            Strings.BoolToColorString(me.Feared()), Strings.BoolToColorString(me.Mezzed() ~= nil))
         return
     end
 

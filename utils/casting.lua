@@ -400,7 +400,7 @@ end
 --- @return boolean True if the pet should be shrunk, false otherwise.
 function Casting.ShouldShrinkPet()
     return Config:GetSetting('DoShrinkPet') and mq.TLO.Me.Pet.ID() > 0 and mq.TLO.Me.Pet.Height() > 1.8 and
-        (Config:GetSetting('ShrinkPetItem'):len() > 0) and Casting.OkayToPetBuff()()
+        (Config:GetSetting('ShrinkPetItem'):len() > 0) and Casting.OkayToPetBuff()
 end
 
 --- Checks if the burn condition is met for RGMercs.
@@ -621,13 +621,18 @@ end
 
 -- Check if an item has a clicky effect.
 function Casting.ItemHasClicky(itemName)
-    return mq.TLO.FindItem("=" .. (itemName or "None")).Clicky() ~= nil
+    local item = mq.TLO.FindItem(itemName)
+    if not (item and item()) then return false end
+
+    return item.Clicky() ~= nil
 end
 
 -- Helper to retrieve a Clicky spell to be used in other checks.
 function Casting.GetClickySpell(itemName)
-    local itemClicky = mq.TLO.FindItem("=" .. itemName()).Clicky
-    return itemClicky and itemClicky.Spell or "None"
+    local item = mq.TLO.FindItem(itemName)
+    if not (item and item()) then return false end
+
+    return item.Clicky and item.Clicky.Spell or "None"
 end
 
 --- Retrieves the ID of the item summoned by a given spell.
@@ -685,7 +690,7 @@ end
 
 function Casting.DetItemCheck(itemName, target)
     local clickySpell = Casting.GetClickySpell(itemName)
-    if not clickySpell or not clickySpell() then return false end
+    if not (clickySpell and clickySpell()) then return false end
     if not target then target = Targeting.GetAutoTarget() or mq.TLO.Target end
 
     return Casting.TargetBuffCheck(clickySpell, target)
