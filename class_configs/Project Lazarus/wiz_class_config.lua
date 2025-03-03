@@ -760,7 +760,7 @@ return {
                 name = "Mana Burn",
                 type = "AA",
                 cond = function(self)
-                    return not Casting.TargetHasBuffByName("Mana Burn") and Config:GetSetting('DoManaBurn')
+                    return not Casting.TargetHasBuff("Mana Burn") and Config:GetSetting('DoManaBurn')
                 end,
             },
             {
@@ -774,7 +774,7 @@ return {
                 name = "HarvestSpell",
                 type = "Spell",
                 cond = function(self, spell)
-                    return mq.TLO.Me.PctMana() < Config:GetSetting('HarvestManaPct') and (mq.TLO.Me.GemTimer(spell.RankName.Name())() or -1) == 0
+                    return mq.TLO.Me.PctMana() < Config:GetSetting('HarvestManaPct') and Casting.CastReady(spell)
                 end,
             },
         },
@@ -854,7 +854,7 @@ return {
                 name = "HarvestSpell",
                 type = "Spell",
                 cond = function(self, spell)
-                    return mq.TLO.Me.PctMana() < Config:GetSetting('HarvestManaPct') and (mq.TLO.Me.GemTimer(spell.RankName.Name())() or -1) == 0
+                    return mq.TLO.Me.PctMana() < Config:GetSetting('HarvestManaPct') and Casting.CastReady(spell)
                 end,
             },
         },
@@ -876,30 +876,18 @@ return {
             {
                 name = "FuseNuke",
                 type = "Spell",
-                cond = function(self, spell)
-                    return true
-                end,
             },
             {
                 name = "FireEtherealNuke",
                 type = "Spell",
-                cond = function(self, spell)
-                    return true
-                end,
             },
             {
                 name = "IceEtherealNuke",
                 type = "Spell",
-                cond = function(self, spell)
-                    return true
-                end,
             },
             {
                 name = "DichoSpell",
                 type = "Spell",
-                cond = function(self, spell)
-                    return true
-                end,
             },
         },
         ['DPS'] = {
@@ -1118,7 +1106,7 @@ return {
                 name = "HarvestSpell",
                 type = "Spell",
                 cond = function(self, spell)
-                    return mq.TLO.Me.PctMana() < Config:GetSetting('HarvestManaPct') and (mq.TLO.Me.GemTimer(spell.RankName.Name())() or -1) == 0
+                    return mq.TLO.Me.PctMana() < Config:GetSetting('HarvestManaPct') and Casting.CastReady(spell)
                 end,
             },
             { --Chest Click, name function stops errors in rotation window when slot is empty
