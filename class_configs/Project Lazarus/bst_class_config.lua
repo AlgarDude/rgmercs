@@ -1166,7 +1166,7 @@ return {
                 name = "BestialBuffDisc",
                 type = "Disc",
                 cond = function(self, discSpell, target)
-                    return not Casting.IHaveBuff(discSpell)
+                    return not Casting.SelfBuffCheck(discSpell)
                 end,
             },
             {
