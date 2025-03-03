@@ -1262,7 +1262,7 @@ _ClassConfig      = {
                 custom_func = function(self) return self.ClassConfig.HelperFunctions.pet_management(self) end,
             },
         },
-        ["PetHealPoint"] = {
+        ['PetHealPoint'] = {
             {
                 name = "PetHealSpell",
                 type = "Spell",
