@@ -283,6 +283,7 @@ local _ClassConfig = {
     },
     ['AbilitySets']       = {
         ["ArrowOpener"] = {
+            "Concealed Shot",
             "Stealthy Shot",
             "Silent Shot",
         },
@@ -319,6 +320,7 @@ local _ClassConfig = {
             "Dissident Fusillade",
             "Composite Fusillade",
             "Ecliptic Fusillade",
+            "Reciprocal Fusillade",
         },
         ["SummerNuke"] = {
             "Summer's Deluge",
@@ -485,6 +487,7 @@ local _ClassConfig = {
             "Arbor Stalker's Enrichment",
             "Copsestalker's Enrichment",
             "Wildstalker's Enrichment",
+            "Fernstalker's Enrichment",
         },
         ["Rathe"] = {
             "Cloak of Needlespikes",
@@ -527,14 +530,6 @@ local _ClassConfig = {
             "Wildfire Boon",
             "Ashcloud Boon",
         },
-        ["FireboonBuff"] = {
-            "Fernflash Burn",
-            "Lunarflare Burn",
-            "Pyroclastic Burn",
-            "Skyfire Burn",
-            "Wildfire Burn",
-            "Ashcloud Burn",
-        },
         ["Firenuke"] = {
             "Flame Lick",
             "Burst of Fire",
@@ -566,14 +561,6 @@ local _ClassConfig = {
             "Windshear Boon",
             "Windgale Boon",
             "Windblast Boon",
-        },
-        ["IceboonBuff"] = {
-            "Frostsquall Freeze",
-            "Nocturnal Freeze",
-            "Mistral Freeze",
-            "Windshear Freeze",
-            "Windgale Freeze",
-            "Windblast Freeze",
         },
         ["Icenuke"] = {
             "Gelid Wind",
@@ -750,6 +737,7 @@ local _ClassConfig = {
             "Wildstalker's Covenant",
             "Arbor Stalker's Coalition",
             "Dusksage Stalker's Conjunction",
+            "Fernstalker's Covariance",
         },
         ["AgiBuff"] = {
             "Feet Like Cat",
@@ -796,11 +784,13 @@ local _ClassConfig = {
             "Focused Gale of Blades",
             "Focused Blizzard of Blades",
             "Focused Tempest of Blades",
+            "Focused Maelstrom of Blades",
         },
         ["ReflexSlashHeal"] = {
             "Reflexive Bladespurs",
             "Reflexive Nettlespears",
             "Reflexive Rimespurs",
+            "Reflexive Needlespikes",
         },
         ["AEArrows"] = {
             "Frenzy of Arrows",
@@ -959,7 +949,7 @@ local _ClassConfig = {
                 tooltip = Tooltips.UnityBuff,
                 active_cond = function(self, aaName) return Casting.TargetHasBuff(mq.TLO.Me.AltAbility(aaName).Spell, mq.TLO.Me) end,
                 cond = function(self, aaName)
-                    return castWSU() and Casting.SelfBuffAACheck(aaName)
+                    return castWSU() and not Casting.SelfBuffAACheck(aaName)
                 end,
             },
             {
@@ -995,7 +985,7 @@ local _ClassConfig = {
                 tooltip = Tooltips.Eyes,
                 active_cond = function(self, spell) return Casting.IHaveBuff(spell) end,
                 cond = function(self, spell)
-                    return not castWSU() and Casting.SelfBuffCheck(spell) and not Casting.IHaveBuff(spell.ID()) and not Config:GetSetting('DoMask')
+                    return not castWSU() and Casting.SelfBuffCheck(spell) and not Config:GetSetting('DoMask')
                 end,
             },
             {
@@ -1067,8 +1057,7 @@ local _ClassConfig = {
                 tooltip = Tooltips.FireFist,
                 active_cond = function(self, spell) return Casting.IHaveBuff(spell) end,
                 cond = function(self, spell)
-                    return Config:GetSetting('DoFireFist')
-                        and Casting.SelfBuffCheck(spell)
+                    return Config:GetSetting('DoFireFist') and Casting.SelfBuffCheck(spell)
                 end,
             },
             {
@@ -1157,8 +1146,8 @@ local _ClassConfig = {
                 type = "AA",
                 tooltip = Tooltips.PoisonArrow,
                 active_cond = function(self, spell) return Casting.SelfBuffCheck(spell) end,
-                cond = function(self, spell)
-                    return Casting.DetAACheck(927) and Config:GetSetting('DoPoisonArrow')
+                cond = function(self, aaName, target)
+                    return Casting.DetAACheck(aaName) and Config:GetSetting('DoPoisonArrow')
                 end,
             },
             {
@@ -1166,8 +1155,8 @@ local _ClassConfig = {
                 type = "AA",
                 tooltip = Tooltips.FlamingArrow,
                 active_cond = function(self, spell) return Casting.SelfBuffCheck(spell) end,
-                cond = function(self, spell)
-                    return Casting.DetAACheck(289) and (mq.TLO.Me.Level() < 86 or not Config:GetSetting('DoPoisonArrow'))
+                cond = function(self, aaName, target)
+                    return Casting.DetAACheck(aaName) and (mq.TLO.Me.Level() < 86 or not Config:GetSetting('DoPoisonArrow'))
                 end,
             },
         },
@@ -1178,7 +1167,7 @@ local _ClassConfig = {
                 tooltip = Tooltips.Rathe,
                 active_cond = function(self, spell) return Casting.IHaveBuff(spell) end,
                 cond = function(self, spell, target)
-                    return Casting.GroupBuffCheck(spell)
+                    return Casting.GroupBuffCheck(spell, target)
                 end,
             },
         },
@@ -1187,48 +1176,48 @@ local _ClassConfig = {
                 name = "Pack Hunt",
                 type = "AA",
                 tooltip = Tooltips.PackHunt,
-                cond = function(self, spell)
-                    return Casting.DetAACheck(43)
+                cond = function(self, aaName, target)
+                    return Casting.DetAACheck(aaName)
                 end,
             },
             {
                 name = "Entropy of Nature",
                 type = "AA",
                 tooltip = Tooltips.EoN,
-                cond = function(self, spell)
-                    return Casting.DetAACheck(682)
+                cond = function(self, aaName, target)
+                    return Casting.DetAACheck(aaName)
                 end,
             },
             {
                 name = "Spire of the Pathfinders",
                 type = "AA",
                 tooltip = Tooltips.SotP,
-                cond = function(self, spell)
-                    return Casting.DetAACheck(1460)
+                cond = function(self, aaName, target)
+                    return Casting.DetAACheck(aaName)
                 end,
             },
             {
                 name = "Scarlet Cheetah's Fang",
                 type = "AA",
                 tooltip = Tooltips.SCF,
-                cond = function(self, spell)
-                    return Casting.DetAACheck(1107)
+                cond = function(self, aaName, target)
+                    return Casting.DetAACheck(aaName)
                 end,
             },
             {
                 name = "Empowered Blades",
                 type = "AA",
                 tooltip = Tooltips.EB,
-                cond = function(self, spell)
-                    return Casting.DetAACheck(683)
+                cond = function(self, aaName, target)
+                    return Casting.DetAACheck(aaName)
                 end,
             },
             {
                 name = "Auspice of the Hunter",
                 type = "AA",
                 tooltip = Tooltips.AotH,
-                cond = function(self, spell)
-                    return Casting.DetAACheck(462)
+                cond = function(self, aaName, target)
+                    return Casting.DetAACheck(aaName)
                 end,
             },
             {
@@ -1253,10 +1242,8 @@ local _ClassConfig = {
                 name = "Taunt",
                 type = "Ability",
                 tooltip = Tooltips.Taunt,
-                cond = function(self, abilityName)
-                    return Core.IsTanking() and mq.TLO.Me.AbilityReady(abilityName)() and
-                        mq.TLO.Me.TargetOfTarget.ID() ~= mq.TLO.Me.ID() and Targeting.GetTargetID() > 0 and
-                        Targeting.GetTargetDistance() < 30
+                cond = function(self, abilityName, target)
+                    return mq.TLO.Me.TargetOfTarget.ID() ~= mq.TLO.Me.ID() and target.ID() > 0 and Targeting.GetTargetDistance(target) < 30
                 end,
             },
             {
@@ -1342,7 +1329,7 @@ local _ClassConfig = {
                 type = "Spell",
                 tooltip = Tooltips.Fireboon,
                 cond = function(self, spell)
-                    return Casting.DetSpellCheck(spell) and not Casting.IHaveBuff("FireboonBuff")
+                    return Casting.DetSpellCheck(spell) and not Casting.SelfBuffCheck(spell) --hardcode later, we need trigger
                 end,
             },
             {
@@ -1350,23 +1337,22 @@ local _ClassConfig = {
                 type = "Spell",
                 tooltip = Tooltips.Iceboon,
                 cond = function(self, spell)
-                    return Casting.DetSpellCheck(spell) and not Casting.IHaveBuff("IceboonBuff")
+                    return Casting.DetSpellCheck(spell) and not Casting.SelfBuffCheck(spell) --hardcode later, we need trigger
                 end,
             },
             {
                 name = "Entrap",
                 tooltip = Tooltips.Entrap,
                 type = "AA",
-                cond = function(self)
-                    return Config:GetSetting('DoSnare') and Casting.DetAACheck(219)
+                cond = function(self, aaName, target)
+                    return Config:GetSetting('DoSnare') and Casting.DetAACheck(aaName)
                 end,
             },
             {
                 name = "SnareSpells",
                 type = "Spell",
                 tooltip = Tooltips.SnareSpells,
-
-                cond = function(self, spell)
+                cond = function(self, spell, target)
                     return Config:GetSetting('DoSnare') and Casting.DetSpellCheck(spell)
                 end,
             },
@@ -1382,7 +1368,7 @@ local _ClassConfig = {
                 name = "SwarmDot",
                 type = "Spell",
                 tooltip = Tooltips.SwarmDot,
-                cond = function(self, spell)
+                cond = function(self, spell, target)
                     return Casting.DotSpellCheck(spell) and Config:GetSetting('DoDot')
                 end,
             },
@@ -1390,7 +1376,7 @@ local _ClassConfig = {
                 name = "ShortSwarmDot",
                 type = "Spell",
                 tooltip = Tooltips.ShortSwarmDot,
-                cond = function(self, spell)
+                cond = function(self, spell, target)
                     return Casting.DotSpellCheck(spell) and Config:GetSetting('DoDot')
                 end,
             },
@@ -1414,8 +1400,8 @@ local _ClassConfig = {
                 name = "Elemental Arrow",
                 tooltip = Tooltips.EA,
                 type = "AA",
-                cond = function(self)
-                    return Casting.DetAACheck(32)
+                cond = function(self, aaName, target)
+                    return Casting.DetAACheck(aaName)
                 end,
             },
             {
@@ -1498,31 +1484,30 @@ local _ClassConfig = {
                 name = "Outrider's Evasion",
                 tooltip = Tooltips.OE,
                 type = "AA",
-                cond = function(self)
-                    return mq.TLO.Me.PctHPs() < 30 and Casting.DetAACheck(876)
+                cond = function(self, aaName, target)
+                    return mq.TLO.Me.PctHPs() < 30
                 end,
             },
             {
                 name = "Protection of the Spirit Wolf",
                 tooltip = Tooltips.PotSW,
                 type = "AA",
-                cond = function(self)
-                    return mq.TLO.Me.PctHPs() < 40 and Casting.DetAACheck(778)
+                cond = function(self, aaName, target)
+                    return mq.TLO.Me.PctHPs() < 40
                 end,
             },
             {
                 name = "Bulwark of the Brownies",
                 tooltip = Tooltips.BotB,
                 type = "AA",
-                cond = function(self)
-                    return mq.TLO.Me.PctHPs() < 50 and Casting.DetAACheck(306)
+                cond = function(self, aaName, target)
+                    return mq.TLO.Me.PctHPs() < 50
                 end,
             },
             {
                 name = "JoltingKicks",
                 type = "Disc",
                 tooltip = Tooltips.JoltingKicks,
-                active_cond = function(self) return not Core.IsTanking() and mq.TLO.Me.PctAggro() > 30 end,
                 cond = function(self)
                     return Casting.NoDiscActive() and Targeting.GetTargetDistance() <= 50
                 end,
@@ -1531,34 +1516,30 @@ local _ClassConfig = {
                 name = "Imbued Ferocity",
                 type = "AA",
                 tooltip = Tooltips.IF,
-                active_cond = function(self) return not Core.IsTanking() end,
-                cond = function(self, spell)
-                    return mq.TLO.Me.PctAggro() > 45 and Casting.DetAACheck(2235)
+                cond = function(self, aaName, target)
+                    return mq.TLO.Me.PctAggro() > 45
                 end,
             },
             {
                 name = "Silent Strikes",
                 type = "AA",
                 tooltip = Tooltips.SS,
-                active_cond = function(self, spell) return not Core.IsTanking() end,
-                cond = function(self, spell)
-                    return mq.TLO.Me.PctAggro() > 60 and Casting.DetAACheck(1109)
+                cond = function(self, aaName, target)
+                    return mq.TLO.Me.PctAggro() > 60
                 end,
             },
             {
                 name = "Chamelon's Gift",
                 type = "AA",
                 tooltip = Tooltips.CG,
-                active_cond = function(self, spell) return not Core.IsTanking() and Casting.DetAACheck(2037) end,
                 cond = function(self, spell)
-                    return mq.TLO.Me.PctAggro() > 70 and mq.TLO.Me.PctHPs() < 50 and Casting.DetAACheck(2037)
+                    return mq.TLO.Me.PctAggro() > 70 and mq.TLO.Me.PctHPs() < 50
                 end,
             },
             {
                 name = "SummerNuke",
                 type = "Spell",
                 tooltip = Tooltips.SummerNuke,
-                active_cond = function(self, spell) return not Core.IsTanking() and mq.TLO.Me.Level() >= 98 end,
                 cond = function(self, spell)
                     return mq.TLO.Me.PctAggro() < 60
                 end,
