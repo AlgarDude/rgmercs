@@ -472,7 +472,7 @@ end
 
 --- Checks if target health exceeds minimum thresholds to use Dots.
 function Casting.EnoughHPToDot(target)
-    if not target then target = Targeting.GetAutoTarget or mq.TLO.Target end
+    if not target then target = Targeting.GetAutoTarget() or mq.TLO.Target end
     if not (target and target()) then return false end
 
     local threshold = Targeting.IsNamed(target) and Config:GetSetting('NamedStopDOT') or Config:GetSetting('HPStopDOT')
@@ -671,14 +671,14 @@ end
 
 function Casting.DetSpellCheck(spell, target)
     if not (spell and spell()) then return false end
-    if not target then target = Targeting.GetAutoTarget or mq.TLO.Target end
+    if not target then target = Targeting.GetAutoTarget() or mq.TLO.Target end
 
     return Casting.TargetBuffCheck(spell, target)
 end
 
 function Casting.DetAACheck(aaName, target)
     if not Casting.CanUseAA(aaName) then return false end
-    if not target then target = Targeting.GetAutoTarget or mq.TLO.Target end
+    if not target then target = Targeting.GetAutoTarget() or mq.TLO.Target end
 
     return Casting.TargetBuffCheck(mq.TLO.Me.AltAbility(aaName).Spell, target)
 end
@@ -686,7 +686,7 @@ end
 function Casting.DetItemCheck(itemName, target)
     local clickySpell = Casting.GetClickySpell(itemName)
     if not clickySpell or not clickySpell() then return false end
-    if not target then target = Targeting.GetAutoTarget or mq.TLO.Target end
+    if not target then target = Targeting.GetAutoTarget() or mq.TLO.Target end
 
     return Casting.TargetBuffCheck(clickySpell, target)
 end
@@ -694,7 +694,7 @@ end
 -- Checks HP thresholds and presence/stacking for Dots.
 function Casting.DotSpellCheck(spell, target)
     if not (spell and spell()) then return false end
-    if not target then target = Targeting.GetAutoTarget or mq.TLO.Target end
+    if not target then target = Targeting.GetAutoTarget() or mq.TLO.Target end
 
     if not Casting.EnoughHPToDot() then return false end
 
@@ -1377,10 +1377,9 @@ function Casting.WaitCastFinish(target, bAllowDead, spellRange) --I am not veste
         local currentCast = mq.TLO.Me.Casting()
         Logger.log_super_verbose("WaitCastFinish(): Waiting to Finish Casting...")
         mq.delay(20)
-        if target() and Targeting.GetTargetPctHPs(target) <= 0 and not bAllowDead then
+        if (not target or not target() or Targeting.TargetIsType("corpse", target)) and not bAllowDead then
             mq.TLO.Me.StopCast()
-            Logger.log_debug("WaitCastFinish(): Canceled casting %s because spellTarget(%d) is dead with no HP(%d)", currentCast, target.ID(),
-                Targeting.GetTargetPctHPs(target))
+            Logger.log_debug("WaitCastFinish(): Canceled casting %s because target is dead or no longer exists.", currentCast)
             return
         elseif target() and Targeting.GetTargetID() > 0 and target.ID() ~= Targeting.GetTargetID() then
             mq.TLO.Me.StopCast()
