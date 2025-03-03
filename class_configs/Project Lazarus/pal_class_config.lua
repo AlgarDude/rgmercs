@@ -863,8 +863,7 @@ return {
                 name = "Spire of Chivalry",
                 type = "AA",
                 cond = function(self, aaName)
-                    return mq.TLO.Me.Level() < 80 and not Casting.IHaveBuff('Group Armor of the Inquisitor') and not Casting.IHaveBuff('Armor of the Inquisitor') and
-                        not Casting.IHaveBuff('Spire of Chivalry')
+                    return mq.TLO.Me.Level() < 80 and not Casting.IHaveBuff("Armor of the Inquisitor") and not Casting.IHaveBuff("Spire of Chivalry")
                 end,
             },
             {
@@ -1042,7 +1041,7 @@ return {
                 name = "Challengetaunt",
                 type = "Spell",
                 cond = function(self, spell)
-                    return not Casting.TargetHasBuff(spell)
+                    return Casting.DetSpellCheck(spell)
                 end,
             },
             {
