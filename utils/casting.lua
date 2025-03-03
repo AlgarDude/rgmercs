@@ -627,8 +627,7 @@ end
 -- Helper to retrieve a Clicky spell to be used in other checks.
 function Casting.GetClickySpell(itemName)
     local itemClicky = mq.TLO.FindItem("=" .. itemName()).Clicky
-    if not itemClicky then return false end
-    return itemClicky.Spell
+    return itemClicky and itemClicky.Spell or "None"
 end
 
 --- Retrieves the ID of the item summoned by a given spell.
@@ -697,7 +696,7 @@ function Casting.DotSpellCheck(spell, target)
     if not (spell and spell()) then return false end
     if not target then target = Targeting.GetAutoTarget or mq.TLO.Target end
 
-    if not Casting.EnoughHPToDot(target) then return false end
+    if not Casting.EnoughHPToDot() then return false end
 
     return Casting.TargetBuffCheck(spell, target)
 end

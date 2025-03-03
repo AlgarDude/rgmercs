@@ -405,7 +405,7 @@ local _ClassConfig = {
                     return Casting.SongActive(discSpell)
                 end,
                 cond = function(self, discSpell)
-                    return not Casting.SongActive(discSpell)
+                    return Casting.SelfBuffCheck(discSpell)
                 end,
             },
             {
@@ -415,7 +415,7 @@ local _ClassConfig = {
                     return Casting.SongActive(discSpell)
                 end,
                 cond = function(self, discSpell)
-                    return not Casting.SongActive(discSpell)
+                    return Casting.SelfBuffCheck(discSpell)
                 end,
             },
             {
@@ -440,7 +440,7 @@ local _ClassConfig = {
                 type = "Disc",
                 cond = function(self, discSpell, target)
                     if not Config:GetSetting('DoAETaunt') or Config:GetSetting('SafeAETaunt') then return false end
-                    return Core.IsTanking() and Casting.GroupBuffCheck(discSpell, target)
+                    return Core.IsTanking() and Casting.SelfBuffCheck(discSpell)
                 end,
             },
             {
@@ -448,21 +448,21 @@ local _ClassConfig = {
                 type = "Disc",
                 cond = function(self, discSpell, target)
                     if Config:GetSetting('DoAETaunt') and not Config:GetSetting('SafeAETaunt') then return false end
-                    return Core.IsTanking() and Casting.GroupBuffCheck(discSpell, target)
+                    return Core.IsTanking() and Casting.SelfBuffCheck(discSpell)
                 end,
             },
             {
                 name = "Infused by Rage",
                 type = "AA",
                 cond = function(self, aaName)
-                    return Core.IsTanking() and Casting.SelfBuffAACheck(aaName) and not Casting.IHaveBuff(aaName)
+                    return Core.IsTanking() and Casting.SelfBuffAACheck(aaName)
                 end,
             },
             {
                 name = "Blade Guardian",
                 type = "AA",
                 cond = function(self, aaName)
-                    return Casting.SelfBuffAACheck(aaName) and not Casting.IHaveBuff(aaName)
+                    return Casting.SelfBuffAACheck(aaName)
                 end,
             },
             { --Charm Click, name function stops errors in rotation window when slot is empty
@@ -586,14 +586,14 @@ local _ClassConfig = {
                 type = "Disc",
                 cond = function(self, discSpell)
                     return mq.TLO.Me.PctHPs() <= Config:GetSetting('EmergencyLockout') and not Casting.IHaveBuff("Flash of Anger") and
-                        not Casting.IHaveBuff(mq.TLO.AltAbility("Blade Guardian").Spell.Base(1)())
+                        not Casting.IHaveBuff("Blade Whirl")
                 end,
             },
             {
                 name = "Flash",
                 type = "Disc",
                 cond = function(self, discSpell)
-                    return not mq.TLO.Me.ActiveDisc.Name() ~= "Fortitude Discipline" and not Casting.IHaveBuff(mq.TLO.AltAbility("Blade Guardian").Spell.Base(1)())
+                    return not mq.TLO.Me.ActiveDisc.Name() ~= "Fortitude Discipline" and not Casting.IHaveBuff("Blade Whirl")
                 end,
             },
             {
@@ -652,8 +652,8 @@ local _ClassConfig = {
                 name = "DichoShield",
                 type = "Disc",
                 cond = function(self, discSpell)
-                    local itemSpell = mq.TLO.Me.Inventory("Chest").Spell()
-                    return not (itemSpell and mq.TLO.Me.Buff(itemSpell)())
+                    local chestClicky = Casting.GetClickySpell(mq.TLO.Me.Inventory("Chest").Name())
+                    return not Casting.IHaveBuff(chestClicky)
                 end,
             },
             { --shares effect with Dicho Shield --Chest Click, name function stops errors in rotation window when slot is empty
@@ -662,7 +662,7 @@ local _ClassConfig = {
                 cond = function(self, itemName, target)
                     if not Config:GetSetting('DoChestClick') or not Casting.ItemHasClicky(itemName) then return false end
                     local dichoShield = Core.GetResolvedActionMapItem('DichoShield')
-                    return not mq.TLO.Me.Buff(dichoShield) and Casting.SelfBuffItemCheck(itemName)
+                    return not mq.TLO.Me.Buff(dichoShield)() and Casting.SelfBuffItemCheck(itemName)
                 end,
             },
             { --shares effect with OoW Chest and Warlord's Bravery, offset from AbsorbDisc for automation flow/coverage
@@ -890,15 +890,12 @@ local _ClassConfig = {
                 name = "StrikeDisc",
                 type = "Disc",
                 cond = function(self, discSpell)
-                    return Targeting.GetTargetDistance() < Targeting.GetTargetMaxRangeTo() and Targeting.GetTargetPctHPs() <= 20
+                    return Targeting.GetTargetPctHPs() <= 20
                 end,
             },
             {
                 name = "DefenseACBuff",
                 type = "Disc",
-                active_cond = function(self, discSpell)
-                    return mq.TLO.Me.ActiveDisc.ID() == discSpell.ID()
-                end,
                 cond = function(self, discSpell)
                     return Core.IsTanking() and Casting.NoDiscActive()
                 end,
