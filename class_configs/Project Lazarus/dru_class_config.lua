@@ -1049,21 +1049,15 @@ local _ClassConfig = {
                 name = "SunrayDot",
                 type = "Spell",
                 cond = function(self, spell)
-                    return Core.IsModeActive("Heal")
-                        and Config:GetSetting('DoFire')
-                        and Casting.DotSpellCheck(spell) and
-                        Config:GetSetting('DoDot') and
-                        mq.TLO.FindItemCount(spell.NoExpendReagentID(1)())() >= 1
+                    return Core.IsModeActive("Heal") and Config:GetSetting('DoFire') and Casting.DotSpellCheck(spell) and Config:GetSetting('DoDot') and
+                        Casting.ReagentCheck(spell)
                 end,
             },
             {
                 name = "ChillDot",
                 type = "Spell",
                 cond = function(self, spell)
-                    return Core.IsModeActive("Heal")
-                        and not Config:GetSetting('DoFire')
-                        and Casting.DotSpellCheck(spell) and
-                        Config:GetSetting('DoDot')
+                    return Core.IsModeActive("Heal") and not Config:GetSetting('DoFire') and Casting.DotSpellCheck(spell) and Config:GetSetting('DoDot')
                 end,
             },
             {
@@ -1074,34 +1068,29 @@ local _ClassConfig = {
                 name = "Season's Wrath",
                 type = "AA",
                 cond = function(self, aaName)
-                    return Core.IsModeActive("Mana") and Casting.DetAACheck(aaName) and
-                        Targeting.GetTargetPctHPs() > 75
+                    return Core.IsModeActive("Mana") and Casting.DetAACheck(aaName) and Targeting.GetTargetPctHPs() > 75
                 end,
             },
             {
                 name = "SunDot",
                 type = "Spell",
                 cond = function(self, spell)
-                    return Core.IsModeActive("Mana") or (Core.IsModeActive("Heal")
-                            and Config:GetSetting('DoFire')) and Casting.DotSpellCheck(spell)
-                        and Config:GetSetting('DoDot')
+                    return Core.IsModeActive("Mana") or
+                        (Core.IsModeActive("Heal") and Config:GetSetting('DoFire')) and Casting.DotSpellCheck(spell) and Config:GetSetting('DoDot')
                 end,
             },
             {
                 name = "HordeDot",
                 type = "Spell",
                 cond = function(self, spell)
-                    return Core.IsModeActive("Mana")
-                        and Casting.DotSpellCheck(spell) and
-                        Config:GetSetting('DoDot')
+                    return Core.IsModeActive("Mana") and Casting.DotSpellCheck(spell) and Config:GetSetting('DoDot')
                 end,
             },
             {
                 name = "DichoSpell",
                 type = "Spell",
                 cond = function(self, spell)
-                    return (Core.IsModeActive("Mana") or Config:GetSetting('DoNuke'))
-                        and Casting.DetSpellCheck(spell) and Targeting.GetTargetPctHPs() > 60 and
+                    return (Core.IsModeActive("Mana") or Config:GetSetting('DoNuke')) and Casting.DetSpellCheck(spell) and Targeting.GetTargetPctHPs() > 60 and
                         mq.TLO.Me.PctMana() > 50
                 end,
             },
@@ -1109,8 +1098,7 @@ local _ClassConfig = {
                 name = "RemoteSunDD",
                 type = "Spell",
                 cond = function(self, spell)
-                    return Config:GetSetting('DoFire')
-                        and Casting.DetSpellCheck(spell) and Config:GetSetting('DoNuke') and
+                    return Config:GetSetting('DoFire') and Casting.DetSpellCheck(spell) and Config:GetSetting('DoNuke') and
                         Targeting.GetTargetPctHPs() < Config:GetSetting('NukePct')
                 end,
             },
@@ -1118,8 +1106,7 @@ local _ClassConfig = {
                 name = "RemoteMoonDD",
                 type = "Spell",
                 cond = function(self, spell)
-                    return not Config:GetSetting('DoFire')
-                        and Casting.DetSpellCheck(spell) and Config:GetSetting('DoNuke') and
+                    return not Config:GetSetting('DoFire') and Casting.DetSpellCheck(spell) and Config:GetSetting('DoNuke') and
                         Targeting.GetTargetPctHPs() < Config:GetSetting('NukePct')
                 end,
             },
@@ -1127,9 +1114,7 @@ local _ClassConfig = {
                 name = "SunMoonDot",
                 type = "Spell",
                 cond = function(self, spell)
-                    return Core.IsModeActive("Mana")
-                        and Casting.DotSpellCheck(spell) and
-                        Config:GetSetting('DoDot') and
+                    return Core.IsModeActive("Mana") and Casting.DotSpellCheck(spell) and Config:GetSetting('DoDot') and
                         Targeting.GetTargetLevel() >= mq.TLO.Me.Level()
                 end,
             },
@@ -1137,9 +1122,7 @@ local _ClassConfig = {
                 name = "NaturesWrathDot",
                 type = "Spell",
                 cond = function(self, spell)
-                    return Core.IsModeActive("Mana")
-                        and Casting.DotSpellCheck(spell) and
-                        Config:GetSetting('DoDot')
+                    return Core.IsModeActive("Mana") and Casting.DotSpellCheck(spell) and Config:GetSetting('DoDot')
                 end,
             },
             {
@@ -1154,18 +1137,14 @@ local _ClassConfig = {
                 name = "WinterFireDD",
                 type = "Spell",
                 cond = function(self, spell)
-                    return Core.IsModeActive("Mana")
-                        and Casting.DetSpellCheck(spell) and Config:GetSetting('DoFire') and
-                        Casting.HaveManaToNuke()
+                    return Core.IsModeActive("Mana") and Casting.DetSpellCheck(spell) and Config:GetSetting('DoFire') and Casting.HaveManaToNuke()
                 end,
             },
             {
                 name = "IceRainNuke",
                 type = "Spell",
                 cond = function(self, spell)
-                    return Core.IsModeActive("Mana")
-                        and Casting.DetSpellCheck(spell) and not Config:GetSetting('DoFire') and
-                        Config:GetSetting('DoRain') and
+                    return Core.IsModeActive("Mana") and Casting.DetSpellCheck(spell) and not Config:GetSetting('DoFire') and Config:GetSetting('DoRain') and
                         Casting.HaveManaToNuke()
                 end,
             },
@@ -1179,30 +1158,8 @@ local _ClassConfig = {
                 end,
             },
             {
-                name = "Nature's Frost",
+                name = "Storm Strike",
                 type = "AA",
-                cond = function(self, aaName)
-                    return Core.IsModeActive("Mana") and Casting.DetAACheck(aaName) and
-                        mq.TLO.Me.PctMana() > 50 and
-                        (not Core.IsModeActive("Heal") or (Core.IsModeActive("Heal") and not Config:GetSetting('DoFire') and Casting.HaveManaToNuke()))
-                end,
-            },
-            {
-                name = "Nature's Fire",
-                type = "AA",
-                cond = function(self, aaName)
-                    return Casting.DetAACheck(aaName) and mq.TLO.Me.PctMana() > 50 and
-                        Config:GetSetting('DoNuke') and
-                        (not Core.IsModeActive("Heal") or (Core.IsModeActive("Heal") and Config:GetSetting('DoFire') and Casting.HaveManaToNuke()))
-                end,
-            },
-            {
-                name = "Nature's Bolt",
-                type = "AA",
-                cond = function(self, aaName)
-                    return Core.IsModeActive("Mana") and Casting.DetAACheck(aaName) and
-                        mq.TLO.Me.PctMana() > 50
-                end,
             },
         },
         ['Burn'] = {
@@ -1290,8 +1247,7 @@ local _ClassConfig = {
                 name = "IceBreathDebuff",
                 type = "Spell",
                 cond = function(self, spell, target)
-                    return not Config:GetSetting('DoFire') and Casting.DetSpellCheck(spell) and
-                        Targeting.GetAutoTargetPctHPs() < Config:GetSetting('NukePct') and
+                    return not Config:GetSetting('DoFire') and Casting.DetSpellCheck(spell) and Targeting.GetAutoTargetPctHPs() < Config:GetSetting('NukePct') and
                         Config:GetSetting('DoNuke')
                 end,
             },
@@ -1441,7 +1397,7 @@ local _ClassConfig = {
                 type = "AA",
                 active_cond = function(self, aaName) return Casting.IHaveBuff(aaName) end,
                 cond = function(self, aaName)
-                    return Casting.SelfBuffAACheck(aaName) and mq.TLO.Me.AltAbility(aaName).Spell.RankName.Stacks()
+                    return Casting.SelfBuffAACheck(aaName)
                 end,
             },
             {
