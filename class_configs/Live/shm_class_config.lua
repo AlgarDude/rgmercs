@@ -1215,7 +1215,7 @@ local _ClassConfig = {
                 allowDead = true,
                 cond = function(self, spell, target)
                     if not Casting.CanUseAA("Luminary's Synergy") and Config:GetSetting('DoHealOverTime') then return false end
-                    return not Casting.EnoughHPToDot(target) and spell.RankName.Stacks() and (mq.TLO.Me.Song(spell).Duration.TotalSeconds() or 0) < 30
+                    return not Casting.EnoughHPToDot() and spell.RankName.Stacks() and (mq.TLO.Me.Song(spell).Duration.TotalSeconds() or 0) < 30
                 end,
             },
             {
@@ -1230,7 +1230,7 @@ local _ClassConfig = {
                 type = "Spell",
                 cond = function(self, spell, target)
                     if Core.IsModeActive("Heal") and Core.GetResolvedActionMapItem('FastPoisonNuke') then return false end
-                    return not Casting.EnoughHPToDot(target) and Casting.HaveManaToNuke()
+                    return not Casting.EnoughHPToDot() and Casting.HaveManaToNuke()
                 end,
             },
             {
@@ -1238,7 +1238,7 @@ local _ClassConfig = {
                 type = "Spell",
                 cond = function(self, spell, target)
                     if Core.GetResolvedActionMapItem('PoisonNuke') then return false end
-                    return not Casting.EnoughHPToDot(target) and Casting.HaveManaToNuke()
+                    return not Casting.EnoughHPToDot() and Casting.HaveManaToNuke()
                 end,
             },
         },

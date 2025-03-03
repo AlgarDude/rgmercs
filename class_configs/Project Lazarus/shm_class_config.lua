@@ -1231,7 +1231,7 @@ local _ClassConfig = {
                 type = "Spell",
                 cond = function(self, spell, target)
                     if Core.IsModeActive("Heal") and Core.GetResolvedActionMapItem('FastPoisonNuke') then return false end
-                    return not Casting.EnoughHPToDot(target) and Casting.HaveManaToNuke()
+                    return not Casting.EnoughHPToDot() and Casting.HaveManaToNuke()
                 end,
             },
             {
@@ -1239,7 +1239,7 @@ local _ClassConfig = {
                 type = "Spell",
                 cond = function(self, spell, target)
                     if Core.GetResolvedActionMapItem('PoisonNuke') then return false end
-                    return not Casting.EnoughHPToDot(target) and Casting.HaveManaToNuke()
+                    return not Casting.EnoughHPToDot() and Casting.HaveManaToNuke()
                 end,
             },
         },
