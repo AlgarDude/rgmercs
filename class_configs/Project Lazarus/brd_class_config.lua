@@ -1067,7 +1067,7 @@ local _ClassConfig = {
                 cond = function(self, songSpell)
                     if Config:GetSetting('UseDicho') == 1 then return false end
                     return (Config:GetSetting('UseDicho') == 3 and (mq.TLO.Me.PctEndurance() > Config:GetSetting('SelfEndPct') or Casting.BurnCheck()))
-                        or (Config:GetSetting('UseDicho') == 2 and Casting.IHaveBuff(mq.TLO.Me.AltAbility("Quick Time").Spell.ID()))
+                        or (Config:GetSetting('UseDicho') == 2 and Casting.IHaveBuff(Casting.GetAASpell("Quick Time")))
                 end,
             },
             {
@@ -1685,7 +1685,7 @@ local _ClassConfig = {
             Tooltip = "When to use the Fierce Eye AA.",
             Type = "Combo",
             ComboOptions = { 'Never', 'Burns Only', 'All Combat', },
-            Default = 3,
+            Default = 2, --laz doesn't have the uptime of live
             Min = 1,
             Max = 3,
             ConfigType = "Advanced",
