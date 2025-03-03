@@ -1083,9 +1083,7 @@ local _ClassConfig = {
                     --NDT will not be cast or memorized if it isn't already on the bar due to a very long refresh time
                     if not Config:GetSetting('DoNDTBuff') or not Casting.CastReady(spell) then return false end
                     --Single target versions of the spell will only be used on Melee, group versions will be cast if they are missing from any groupmember
-                    if (spell and spell() and ((spell.TargetType() or ""):lower() ~= "group v2")) and not Targeting.TargetIsMelee(target) then
-                        return false
-                    end
+                    if (spell.TargetType() or ""):lower() ~= "group v2" and not Targeting.TargetIsMelee(target) then return false end
 
                     return Casting.GroupBuffCheck(spell, target)
                 end,
@@ -1157,8 +1155,8 @@ local _ClassConfig = {
             {
                 name = "Beguiler's Directed Banishment",
                 type = "AA",
-                cond = function(self)
-                    if not mq.TLO.Target.ID() == Config.Globals.AutoTargetID then return false end
+                cond = function(self, aaName, target)
+                    if not target.ID() == Config.Globals.AutoTargetID then return false end
                     return mq.TLO.Me.PctAggro() > 99 and mq.TLO.Me.PctHPs() <= 40
                 end,
 
@@ -1174,7 +1172,7 @@ local _ClassConfig = {
             {
                 name = "Doppelganger",
                 type = "AA",
-                cond = function(self)
+                cond = function(self, aaName)
                     return Targeting.IHaveAggro(100) and mq.TLO.Me.PctHPs() <= 60
                 end,
 
@@ -1224,7 +1222,7 @@ local _ClassConfig = {
                 type = "Spell",
                 cond = function(self, spell, target)
                     if not Config:GetSetting('DoStripBuff') then return false end
-                    return target.ID() == mq.TLO.Target.ID() and target.Beneficial()
+                    return target.Beneficial()
                 end,
             },
             {
@@ -1261,8 +1259,8 @@ local _ClassConfig = {
             {
                 name = "ManaDrainSpell",
                 type = "Spell",
-                cond = function(self)
-                    return (mq.TLO.Target.CurrentMana() or 0) > 10 and Casting.HaveManaToNuke()
+                cond = function(self, spell, target)
+                    return (target.CurrentMana() or 0) > 10 and Casting.HaveManaToNuke()
                 end,
             },
         },
@@ -1272,7 +1270,7 @@ local _ClassConfig = {
                 type = "Spell",
                 cond = function(self, spell, target)
                     if not Config:GetSetting('DoStripBuff') then return false end
-                    return target.ID() == mq.TLO.Target.ID() and target.Beneficial()
+                    return target.Beneficial()
                 end,
             },
             {
