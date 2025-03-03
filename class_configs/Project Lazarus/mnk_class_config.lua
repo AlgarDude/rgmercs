@@ -523,7 +523,7 @@ local _ClassConfig = {
                 type = "Disc",
                 cond = function(self, discSpell)
                     if not Config:GetSetting('DoAlliance') then return false end
-                    return not Casting.TargetHasBuffByName(discSpell.Trigger(1))
+                    return not Casting.TargetHasBuff(discSpell.Trigger(1))
                 end,
             },
             {
@@ -549,15 +549,15 @@ local _ClassConfig = {
             {
                 name = "Curse",
                 type = "Disc",
-                cond = function(self, discSpell) --DotSpellCheck used in part to not blow this on low-health mobs
-                    return Casting.DotSpellCheck(discSpell)
+                cond = function(self, discSpell, target)
+                    return Casting.EnoughHPToDot(target)
                 end,
             },
             {
                 name = "Two-Finger Wasp Touch",
                 type = "AA",
                 cond = function(self, aaName, target) --DotSpellCheck used in part to not blow this on low-health mobs
-                    return Casting.DotSpellCheck(mq.TLO.Me.AltAbility(aaName).Spell)
+                    return Casting.EnoughHPToDot(target)
                 end,
             },
             {
