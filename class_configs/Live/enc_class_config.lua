@@ -1363,15 +1363,14 @@ local _ClassConfig = {
                 name = "TashSpell",
                 type = "Spell",
                 cond = function(self, spell, target)
-                    return Config:GetSetting('DoTash') and Casting.DetSpellCheck(spell)
+                    return Casting.DetSpellCheck(spell)
                 end,
             },
             {
                 name = "Bite of Tashani",
                 type = "AA",
                 cond = function(self, aaName, target)
-                    return Config:GetSetting('DoTash') and Casting.DetAACheck(aaName) and
-                        Targeting.GetXTHaterCount() > 1
+                    return Casting.DetAACheck(aaName) and Targeting.GetXTHaterCount() > 1
                 end,
             },
         },
