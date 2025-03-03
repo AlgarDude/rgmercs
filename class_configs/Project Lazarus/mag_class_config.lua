@@ -883,7 +883,7 @@ _ClassConfig      = {
             name = 'Malo',
             state = 1,
             steps = 1,
-            load_cond = function() return Config:GetSetting('DoMalo') end,
+            load_cond = function() return Config:GetSetting('DoMalo') or Config:GetSetting('DoAEMalo') end,
             targetId = function(self) return mq.TLO.Target.ID() == Config.Globals.AutoTargetID and { Config.Globals.AutoTargetID, } or {} end,
             cond = function(self, combat_state)
                 return combat_state == "Combat" and not Casting.IAmFeigning() and Casting.OkayToDebuff() and
@@ -1327,7 +1327,7 @@ _ClassConfig      = {
                 type = "Item",
                 cond = function(self, itemName)
                     if mq.TLO.Me.Pet.ID() == 0 then return false end
-                    return not mq.TLO.Me.PetBuff("Primal Fusion")() and not mq.TLO.Me.PetBuff("Elemental Conjuction")()
+                    return Casting.PetBuffItemCheck(itemName)
                 end,
             },
             {
@@ -1505,14 +1505,14 @@ _ClassConfig      = {
                 name = "SurgeDS1",
                 type = "Spell",
                 cond = function(self, spell)
-                    return Core.IsModeActive("PetTank") and not Casting.PetBuffCheck(spell) and (mq.TLO.Me.PetBuff(self.ResolvedActionMap['SurgeDS1'] or "")() == nil)
+                    return Core.IsModeActive("PetTank") and Casting.PetBuffCheck(spell)
                 end,
             },
             {
                 name = "SurgeDS2",
                 type = "Spell",
                 cond = function(self, spell)
-                    return Core.IsModeActive("PetTank") and Casting.PetBuffCheck(spell) and (mq.TLO.Me.PetBuff(self.ResolvedActionMap['SurgeDS2'] or "")() == nil)
+                    return Core.IsModeActive("PetTank") and Casting.PetBuffCheck(spell)
                 end,
             },
             {
@@ -1526,7 +1526,7 @@ _ClassConfig      = {
                 name = "FireShroud",
                 type = "Spell",
                 cond = function(self, spell)
-                    return Core.IsModeActive("PetTank") and (mq.TLO.Me.PetBuff(self.ResolvedActionMap['PetPromisedSpell'] or "").ID() or 0)
+                    return Core.IsModeActive("PetTank") and Casting.PetBuffCheck(spell)
                 end,
             },
         },
@@ -1588,7 +1588,7 @@ _ClassConfig      = {
             {
                 name = "TwinCast",
                 type = "Spell",
-                cond = function(self, spell) return Casting.SelfBuffCheck(spell) and not Casting.IHaveBuff("Improved Twincast") end,
+                cond = function(self, spell) return Casting.SelfBuffCheck(spell) and not Casting.IHaveBuff("Twincast") end,
             },
             --   {
             --       name = "AllianceBuff",
