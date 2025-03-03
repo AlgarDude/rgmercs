@@ -731,11 +731,30 @@ local _ClassConfig = {
                 return (mq.TLO.Group.Injured(Config:GetSetting('GroupHealPoint'))() or 0) >= Config:GetSetting('GroupInjureCnt')
             end,
         },
-        { -- Level 70+
-            name = 'BigHeal(70+)',
+        { -- Level 1-97
+            name = 'GroupHeal(1-97)',
             state = 1,
             steps = 1,
-            load_cond = function() return mq.TLO.Me.Level() > 69 end,
+            load_cond = function() return mq.TLO.Me.Level() < 98 end,
+            cond = function(self, target)
+                if not Targeting.GroupedWithTarget(target) then return false end
+                return (mq.TLO.Group.Injured(Config:GetSetting('GroupHealPoint'))() or 0) >= Config:GetSetting('GroupInjureCnt')
+            end,
+        },
+        { -- Level 77+
+            name = 'BigHeal(77+)',
+            state = 1,
+            steps = 1,
+            load_cond = function() return mq.TLO.Me.Level() > 76 end,
+            cond = function(self, target)
+                return (target.PctHPs() or 999) < Config:GetSetting('BigHealPoint')
+            end,
+        },
+        { -- Level 59-76
+            name = 'BigHeal(59-76)',
+            state = 1,
+            steps = 1,
+            load_cond = function() return mq.TLO.Me.Level() > 58 and mq.TLO.Me.Level() < 77 end,
             cond = function(self, target)
                 return (target.PctHPs() or 999) < Config:GetSetting('BigHealPoint')
             end,
@@ -749,30 +768,20 @@ local _ClassConfig = {
                 return (target.PctHPs() or 999) < Config:GetSetting('MainHealPoint')
             end,
         },
-        { -- Level 1-97
-            name = 'GroupHeal(1-97)',
+        { -- Level 80-100
+            name = 'MainHeal(80-100)',
             state = 1,
             steps = 1,
-            load_cond = function() return mq.TLO.Me.Level() < 98 end,
-            cond = function(self, target)
-                if not Targeting.GroupedWithTarget(target) then return false end
-                return (mq.TLO.Group.Injured(Config:GetSetting('GroupHealPoint'))() or 0) >= Config:GetSetting('GroupInjureCnt')
-            end,
-        },
-        { -- Level 70-100
-            name = 'MainHeal(70-100)',
-            state = 1,
-            steps = 1,
-            load_cond = function() return mq.TLO.Me.Level() > 69 and mq.TLO.Me.Level() < 101 end,
+            load_cond = function() return mq.TLO.Me.Level() > 79 and mq.TLO.Me.Level() < 101 end,
             cond = function(self, target)
                 return (target.PctHPs() or 999) <= Config:GetSetting('MainHealPoint')
             end,
         },
-        { -- Level 1-69, includes BigHeal
-            name = 'Heal(1-69)',
+        { -- Level 1-70
+            name = 'MainHeal(1-79)',
             state = 1,
             steps = 1,
-            load_cond = function() return mq.TLO.Me.Level() < 70 end,
+            load_cond = function() return mq.TLO.Me.Level() < 80 end,
             cond = function(self, target)
                 return (target.PctHPs() or 999) <= Config:GetSetting('MainHealPoint')
             end,
@@ -816,7 +825,29 @@ local _ClassConfig = {
                 end,
             },
         },
-        ['BigHeal(70+)'] = {
+        ['GroupHeal(1-97)'] = { --Level 1-97
+            {
+                name = "GroupHealNoCure",
+                type = "Spell",
+            },
+            {
+                name = "GroupElixir",
+                type = "Spell",
+                cond = function(self, spell, target)
+                    if not Config:GetSetting('DoHealOverTime') then return false end
+                    return Casting.GroupBuffCheck(spell, target)
+                end,
+            },
+            {
+                name = "Celestial Regeneration",
+                type = "AA",
+            },
+            {
+                name = "Exquisite Benediction",
+                type = "AA",
+            },
+        },
+        ['BigHeal(77+)'] = {
             {
                 name = "ClutchHeal",
                 type = "Spell",
@@ -828,7 +859,7 @@ local _ClassConfig = {
                 name = "Sanctuary",
                 type = "AA",
                 cond = function(self, aaName, target)
-                    return Targeting.TargetIsMA(target)
+                    return Targeting.TargetIsMyself(target)
                 end,
             },
             {
@@ -885,6 +916,42 @@ local _ClassConfig = {
                 type = "AA",
             },
         },
+        ['BigHeal(59-76)'] = {
+            {
+                name = "Sanctuary",
+                type = "AA",
+                cond = function(self, aaName, target)
+                    return Targeting.TargetIsMyself(target)
+                end,
+            },
+            {
+                name = "Divine Arbitration",
+                type = "AA",
+                cond = function(self, aaName, target)
+                    if not Targeting.GroupedWithTarget(target) then return false end
+                    return Targeting.TargetIsMA(target)
+                end,
+            },
+            {
+                name = "Epic",
+                type = "Item",
+                cond = function(self, itemName, target)
+                    if not Targeting.GroupedWithTarget(target) then return false end
+                    return Targeting.TargetIsMA(target)
+                end,
+            },
+            {
+                name = "Renewal",
+                type = "Spell",
+            },
+            {
+                name = "RemedyHeal",
+                type = "Spell",
+                cond = function(self, spell, target)
+                    return not Core.GetResolvedActionMapItem("Renewal")
+                end,
+            },
+        },
         ['MainHeal(101+)'] = {
             {
                 name = "Focused Celestial Regeneration",
@@ -913,29 +980,7 @@ local _ClassConfig = {
                 type = "Item",
             },
         },
-        ['GroupHeal(1-97)'] = { --Level 1-97
-            {
-                name = "GroupHealNoCure",
-                type = "Spell",
-            },
-            {
-                name = "GroupElixir",
-                type = "Spell",
-                cond = function(self, spell, target)
-                    if not Config:GetSetting('DoHealOverTime') then return false end
-                    return Casting.GroupBuffCheck(spell, target)
-                end,
-            },
-            {
-                name = "Celestial Regeneration",
-                type = "AA",
-            },
-            {
-                name = "Exquisite Benediction",
-                type = "AA",
-            },
-        },
-        ['MainHeal(70-100)'] = { --Level 70-100
+        ['MainHeal(80-100)'] = { --Level 80-100
             {
                 name = "Focused Celestial Regeneration",
                 type = "AA",
@@ -986,30 +1031,7 @@ local _ClassConfig = {
                 type = "Spell",
             },
         },
-        ['Heal(1-69)'] = { --Level 1-69, includes Main and Big Healing
-            {
-                name = "Divine Arbitration",
-                type = "AA",
-                cond = function(self, aaName, target)
-                    if not Targeting.GroupedWithTarget(target) then return false end
-                    return Targeting.TargetIsMA(target) and (target.PctHPs() or 999) <= Config:GetSetting('BigHealPoint')
-                end,
-            },
-            {
-                name = "Epic",
-                type = "Item",
-                cond = function(self, itemName, target)
-                    if not Targeting.GroupedWithTarget(target) then return false end
-                    return Targeting.TargetIsMA(target) and (target.PctHPs() or 999) <= Config:GetSetting('BigHealPoint')
-                end,
-            },
-            {
-                name = "RemedyHeal",
-                type = "Spell",
-                cond = function(self, spell, target)
-                    return (target.PctHPs() or 999) <= Config:GetSetting('BigHealPoint')
-                end,
-            },
+        ['MainHeal(1-79)'] = { --Level 1-79
             {
                 name = "SingleElixir",
                 type = "Spell",
@@ -1034,7 +1056,6 @@ local _ClassConfig = {
                 end,
             },
         },
-
     },
     ['RotationOrder']     = {
         -- Downtime doesn't have state because we run the whole rotation at once.
@@ -1424,17 +1445,16 @@ local _ClassConfig = {
             gem = 1,
             spells = {
                 { name = "RemedyHeal",   cond = function(self) return mq.TLO.Me.Level() >= 96 end, }, -- Level 96+
-                { name = "Renewal", },                                                                -- Level 70-95
-                { name = "HealingLight", },                                                           -- Main Heal, Level 1-69
+                { name = "Renewal",      cond = function(self) return mq.TLO.Me.Level() >= 80 end, }, -- Level 80-95
+                { name = "HealingLight", },                                                           -- Main Heal, Level 1-79
             },
         },
         {
             gem = 2,
             spells = {
                 { name = "RemedyHeal2", },                                                           -- Level 101+
-                { name = "Renewal", },                                                               -- Level 96-100 (When we only have one Remedy)
-                { name = "Renewal2", },                                                              -- Level 75+
-                { name = "HealingLight", },                                                          -- Fallback, Level 70-74
+                { name = "Renewal", },                                                               -- Level 70-79,96-100 (When we only have one Remedy)
+                { name = "Renewal2", },                                                              -- Level 80+
                 { name = "RemedyHeal", },                                                            -- Emergency/fallback, 59-69, these aren't good until 96
                 { name = "LowLevelStun", cond = function(self) return mq.TLO.Me.Level() < 59 end, }, -- Level 2-58
             },
@@ -1444,7 +1464,7 @@ local _ClassConfig = {
             spells = {
                 { name = "HealNuke2",     cond = function(self) return Config:GetSetting('InterContraChoice') == 1 end, }, -- Level 88+
                 { name = "NukeHeal", },                                                                                    -- Level 85+
-                { name = "Renewal3", },                                                                                    -- Level 80-85/87
+                { name = "Renewal2", },                                                                                    -- Level 80-85/87
                 { name = "CompleteHeal",  cond = function(self) return Config:GetSetting('DoCompleteHeal') end, },         -- Level 39
                 { name = "SingleElixir",  cond = function(self) return Config:GetSetting('DoHealOverTime') end, },         -- Level 19-79
                 --fallback
@@ -1464,10 +1484,11 @@ local _ClassConfig = {
             spells = {
                 { name = "NukeHeal2",     cond = function(self) return Config:GetSetting('InterContraChoice') == 3 end, }, -- Level 90+
                 { name = "HealNuke", },                                                                                    -- Level 83+
+                { name = "Renewal3", },
                 { name = "SingleElixir",  cond = function(self) return Config:GetSetting('DoHealOverTime') end, },
-                { name = "HealingLight", },                                                                                -- Fallback, Level 75-82
+                { name = "HealingLight", },                                                                    -- Fallback, Level 80-82
                 --fallback
-                { name = "TwinHealNuke",  cond = function(self) return Config:GetSetting('DoTwinHeal') end, },             -- 84+
+                { name = "TwinHealNuke",  cond = function(self) return Config:GetSetting('DoTwinHeal') end, }, -- 84+
                 { name = "CureAll",       cond = function(self) return Config:GetSetting('KeepCureMemmed') == 2 end, },
                 { name = "CurePoison",    cond = function(self) return Config:GetSetting('KeepCureMemmed') == 2 and not Core.GetResolvedActionMapItem('CureAll') end, },
                 { name = "CureDisease",   cond = function(self) return Config:GetSetting('KeepCureMemmed') == 2 and not Core.GetResolvedActionMapItem('CureAll') end, },

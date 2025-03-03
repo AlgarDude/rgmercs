@@ -735,11 +735,30 @@ local _ClassConfig = {
                 return (mq.TLO.Group.Injured(Config:GetSetting('GroupHealPoint'))() or 0) >= Config:GetSetting('GroupInjureCnt')
             end,
         },
-        { -- Level 65+ --Laz gets many of these starting at 65, adjusted over live.
-            name = 'BigHeal(65+)',
+        { -- Level 1-97
+            name = 'GroupHeal(1-97)',
             state = 1,
             steps = 1,
-            load_cond = function() return mq.TLO.Me.Level() > 64 end,
+            load_cond = function() return mq.TLO.Me.Level() < 98 end,
+            cond = function(self, target)
+                if not Targeting.GroupedWithTarget(target) then return false end
+                return (mq.TLO.Group.Injured(Config:GetSetting('GroupHealPoint'))() or 0) >= Config:GetSetting('GroupInjureCnt')
+            end,
+        },
+        { -- Level 77+
+            name = 'BigHeal(77+)',
+            state = 1,
+            steps = 1,
+            load_cond = function() return mq.TLO.Me.Level() > 76 end,
+            cond = function(self, target)
+                return (target.PctHPs() or 999) < Config:GetSetting('BigHealPoint')
+            end,
+        },
+        { -- Level 59-76
+            name = 'BigHeal(59-76)',
+            state = 1,
+            steps = 1,
+            load_cond = function() return mq.TLO.Me.Level() > 58 and mq.TLO.Me.Level() < 77 end,
             cond = function(self, target)
                 return (target.PctHPs() or 999) < Config:GetSetting('BigHealPoint')
             end,
@@ -753,30 +772,20 @@ local _ClassConfig = {
                 return (target.PctHPs() or 999) < Config:GetSetting('MainHealPoint')
             end,
         },
-        { -- Level 1-97
-            name = 'GroupHeal(1-97)',
+        { -- Level 80-100
+            name = 'MainHeal(80-100)',
             state = 1,
             steps = 1,
-            load_cond = function() return mq.TLO.Me.Level() < 98 end,
-            cond = function(self, target)
-                if not Targeting.GroupedWithTarget(target) then return false end
-                return (mq.TLO.Group.Injured(Config:GetSetting('GroupHealPoint'))() or 0) >= Config:GetSetting('GroupInjureCnt')
-            end,
-        },
-        { -- Level 70-100
-            name = 'MainHeal(70-100)',
-            state = 1,
-            steps = 1,
-            load_cond = function() return mq.TLO.Me.Level() > 69 and mq.TLO.Me.Level() < 101 end,
+            load_cond = function() return mq.TLO.Me.Level() > 79 and mq.TLO.Me.Level() < 101 end,
             cond = function(self, target)
                 return (target.PctHPs() or 999) <= Config:GetSetting('MainHealPoint')
             end,
         },
-        { -- Level 1-69, includes BigHeal
-            name = 'Heal(1-69)',
+        { -- Level 1-70
+            name = 'MainHeal(1-79)',
             state = 1,
             steps = 1,
-            load_cond = function() return mq.TLO.Me.Level() < 70 end,
+            load_cond = function() return mq.TLO.Me.Level() < 80 end,
             cond = function(self, target)
                 return (target.PctHPs() or 999) <= Config:GetSetting('MainHealPoint')
             end,
@@ -787,7 +796,7 @@ local _ClassConfig = {
             {
                 name = "DichoHeal",
                 type = "Spell",
-                cond = function(self)
+                cond = function(self, spell)
                     return (mq.TLO.Group.Injured(Config:GetSetting('BigHealPoint'))() or 0) >= Config:GetSetting('GroupInjureCnt')
                 end,
             },
@@ -818,113 +827,6 @@ local _ClassConfig = {
                     if not Config:GetSetting('DoHealOverTime') then return false end
                     return Casting.GroupBuffCheck(spell, target)
                 end,
-            },
-        },
-        ['BigHeal(65+)'] = {
-            {
-                name = "ClutchHeal",
-                type = "Spell",
-                cond = function(self)
-                    return Targeting.GetTargetPctHPs() < 35
-                end,
-            },
-            {
-                name = "Sanctuary",
-                type = "AA",
-                cond = function(self, aaName, target)
-                    return Targeting.TargetIsMyself(target)
-                end,
-            },
-            -- {
-            --     name = "DichoHeal",
-            --     type = "Spell",
-            --     cond = function(self, spell, target)
-            --         return Targeting.TargetIsMA(target)
-            --     end,
-            -- },
-            {
-                name = "Divine Arbitration",
-                type = "AA",
-                cond = function(self, aaName, target)
-                    if not Targeting.GroupedWithTarget(target) then return false end
-                    return Targeting.TargetIsMA(target)
-                end,
-            },
-            {
-                name = "Burst of Life",
-                type = "AA",
-            },
-            {
-                name = "Epic",
-                type = "Item",
-                cond = function(self, itemName, target)
-                    return Targeting.TargetIsMA(target)
-                end,
-            },
-            {
-                name = "Focused Celestial Regeneration",
-                type = "AA",
-                cond = function(self, aaName, target)
-                    return Targeting.TargetIsMA(target)
-                end,
-            },
-            {
-                name = "Blessing of Sanctuary",
-                type = "AA",
-                cond = function(self, aaName, target)
-                    return target.ID() == (mq.TLO.Target.AggroHolder.ID() and not Core.GetMainAssistId())
-                end,
-            },
-            -- {
-            --     name = "Veturika's Perseverence",
-            --     type = "AA",
-            --     cond = function(self, aaName, target)
-            --         return Targeting.TargetIsMyself(target)
-            --     end,
-            -- },
-            { --The stuff above is down, lets make mainhealpoint chonkier. Homework: Wondering if we should be using this more/elsewhere.
-                name = "Channeling of the Divine",
-                type = "AA",
-            },
-            { --The stuff above is down, lets make mainhealpoint faster.
-                name = "Celestial Rapidity",
-                type = "AA",
-            },
-            {
-                name = "VP2Hammer",
-                type = "Item",
-            },
-            { --if we hit this we need spells back ASAP
-                name = "Forceful Rejuvenation",
-                type = "AA",
-            },
-        },
-        ['MainHeal(101+)'] = {
-            {
-                name = "Focused Celestial Regeneration",
-                type = "AA",
-                cond = function(self, aaName, target)
-                    return Targeting.TargetIsMA(target)
-                end,
-            },
-            {
-                name = "HealNuke",
-                type = "Spell",
-                cond = function(self)
-                    return mq.TLO.Me.CombatState():lower() == "combat"
-                end,
-            },
-            {
-                name = "RemedyHeal",
-                type = "Spell",
-            },
-            {
-                name = "RemedyHeal2",
-                type = "Spell",
-            },
-            {
-                name = "VP2Hammer",
-                type = "Item",
             },
         },
         ['GroupHeal(1-97)'] = { --Level 1-97
@@ -959,7 +861,173 @@ local _ClassConfig = {
                 type = "Spell",
             },
         },
-        ['MainHeal(70-100)'] = { --Level 70-100
+        ['BigHeal(77+)'] = {
+            {
+                name = "ClutchHeal",
+                type = "Spell",
+                cond = function(self, spell, target)
+                    return Targeting.GetTargetPctHPs() < 35
+                end,
+            },
+            {
+                name = "Sanctuary",
+                type = "AA",
+                cond = function(self, aaName, target)
+                    return Targeting.TargetIsMyself(target)
+                end,
+            },
+            {
+                name = "DichoHeal",
+                type = "Spell",
+                cond = function(self, spell, target)
+                    return Targeting.TargetIsMA(target)
+                end,
+            },
+            {
+                name = "Divine Arbitration",
+                type = "AA",
+                cond = function(self, aaName, target)
+                    if not Targeting.GroupedWithTarget(target) then return false end
+                    return Targeting.TargetIsMA(target)
+                end,
+            },
+            {
+                name = "Burst of Life",
+                type = "AA",
+            },
+            {
+                name = "Epic",
+                type = "Item",
+                cond = function(self, itemName, target)
+                    if not Targeting.GroupedWithTarget(target) then return false end
+                    return Targeting.TargetIsMA(target)
+                end,
+            },
+            {
+                name = "Blessing of Sanctuary",
+                type = "AA",
+                cond = function(self, aaName, target)
+                    return target.ID() == (mq.TLO.Target.AggroHolder.ID() and not Core.GetMainAssistId())
+                end,
+            },
+            {
+                name = "Veturika's Perseverence",
+                type = "AA",
+                cond = function(self, aaName, target)
+                    return Targeting.TargetIsMyself(target)
+                end,
+            },
+            { --The stuff above is down, lets make mainhealpoint chonkier. Homework: Wondering if we should be using this more/elsewhere.
+                name = "Channeling of the Divine",
+                type = "AA",
+            },
+            {
+                name = "VP2Hammer",
+                type = "Item",
+            },
+            { --if we hit this we need spells back ASAP
+                name = "Forceful Rejuvenation",
+                type = "AA",
+            },
+        },
+        ['BigHeal(59-76)'] = {
+            {
+                name = "Divine Arbitration",
+                type = "AA",
+                cond = function(self, aaName, target)
+                    if not Targeting.GroupedWithTarget(target) then return false end
+                    return Targeting.TargetIsMA(target)
+                end,
+            },
+            {
+                name = "Sanctuary",
+                type = "AA",
+                cond = function(self, aaName, target)
+                    return Targeting.TargetIsMyself(target)
+                end,
+            },
+            {
+                name = "Burst of Life",
+                type = "AA",
+            },
+            {
+                name = "Epic",
+                type = "Item",
+                cond = function(self, itemName, target)
+                    if not Targeting.GroupedWithTarget(target) then return false end
+                    return Targeting.TargetIsMA(target)
+                end,
+            },
+            {
+                name = "Focused Celestial Regeneration",
+                type = "AA",
+                cond = function(self, aaName, target)
+                    return Targeting.TargetIsMA(target)
+                end,
+            },
+            {
+                name = "Blessing of Sanctuary",
+                type = "AA",
+                cond = function(self, aaName, target)
+                    return target.ID() == (mq.TLO.Target.AggroHolder.ID() and not Targeting.TargetIsMA(target))
+                end,
+            },
+            {
+                name = "Renewal",
+                type = "Spell",
+            },
+            {
+                name = "RemedyHeal",
+                type = "Spell",
+                cond = function(self, spell, target)
+                    return not Core.GetResolvedActionMapItem("Renewal")
+                end,
+            },
+            { --The stuff above is down, lets make mainhealpoint faster.
+                name = "Celestial Rapidity",
+                type = "AA",
+            },
+            { --if we hit this we need spells back ASAP
+                name = "Forceful Rejuvenation",
+                type = "AA",
+            },
+        },
+        ['MainHeal(101+)'] = {
+            {
+                name = "Focused Celestial Regeneration",
+                type = "AA",
+                cond = function(self, aaName, target)
+                    return Targeting.TargetIsMA(target)
+                end,
+            },
+            {
+                name = "HealNuke",
+                type = "Spell",
+                cond = function(self)
+                    return mq.TLO.Me.CombatState():lower() == "combat"
+                end,
+            },
+            {
+                name = "RemedyHeal",
+                type = "Spell",
+            },
+            {
+                name = "RemedyHeal2",
+                type = "Spell",
+            },
+            {
+                name = "VP2Hammer",
+                type = "Item",
+            },
+        },
+        ['MainHeal(80-100)'] = { --Level 80-100
+            {
+                name = "Focused Celestial Regeneration",
+                type = "AA",
+                cond = function(self, aaName, target)
+                    return Targeting.TargetIsMA(target)
+                end,
+            },
             {
                 name = "HealNuke",
                 type = "Spell",
@@ -999,6 +1067,20 @@ local _ClassConfig = {
                 end,
             },
             {
+                name = "HealingLight",
+                type = "Spell",
+            },
+        },
+        ['MainHeal(1-79)'] = { --Level 1-79
+            {
+                name = "SingleElixir",
+                type = "Spell",
+                cond = function(self, spell, target)
+                    if not Config:GetSetting('DoHealOverTime') then return false end
+                    return Casting.GroupBuffCheck(spell, target)
+                end,
+            },
+            {
                 name = "CompleteHeal",
                 type = "Spell",
                 cond = function(self, spell, target)
@@ -1014,28 +1096,6 @@ local _ClassConfig = {
                 end,
             },
         },
-        ['Heal(1-69)'] = { --Level 1-69, includes Main and emergency Remedy
-            {
-                name = "RemedyHeal",
-                type = "Spell",
-                cond = function(self, spell, target)
-                    return (target.PctHPs() or 999) <= Config:GetSetting('BigHealPoint')
-                end,
-            },
-            {
-                name = "SingleElixir",
-                type = "Spell",
-                cond = function(self, spell, target)
-                    if not Config:GetSetting('DoHealOverTime') then return false end
-                    return Casting.GroupBuffCheck(spell, target)
-                end,
-            },
-            {
-                name = "HealingLight",
-                type = "Spell",
-            },
-        },
-
     },
     ['RotationOrder']     = {
         -- Downtime doesn't have state because we run the whole rotation at once.
@@ -1418,17 +1478,16 @@ local _ClassConfig = {
             gem = 1,
             spells = {
                 { name = "RemedyHeal",   cond = function(self) return mq.TLO.Me.Level() >= 96 end, }, -- Level 96+
-                { name = "Renewal", },                                                                -- Level 70-95
-                { name = "HealingLight", },                                                           -- Main Heal, Level 1-69
+                { name = "Renewal",      cond = function(self) return mq.TLO.Me.Level() >= 80 end, }, -- Level 80-95
+                { name = "HealingLight", },                                                           -- Main Heal, Level 1-79
             },
         },
         {
             gem = 2,
             spells = {
                 { name = "RemedyHeal2", },                                                           -- Level 101+
-                { name = "Renewal", },                                                               -- Level 96-100 (When we only have one Remedy)
-                { name = "Renewal2", },                                                              -- Level 75+
-                { name = "HealingLight", },                                                          -- Fallback, Level 70-74
+                { name = "Renewal", },                                                               -- Level 70-79,96-100 (When we only have one Remedy)
+                { name = "Renewal2", },                                                              -- Level 80+
                 { name = "RemedyHeal", },                                                            -- Emergency/fallback, 59-69, these aren't good until 96
                 { name = "LowLevelStun", cond = function(self) return mq.TLO.Me.Level() < 59 end, }, -- Level 2-58
             },
@@ -1438,7 +1497,7 @@ local _ClassConfig = {
             spells = {
                 { name = "HealNuke2",     cond = function(self) return Config:GetSetting('InterContraChoice') == 1 end, }, -- Level 88+
                 { name = "NukeHeal", },                                                                                    -- Level 85+
-                { name = "Renewal3", },                                                                                    -- Level 80-85/87
+                { name = "Renewal2", },                                                                                    -- Level 80-85/87
                 { name = "CompleteHeal",  cond = function(self) return Config:GetSetting('DoCompleteHeal') end, },         -- Level 39
                 { name = "SingleElixir",  cond = function(self) return Config:GetSetting('DoHealOverTime') end, },         -- Level 19-79
                 --fallback
