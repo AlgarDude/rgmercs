@@ -49,6 +49,7 @@ return {
             "Dissident Rage",
             "Composite Rage",
             "Ecliptic Rage",
+            "Reciprocal Rage",
         },
         ['Dfrenzy'] = {
             "Eviscerating Frenzy",
@@ -124,6 +125,7 @@ return {
             "Mangler's Covenant",
             "Vindicator's Coalition",
             "Conqueror's Conjunction",
+            "Eviscerator's Covariance",
 
         },
         ['CheapShot'] = {
@@ -141,6 +143,7 @@ return {
             "Arcsteel",
             "Arcslash",
             "Arcshear",
+            "Arcscale",
         },
         ['AEVicious'] = {
             "Vicious Spiral",
@@ -224,6 +227,7 @@ return {
         ['SappingStrike'] = {
             "Sapping Strikes",
             "Shriveling Strikes",
+            "Draining Strikes",
         },
         ['ReflexDisc'] = {
             "Reflexive Retaliation",
@@ -432,8 +436,7 @@ return {
                 name = "BerAura",
                 type = "Disc",
                 cond = function(self, discSpell)
-                    return not mq.TLO.Me.Aura(1).ID() and mq.TLO.Me.CombatAbilityReady(discSpell.RankName())() and
-                        mq.TLO.Me.PctEndurance() > 10
+                    return not mq.TLO.Me.Aura(1).ID() and mq.TLO.Me.PctEndurance() > 10
                 end,
             },
             {
@@ -453,7 +456,7 @@ return {
                 end,
             },
         },
-        ['Burn'] = { --If this burn rotation is optimal, we may wish to refactor with a helper function, a lot of duplicate code near the end. Fixing broken functionality first. - Algar
+        ['Burn'] = { --This really needs to be refactored with helper functions sometime. Other prioriities atm. Algar 3/2/25
             {
                 name = "PrimaryBurnDisc",
                 type = "Disc",
@@ -590,7 +593,7 @@ return {
             },
             {
                 name = "War Cry of the Braxi",
-                type = "AA",
+                type = "Disc",
                 cond = function(self, aaName)
                     return Casting.SelfBuffAACheck(aaName)
                 end,
@@ -636,7 +639,7 @@ return {
                 name = "SharedBuff",
                 type = "Disc",
                 cond = function(self, discSpell)
-                    return not Casting.IHaveBuff(discSpell.RankName())
+                    return Casting.SelfBuffCheck(discSpell)
                 end,
             },
             {
@@ -659,7 +662,7 @@ return {
                 type = "AA",
                 cond = function(self, aaName)
                     -- on emu this is activated on live it is passive.
-                    return not Casting.SongActive(mq.TLO.Me.AltAbility(aaName).Spell)
+                    return not Casting.IHaveBuff(Casting.GetAASpell(aaName))
                 end,
             },
             {
@@ -719,21 +722,14 @@ return {
                 name = "FrenzyBoost",
                 type = "Disc",
                 cond = function(self, discSpell)
-                    return not Casting.IHaveBuff(discSpell)
+                    return Casting.SelfBuffCheck(discSpell)
                 end,
             },
             {
                 name = "CryDmg",
                 type = "Disc",
                 cond = function(self, discSpell)
-                    return not Casting.IHaveBuff(discSpell.Name() or "None")
-                end,
-            },
-            {
-                name = "Drawn to Blood",
-                type = "AA",
-                cond = function(self, aaName)
-                    return Targeting.GetTargetDistance() > 15
+                    return Casting.SelfBuffCheck(discSpell)
                 end,
             },
             {
@@ -760,6 +756,13 @@ return {
                         not Casting.IHaveBuff("Group Bestial Alignment")
                         ---@diagnostic disable-next-line: undefined-field --Defs are not updated with HeadWet
                         and not mq.TLO.Me.HeadWet() --Stops Leap from launching us above the water's surface
+                end,
+            },
+            {
+                name = "Drawn to Blood",
+                type = "AA",
+                cond = function(self, aaName)
+                    return Targeting.GetTargetDistance() > 15
                 end,
             },
         },
