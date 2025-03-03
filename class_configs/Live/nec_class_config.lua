@@ -798,7 +798,6 @@ local _ClassConfig = {
             {
                 name = "LichControl",
                 type = "CustomFunc",
-                active_cond = function(self, spell) return true end,
                 cond = function(self, _)
                     local lichSpell = Core.GetResolvedActionMapItem('LichSpell')
 
@@ -911,12 +910,10 @@ local _ClassConfig = {
             {
                 name = "DichoSpell",
                 type = "Spell",
-                cond = function(self, _) return true end,
             },
             {
                 name = "SwarmPet",
                 type = "Spell",
-                cond = function(self, _) return true end,
             },
             {
                 name = "SnareDot",

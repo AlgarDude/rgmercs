@@ -864,7 +864,7 @@ local _ClassConfig = {
                 name = "Wake the Dead",
                 type = "AA",
                 cond = function(self, aaName)
-                    return Casting.SelfBuffAACheck(aaName) and mq.TLO.SpawnCount("corpse radius 100")() >= Config:GetSetting('WakeDeadCorpseCnt')
+                    return mq.TLO.SpawnCount("corpse radius 100")() >= Config:GetSetting('WakeDeadCorpseCnt')
                 end,
             },
             {
@@ -891,24 +891,22 @@ local _ClassConfig = {
             {
                 name = "Silent Casting",
                 type = "AA",
-                cond = function(self, aaName)
-                    return Casting.SelfBuffAACheck(aaName) and Targeting.GetXTHaterCount() > 1
+                cond = function(self, aaName, target)
+                    return Targeting.IsNamed(target) and mq.TLO.Me.PctAggro() > 60
                 end,
             },
             {
                 name = "Life Burn",
                 type = "AA",
                 cond = function(self, aaName)
-                    return Config:GetSetting('DoLifeBurn') and Casting.SelfBuffAACheck(aaName) and mq.TLO.Me.PctAggro() <= 25
+                    return Config:GetSetting('DoLifeBurn') and mq.TLO.Me.PctAggro() <= 25
                 end,
             },
             {
                 name = "ChaoticDebuff",
                 type = "Spell",
                 cond = function(self, spell, target)
-                    -- force the target for StacksTarget to work.
-                    Targeting.SetTarget(target.ID() or 0)
-                    return not Casting.TargetHasBuff(spell) and spell.Trigger(2).StacksTarget()
+                    return Casting.DetSpellCheck(spell)
                 end,
             },
             {
@@ -1048,37 +1046,23 @@ local _ClassConfig = {
             {
                 name = "Funeral Pyre",
                 type = "AA",
-                cond = function(self, aaName)
-                    return Casting.SelfBuffAACheck(aaName)
-                end,
             },
             {
                 name = "Hand of Death",
                 type = "AA",
-                cond = function(self, aaName)
-                    return Casting.SelfBuffAACheck(aaName)
-                end,
             },
             {
                 name = "Mercurial Torment",
                 type = "AA",
-                cond = function(self, aaName)
-                    return Casting.SelfBuffAACheck(aaName)
-                end,
             },
             {
                 name = "Heretic's Twincast",
                 type = "AA",
-                cond = function(self, aaName)
-                    return Casting.SelfBuffAACheck(aaName) and not Casting.TargetHasBuffByName(aaName)
-                end,
             },
             {
                 name = "Gathering Dusk",
                 type = "AA",
-                cond = function(self, aaName)
-                    return Casting.SelfBuffAACheck(aaName)
-                end,
+                cond = function(self, aaName, target) return Targeting.IsNamed(target) end,
             },
             {
                 name = "Swarm of Decay",
