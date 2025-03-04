@@ -637,7 +637,7 @@ return {
             state = 1,
             steps = 1,
             doFullRotation = true,
-            targetId = function(self) return mq.TLO.Target.ID() == Config.Globals.AutoTargetID and { Config.Globals.AutoTargetID, } or {} end,
+            targetId = function(self) return Targeting.CheckForAutoTargetID() end,
             cond = function(self, combat_state)
                 return combat_state == "Combat" and not Casting.IAmFeigning() and mq.TLO.Me.PctAggro() > (Config:GetSetting('JoltAggro') or 90)
             end,
@@ -646,7 +646,7 @@ return {
             name = 'Burn',
             state = 1,
             steps = 1,
-            targetId = function(self) return mq.TLO.Target.ID() == Config.Globals.AutoTargetID and { Config.Globals.AutoTargetID, } or {} end,
+            targetId = function(self) return Targeting.CheckForAutoTargetID() end,
             cond = function(self, combat_state)
                 return combat_state == "Combat" and Casting.BurnCheck() and not Casting.IAmFeigning()
             end,
@@ -656,7 +656,7 @@ return {
             state = 1,
             steps = 1,
             load_cond = function() return Config:GetSetting('DoSnare') end,
-            targetId = function(self) return mq.TLO.Target.ID() == Config.Globals.AutoTargetID and { Config.Globals.AutoTargetID, } or {} end,
+            targetId = function(self) return Targeting.CheckForAutoTargetID() end,
             cond = function(self, combat_state)
                 return combat_state == "Combat" and Targeting.GetXTHaterCount() <= Config:GetSetting('SnareCount')
             end,
@@ -667,7 +667,7 @@ return {
             steps = 1,
             load_cond = function() return Core.IsModeActive('DPS') and mq.TLO.Me.Level() > 100 end,
             doFullRotation = true,
-            targetId = function(self) return mq.TLO.Target.ID() == Config.Globals.AutoTargetID and { Config.Globals.AutoTargetID, } or {} end,
+            targetId = function(self) return Targeting.CheckForAutoTargetID() end,
             cond = function(self, combat_state)
                 return combat_state == "Combat" and not Casting.IAmFeigning()
             end,
@@ -678,7 +678,7 @@ return {
             steps = 1,
             load_cond = function() return Core.IsModeActive('DPS') and mq.TLO.Me.Level() < 101 and mq.TLO.Me.Level() > 70 end,
             doFullRotation = true,
-            targetId = function(self) return mq.TLO.Target.ID() == Config.Globals.AutoTargetID and { Config.Globals.AutoTargetID, } or {} end,
+            targetId = function(self) return Targeting.CheckForAutoTargetID() end,
             cond = function(self, combat_state)
                 return combat_state == "Combat" and not Casting.IAmFeigning()
             end,
@@ -689,7 +689,7 @@ return {
             steps = 1,
             load_cond = function() return mq.TLO.Me.Level() < 71 and Config:GetSetting('ElementChoice') == 1 end,
             doFullRotation = true,
-            targetId = function(self) return mq.TLO.Target.ID() == Config.Globals.AutoTargetID and { Config.Globals.AutoTargetID, } or {} end,
+            targetId = function(self) return Targeting.CheckForAutoTargetID() end,
             cond = function(self, combat_state)
                 return combat_state == "Combat" and not Casting.IAmFeigning() and
                     not (Core.IsModeActive('PBAE(LowLevel)') and self.ClassConfig.HelperFunctions.AETargetCheck(Config:GetSetting('PBAETargetCnt'), true))
@@ -701,7 +701,7 @@ return {
             steps = 1,
             load_cond = function() return mq.TLO.Me.Level() < 71 and Config:GetSetting('ElementChoice') == 2 end,
             doFullRotation = true,
-            targetId = function(self) return mq.TLO.Target.ID() == Config.Globals.AutoTargetID and { Config.Globals.AutoTargetID, } or {} end,
+            targetId = function(self) return Targeting.CheckForAutoTargetID() end,
             cond = function(self, combat_state)
                 return combat_state == "Combat" and not Casting.IAmFeigning() and
                     not (Core.IsModeActive('PBAE(LowLevel)') and self.ClassConfig.HelperFunctions.AETargetCheck(Config:GetSetting('PBAETargetCnt'), true))
@@ -713,7 +713,7 @@ return {
             steps = 1,
             load_cond = function() return mq.TLO.Me.Level() < 71 and Config:GetSetting('ElementChoice') == 3 end,
             doFullRotation = true,
-            targetId = function(self) return mq.TLO.Target.ID() == Config.Globals.AutoTargetID and { Config.Globals.AutoTargetID, } or {} end,
+            targetId = function(self) return Targeting.CheckForAutoTargetID() end,
             cond = function(self, combat_state)
                 return combat_state == "Combat" and not Casting.IAmFeigning() and
                     not (Core.IsModeActive('PBAE(LowLevel)') and self.ClassConfig.HelperFunctions.AETargetCheck(Config:GetSetting('PBAETargetCnt'), true))
@@ -725,7 +725,7 @@ return {
             steps = 1,
             load_cond = function() return Core.IsModeActive('PBAE(LowLevel)') and mq.TLO.Me.Level() < 71 end,
             doFullRotation = true,
-            targetId = function(self) return mq.TLO.Target.ID() == Config.Globals.AutoTargetID and { Config.Globals.AutoTargetID, } or {} end,
+            targetId = function(self) return Targeting.CheckForAutoTargetID() end,
             cond = function(self, combat_state)
                 return combat_state == "Combat" and not Casting.IAmFeigning() and self.ClassConfig.HelperFunctions.AETargetCheck(Config:GetSetting('PBAETargetCnt'), true)
             end,
@@ -734,7 +734,7 @@ return {
             name = 'Weaves',
             state = 1,
             steps = 1,
-            targetId = function(self) return mq.TLO.Target.ID() == Config.Globals.AutoTargetID and { Config.Globals.AutoTargetID, } or {} end,
+            targetId = function(self) return Targeting.CheckForAutoTargetID() end,
             cond = function(self, combat_state)
                 return combat_state == "Combat" and not Casting.IAmFeigning()
             end,
@@ -744,7 +744,7 @@ return {
             state = 1,
             steps = 1,
             timer = 30, -- only run every 30 seconds at most.
-            targetId = function(self) return mq.TLO.Target.ID() == Config.Globals.AutoTargetID and { Config.Globals.AutoTargetID, } or {} end,
+            targetId = function(self) return Targeting.CheckForAutoTargetID() end,
             cond = function(self, combat_state)
                 return combat_state == "Combat" and not Casting.IAmFeigning()
             end,

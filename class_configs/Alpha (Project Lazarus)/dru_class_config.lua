@@ -473,8 +473,8 @@ local _ClassConfig = {
         },
         ['SnareSpell'] = {
             -- Snare Spells
-            "Thornmaw Vines",
-            "Hungry Vines",
+            -- "Thornmaw Vines",
+            -- "Hungry Vines", -- The out-of-era Serpent Vines is much less mana and lasts longer without the Dot And melee guard
             "Serpent Vines",
             "Entangle",
             "Mire Thorns",
@@ -710,7 +710,14 @@ local _ClassConfig = {
             "Bolstered Growth",
         },
         ['PetSpell'] = {
+            "Nature Wanderer's Behest",
             "Nature Walker's Behest",
+        },
+        ['Dawnstrike'] = { -- I think better to just spam solstice strike
+            "Dawnstrike",
+        },
+        ['BurstDmgShield'] = {
+            "Barkspur",
         },
     },
     ['HealRotationOrder'] = {
@@ -839,7 +846,7 @@ local _ClassConfig = {
             name = 'Debuff',
             state = 1,
             steps = 2,
-            targetId = function(self) return mq.TLO.Target.ID() == Config.Globals.AutoTargetID and { Config.Globals.AutoTargetID, } or {} end,
+            targetId = function(self) return Targeting.CheckForAutoTargetID() end,
             cond = function(self, combat_state)
                 return combat_state == "Combat" and not Casting.IAmFeigning() and Core.OkayToNotHeal() and
                     Casting.OkayToDebuff() and (Casting.HaveManaToDebuff() or Targeting.IsNamed(Targeting.GetAutoTarget()))
@@ -850,7 +857,7 @@ local _ClassConfig = {
             state = 1,
             steps = 1,
             load_cond = function() return Config:GetSetting('DoSnare') end,
-            targetId = function(self) return mq.TLO.Target.ID() == Config.Globals.AutoTargetID and { Config.Globals.AutoTargetID, } or {} end,
+            targetId = function(self) return Targeting.CheckForAutoTargetID() end,
             cond = function(self, combat_state)
                 return combat_state == "Combat" and Core.OkayToNotHeal() and Targeting.GetXTHaterCount() <= Config:GetSetting('SnareCount')
             end,
@@ -859,7 +866,7 @@ local _ClassConfig = {
             name = 'HealBurn',
             state = 1,
             steps = 1,
-            targetId = function(self) return mq.TLO.Target.ID() == Config.Globals.AutoTargetID and { Config.Globals.AutoTargetID, } or {} end,
+            targetId = function(self) return Targeting.CheckForAutoTargetID() end,
             cond = function(self, combat_state)
                 return combat_state == "Combat" and
                     Casting.BurnCheck() and not Casting.IAmFeigning() and Core.OkayToNotHeal()
@@ -880,7 +887,7 @@ local _ClassConfig = {
             state = 1,
             steps = 1,
             load_cond = function() return mq.TLO.Me.Level() < 71 end,
-            targetId = function(self) return mq.TLO.Target.ID() == Config.Globals.AutoTargetID and { Config.Globals.AutoTargetID, } or {} end,
+            targetId = function(self) return Targeting.CheckForAutoTargetID() end,
             cond = function(self, combat_state)
                 return combat_state == "Combat" and not Casting.IAmFeigning() and Core.OkayToNotHeal()
             end,
@@ -1179,7 +1186,7 @@ local _ClassConfig = {
         {
             gem = 2,
             spells = {
-                { name = "QuickHealSurge", cond = function(self) return mq.TLO.Me.Level() >= 75 end, },
+                { name = "LongGroupHeal", cond = function(self) return mq.TLO.Me.Level() >= 70 end, },
 
 
             },
@@ -1205,7 +1212,6 @@ local _ClassConfig = {
             gem = 5,
             spells = {
 
-                { name = "LongGroupHeal", cond = function(self) return mq.TLO.Me.Level() >= 70 end, },
                 { name = "WinterFireDD", },
 
             },

@@ -776,7 +776,7 @@ local _ClassConfig = {
                 name = "Blessing of Tunare",
                 type = "AA",
                 cond = function(self, aaName, target)
-                    return Targeting.BigHealsNeeded(target)
+                    return Targeting.BigGroupHealsNeeded()
                 end,
             },
             {
@@ -839,7 +839,7 @@ local _ClassConfig = {
             name = 'Debuff',
             state = 1,
             steps = 2,
-            targetId = function(self) return mq.TLO.Target.ID() == Config.Globals.AutoTargetID and { Config.Globals.AutoTargetID, } or {} end,
+            targetId = function(self) return Targeting.CheckForAutoTargetID() end,
             cond = function(self, combat_state)
                 return combat_state == "Combat" and not Casting.IAmFeigning() and Core.OkayToNotHeal() and
                     Casting.OkayToDebuff() and (Casting.HaveManaToDebuff() or Targeting.IsNamed(Targeting.GetAutoTarget()))
@@ -850,7 +850,7 @@ local _ClassConfig = {
             state = 1,
             steps = 1,
             load_cond = function() return Config:GetSetting('DoSnare') end,
-            targetId = function(self) return mq.TLO.Target.ID() == Config.Globals.AutoTargetID and { Config.Globals.AutoTargetID, } or {} end,
+            targetId = function(self) return Targeting.CheckForAutoTargetID() end,
             cond = function(self, combat_state)
                 return combat_state == "Combat" and Core.OkayToNotHeal() and Targeting.GetXTHaterCount() <= Config:GetSetting('SnareCount')
             end,
@@ -859,7 +859,7 @@ local _ClassConfig = {
             name = 'HealBurn',
             state = 1,
             steps = 1,
-            targetId = function(self) return mq.TLO.Target.ID() == Config.Globals.AutoTargetID and { Config.Globals.AutoTargetID, } or {} end,
+            targetId = function(self) return Targeting.CheckForAutoTargetID() end,
             cond = function(self, combat_state)
                 return combat_state == "Combat" and
                     Casting.BurnCheck() and not Casting.IAmFeigning() and Core.OkayToNotHeal()
@@ -880,7 +880,7 @@ local _ClassConfig = {
             state = 1,
             steps = 1,
             load_cond = function() return mq.TLO.Me.Level() > 70 end,
-            targetId = function(self) return mq.TLO.Target.ID() == Config.Globals.AutoTargetID and { Config.Globals.AutoTargetID, } or {} end,
+            targetId = function(self) return Targeting.CheckForAutoTargetID() end,
             cond = function(self, combat_state)
                 return combat_state == "Combat" and not Casting.IAmFeigning() and Core.OkayToNotHeal()
             end,
@@ -890,7 +890,7 @@ local _ClassConfig = {
             state = 1,
             steps = 1,
             load_cond = function() return mq.TLO.Me.Level() < 71 end,
-            targetId = function(self) return mq.TLO.Target.ID() == Config.Globals.AutoTargetID and { Config.Globals.AutoTargetID, } or {} end,
+            targetId = function(self) return Targeting.CheckForAutoTargetID() end,
             cond = function(self, combat_state)
                 return combat_state == "Combat" and not Casting.IAmFeigning() and Core.OkayToNotHeal()
             end,

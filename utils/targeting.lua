@@ -481,15 +481,15 @@ function Targeting.MobHasLowHP(target)
     return threshold > Targeting.GetTargetPctHPs(target)
 end
 
-function Targeting.HPInBigHealRange(target)
+function Targeting.BigHealsNeeded(target)
     return (target.PctHPs() or 999) < Config:GetSetting('BigHealPoint')
 end
 
-function Targeting.HPInMainHealRange(target)
+function Targeting.MainHealsNeeded(target)
     return (target.PctHPs() or 999) < Config:GetSetting('MainHealPoint')
 end
 
-function Targeting.HPInLightHealRange(target)
+function Targeting.LightHealsNeeded(target)
     return (target.PctHPs() or 999) < Config:GetSetting('LightHealPoint')
 end
 
@@ -499,6 +499,10 @@ end
 
 function Targeting.BigGroupHealsNeeded()
     return (mq.TLO.Group.Injured(Config:GetSetting('BigHealPoint'))() or 0) >= Config:GetSetting('GroupInjureCnt')
+end
+
+function Targeting.CheckForAutoTargetID()
+    return mq.TLO.Target.ID() == Config.Globals.AutoTargetID and { Config.Globals.AutoTargetID, } or {}
 end
 
 return Targeting

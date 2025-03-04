@@ -646,7 +646,7 @@ return {
             name = 'Burn',
             state = 1,
             steps = 1,
-            targetId = function(self) return mq.TLO.Target.ID() == Config.Globals.AutoTargetID and { Config.Globals.AutoTargetID, } or {} end,
+            targetId = function(self) return Targeting.CheckForAutoTargetID() end,
             cond = function(self, combat_state)
                 return combat_state == "Combat" and
                     Casting.BurnCheck()
@@ -667,7 +667,7 @@ return {
             name = 'Aggro Management',
             state = 1,
             steps = 1,
-            targetId = function(self) return mq.TLO.Target.ID() == Config.Globals.AutoTargetID and { Config.Globals.AutoTargetID, } or {} end,
+            targetId = function(self) return Targeting.CheckForAutoTargetID() end,
             cond = function(self, combat_state)
                 return combat_state ==
                     "Combat"
@@ -677,7 +677,7 @@ return {
             name = 'Weaves',
             state = 1,
             steps = 1,
-            targetId = function(self) return mq.TLO.Target.ID() == Config.Globals.AutoTargetID and { Config.Globals.AutoTargetID, } or {} end,
+            targetId = function(self) return Targeting.CheckForAutoTargetID() end,
             cond = function(self, combat_state)
                 return combat_state == "Combat" and Config:GetSetting('WeaveAANukes') and mq.TLO.Me.SpellInCooldown()
             end,
@@ -686,7 +686,7 @@ return {
             name = 'Gift of Mana',
             state = 1,
             steps = 1,
-            targetId = function(self) return mq.TLO.Target.ID() == Config.Globals.AutoTargetID and { Config.Globals.AutoTargetID, } or {} end,
+            targetId = function(self) return Targeting.CheckForAutoTargetID() end,
             cond = function(self, combat_state)
                 return combat_state == "Combat" and (not Config:GetSetting('DoGOMCheck') or Casting.GOMCheck())
             end,
@@ -695,7 +695,7 @@ return {
             name = 'DPS',
             state = 1,
             steps = 1,
-            targetId = function(self) return mq.TLO.Target.ID() == Config.Globals.AutoTargetID and { Config.Globals.AutoTargetID, } or {} end,
+            targetId = function(self) return Targeting.CheckForAutoTargetID() end,
             cond = function(self, combat_state)
                 return combat_state == "Combat"
             end,
@@ -704,7 +704,7 @@ return {
             name = 'AoE Rain DPS',
             state = 1,
             steps = 1,
-            targetId = function(self) return mq.TLO.Target.ID() == Config.Globals.AutoTargetID and { Config.Globals.AutoTargetID, } or {} end,
+            targetId = function(self) return Targeting.CheckForAutoTargetID() end,
             cond = function(self, combat_state)
                 return combat_state == "Combat" and Targeting.GetAutoTargetPctHPs() <= Config:GetSetting('RainMinTargetHP') and
                     Targeting.GetXTHaterCount() >= Config:GetSetting('RainMinHaters')

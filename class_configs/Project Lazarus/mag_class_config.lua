@@ -394,6 +394,7 @@ _ClassConfig      = {
         ['PetAura'] = {
             -- Mage Pet Aura
             "Arcane Distillect",
+            "Rathe's Strength",
             "Earthen Strength",
         },
         --not used
@@ -752,9 +753,9 @@ _ClassConfig      = {
             "Summon Wintry Paradox",
         },
         ['FireOrbSummon'] = {
-            "Summon Molten Komatiite Orb",
-            "Summon Firebound Orb",
-            "Summon Blazing Orb",
+            -- "Summon Molten Komatiite Orb",
+            -- "Summon Firebound Orb",
+            -- "Summon Blazing Orb",
             "Summon: Molten Orb",
             "Summon: Lava Orb",
         },
@@ -874,7 +875,7 @@ _ClassConfig      = {
             name = 'Burn',
             state = 1,
             steps = 1,
-            targetId = function(self) return mq.TLO.Target.ID() == Config.Globals.AutoTargetID and { Config.Globals.AutoTargetID, } or {} end,
+            targetId = function(self) return Targeting.CheckForAutoTargetID() end,
             cond = function(self, combat_state)
                 return combat_state == "Combat" and Casting.BurnCheck() and not Casting.IAmFeigning()
             end,
@@ -884,7 +885,7 @@ _ClassConfig      = {
             state = 1,
             steps = 1,
             load_cond = function() return Config:GetSetting('DoMalo') or Config:GetSetting('DoAEMalo') end,
-            targetId = function(self) return mq.TLO.Target.ID() == Config.Globals.AutoTargetID and { Config.Globals.AutoTargetID, } or {} end,
+            targetId = function(self) return Targeting.CheckForAutoTargetID() end,
             cond = function(self, combat_state)
                 return combat_state == "Combat" and not Casting.IAmFeigning() and Casting.OkayToDebuff() and
                     (Casting.HaveManaToDebuff() or Targeting.IsNamed(Targeting.GetAutoTarget()))
@@ -905,7 +906,7 @@ _ClassConfig      = {
             state = 1,
             steps = 1,
             load_cond = function() return Core.IsModeActive("PetTank") end,
-            targetId = function(self) return mq.TLO.Target.ID() == Config.Globals.AutoTargetID and { Config.Globals.AutoTargetID, } or {} end,
+            targetId = function(self) return Targeting.CheckForAutoTargetID() end,
             cond = function(self, combat_state)
                 return combat_state == "Combat" and not Casting.IAmFeigning()
             end,
@@ -914,7 +915,7 @@ _ClassConfig      = {
             name = 'Weaves',
             state = 1,
             steps = 1,
-            targetId = function(self) return mq.TLO.Target.ID() == Config.Globals.AutoTargetID and { Config.Globals.AutoTargetID, } or {} end,
+            targetId = function(self) return Targeting.CheckForAutoTargetID() end,
             cond = function(self, combat_state)
                 return combat_state == "Combat" and mq.TLO.Me.SpellInCooldown() and not Casting.IAmFeigning()
             end,
@@ -924,7 +925,7 @@ _ClassConfig      = {
             state = 1,
             steps = 1,
             load_cond = function(self) return not self:GetResolvedActionMapItem('ChaoticNuke') end,
-            targetId = function(self) return mq.TLO.Target.ID() == Config.Globals.AutoTargetID and { Config.Globals.AutoTargetID, } or {} end,
+            targetId = function(self) return Targeting.CheckForAutoTargetID() end,
             cond = function(self, combat_state)
                 return combat_state == "Combat" and not Casting.IAmFeigning()
             end,
@@ -934,7 +935,7 @@ _ClassConfig      = {
             state = 1,
             steps = 1,
             load_cond = function(self) return self:GetResolvedActionMapItem('ChaoticNuke') end,
-            targetId = function(self) return mq.TLO.Target.ID() == Config.Globals.AutoTargetID and { Config.Globals.AutoTargetID, } or {} end,
+            targetId = function(self) return Targeting.CheckForAutoTargetID() end,
             cond = function(self, combat_state)
                 return combat_state == "Combat" and not Casting.IAmFeigning()
             end,
@@ -966,7 +967,7 @@ _ClassConfig      = {
             state = 1,
             steps = 1,
             load_cond = function() return Config:GetSetting('DoArcanumWeave') and Casting.CanUseAA("Acute Focus of Arcanum") end,
-            targetId = function(self) return mq.TLO.Target.ID() == Config.Globals.AutoTargetID and { Config.Globals.AutoTargetID, } or {} end,
+            targetId = function(self) return Targeting.CheckForAutoTargetID() end,
             cond = function(self, combat_state)
                 return combat_state == "Combat" and not Casting.IAmFeigning() and not mq.TLO.Me.Buff("Focus of Arcanum")()
             end,
@@ -1669,6 +1670,14 @@ _ClassConfig      = {
                 end,
             },
             {
+                name = "FireShroud",
+                type = "Spell",
+                cond = function(self, spell, target)
+                    if not Targeting.TargetIsMA(target) then return false end
+                    return Casting.GroupBuffCheck(spell, target)
+                end,
+            },
+            {
                 name = "HandleGroupToys",
                 type = "CustomFunc",
                 custom_func = function(self)
@@ -1926,6 +1935,7 @@ _ClassConfig      = {
             spells = {
                 { name = "PetManaNuke", },
                 { name = "PetHealSpell", },
+                { name = "GroupCotH", },
                 { name = "SingleCotH",       cond = function() return not Casting.CanUseAA('Call of the Hero') end, },
                 { name = "LongDurDmgShield", },
             },

@@ -17,7 +17,7 @@ local _ClassConfig = {
     },
     ['Modes']           = {
         'Default',
-        'ModernEra', --Different DPS rotation, meant for ~90+ (and may not come fully online until 105ish)
+        --'ModernEra', --Different DPS rotation, meant for ~90+ (and may not come fully online until 105ish)
     },
     ['ItemSets']        = {
         ['Epic'] = {
@@ -26,6 +26,7 @@ local _ClassConfig = {
         },
     },
     ['AbilitySets']     = {
+        --Laz spells to look into: Echoing Madness
         ['TwincastAura'] = {
             "Twincast Aura",
         },
@@ -308,7 +309,6 @@ local _ClassConfig = {
             "Mana Reiterate",
             "Mana Resurgence",
             "Mana Recursion",
-            "Mana Recursion",
             "Mana Flare",
         },
         ['AllianceSpell'] = {
@@ -533,7 +533,7 @@ local _ClassConfig = {
             "Polychaotic Assault",
             "Multichromatic Assault",
             "Polychromatic Assault",
-            "Colored Chaos",
+            --"Colored Chaos", different type of spell on laz
             "Psychosis",
             "Madness of Ikkibi",
             "Insanity",
@@ -754,6 +754,12 @@ local _ClassConfig = {
         ['HasteManaCombo'] = {
             "Unified Alacrity",
         },
+        ['ColoredNuke'] = {
+            "Colored Chaos",
+        },
+        ['Chromaburst'] = {
+            "Chromaburst",
+        },
     },
     ['RotationOrder']   = {
         {
@@ -793,7 +799,7 @@ local _ClassConfig = {
             state = 1,
             steps = 1,
             load_cond = function() return Config:GetSetting('DoTash') end,
-            targetId = function(self) return mq.TLO.Target.ID() == Config.Globals.AutoTargetID and { Config.Globals.AutoTargetID, } or {} end,
+            targetId = function(self) return Targeting.CheckForAutoTargetID() end,
             cond = function(self, combat_state)
                 return combat_state == "Combat" and Casting.OkayToDebuff() and not Casting.IAmFeigning() and
                     (Casting.HaveManaToDebuff() or Targeting.IsNamed(Targeting.GetAutoTarget()))
@@ -804,7 +810,18 @@ local _ClassConfig = {
             state = 1,
             steps = 1,
             load_cond = function() return Config:GetSetting('DoSlow') end,
-            targetId = function(self) return mq.TLO.Target.ID() == Config.Globals.AutoTargetID and { Config.Globals.AutoTargetID, } or {} end,
+            targetId = function(self) return Targeting.CheckForAutoTargetID() end,
+            cond = function(self, combat_state)
+                return combat_state == "Combat" and Casting.OkayToDebuff() and not Casting.IAmFeigning() and
+                    (Casting.HaveManaToDebuff() or Targeting.IsNamed(Targeting.GetAutoTarget()))
+            end,
+        },
+        {
+            name = 'StripBuff',
+            state = 1,
+            steps = 1,
+            load_cond = function() return Config:GetSetting('DoStripBuff') end,
+            targetId = function(self) return Targeting.CheckForAutoTargetID() end,
             cond = function(self, combat_state)
                 return combat_state == "Combat" and Casting.OkayToDebuff() and not Casting.IAmFeigning() and
                     (Casting.HaveManaToDebuff() or Targeting.IsNamed(Targeting.GetAutoTarget()))
@@ -814,7 +831,7 @@ local _ClassConfig = {
             name = 'Burn',
             state = 1,
             steps = 1,
-            targetId = function(self) return mq.TLO.Target.ID() == Config.Globals.AutoTargetID and { Config.Globals.AutoTargetID, } or {} end,
+            targetId = function(self) return Targeting.CheckForAutoTargetID() end,
             cond = function(self, combat_state)
                 return combat_state == "Combat" and Casting.BurnCheck() and not Casting.IAmFeigning()
             end,
@@ -823,37 +840,36 @@ local _ClassConfig = {
             name = 'CombatSupport',
             state = 1,
             steps = 1,
-            targetId = function(self) return mq.TLO.Target.ID() == Config.Globals.AutoTargetID and { Config.Globals.AutoTargetID, } or {} end,
+            targetId = function(self) return Targeting.CheckForAutoTargetID() end,
             cond = function(self, combat_state)
                 return combat_state == "Combat" and not Casting.IAmFeigning()
             end,
         },
         {
-            name = 'DPS(Default)',
+            name = 'DPS',
             state = 1,
             steps = 1,
-            load_cond = function() return Core.IsModeActive("Default") end,
-            targetId = function(self) return mq.TLO.Target.ID() == Config.Globals.AutoTargetID and { Config.Globals.AutoTargetID, } or {} end,
+            targetId = function(self) return Targeting.CheckForAutoTargetID() end,
             cond = function(self, combat_state)
                 return combat_state == "Combat" and not Casting.IAmFeigning()
             end,
         },
-        {
-            name = 'DPS(ModernEra)',
-            state = 1,
-            steps = 1,
-            load_cond = function() return Core.IsModeActive("ModernEra") end,
-            targetId = function(self) return mq.TLO.Target.ID() == Config.Globals.AutoTargetID and { Config.Globals.AutoTargetID, } or {} end,
-            cond = function(self, combat_state)
-                return combat_state == "Combat" and not Casting.IAmFeigning()
-            end,
-        },
+        -- {
+        --     name = 'DPS(ModernEra)',
+        --     state = 1,
+        --     steps = 1,
+        --     load_cond = function() return Core.IsModeActive("ModernEra") end,
+        --     targetId = function(self) return Targeting.CheckForAutoTargetID() end,
+        --     cond = function(self, combat_state)
+        --         return combat_state == "Combat" and not Casting.IAmFeigning()
+        --     end,
+        -- },
         {
             name = 'ArcanumWeave',
             state = 1,
             steps = 1,
             load_cond = function() return Config:GetSetting('DoArcanumWeave') and Casting.CanUseAA("Acute Focus of Arcanum") end,
-            targetId = function(self) return mq.TLO.Target.ID() == Config.Globals.AutoTargetID and { Config.Globals.AutoTargetID, } or {} end,
+            targetId = function(self) return Targeting.CheckForAutoTargetID() end,
             cond = function(self, combat_state)
                 return combat_state == "Combat" and not Casting.IAmFeigning() and not mq.TLO.Me.Buff("Focus of Arcanum")()
             end,
@@ -1055,6 +1071,7 @@ local _ClassConfig = {
                 type = "Spell",
                 active_cond = function(self, spell) return mq.TLO.Me.FindBuff("id " .. tostring(spell.ID()))() ~= nil end,
                 cond = function(self, spell, target)
+                    if not Config:GetSetting('DoGroupSpellShield') then return false end
                     return Casting.GroupBuffCheck(spell, target) and Casting.ReagentCheck(spell)
                 end,
             },
@@ -1216,13 +1233,35 @@ local _ClassConfig = {
 
             },
         },
-        ['DPS(Default)'] = {
+        ['StripBuff'] = {
             {
                 name = "StripBuffSpell",
                 type = "Spell",
                 cond = function(self, spell, target)
-                    if not Config:GetSetting('DoStripBuff') then return false end
                     return target.Beneficial()
+                end,
+            },
+        },
+        ['DPS'] = {
+            {
+                name = "ColoredNuke",
+                type = "Spell",
+                cond = function(self)
+                    return Casting.HaveManaToNuke()
+                end,
+            },
+            {
+                name = "ManaDot",
+                type = "Spell",
+                cond = function(self, spell, target)
+                    return Casting.DotSpellCheck(spell)
+                end,
+            },
+            {
+                name = "Chromaburst",
+                type = "Spell",
+                cond = function(self)
+                    return Casting.HaveManaToNuke()
                 end,
             },
             {
@@ -1234,92 +1273,69 @@ local _ClassConfig = {
                 end,
             },
             {
-                name = "ManaDot",
-                type = "Spell",
-                cond = function(self, spell, target)
-                    if not Config:GetSetting('DoDot') and not Targeting.IsNamed(target) then return false end
-                    return Casting.DotSpellCheck(spell)
-                end,
-            },
-            {
-                name = "DichoSpell",
-                type = "Spell",
-                cond = function(self)
-                    if not Config:GetSetting('DoDicho') then return false end
-                    return Casting.HaveManaToNuke()
-                end,
-            },
-            {
                 name = "NukeSpell",
                 type = "Spell",
                 cond = function(self)
                     return Casting.HaveManaToNuke()
                 end,
             },
-            {
-                name = "ManaDrainSpell",
-                type = "Spell",
-                cond = function(self, spell, target)
-                    return (target.CurrentMana() or 0) > 10 and Casting.HaveManaToNuke()
-                end,
-            },
         },
-        ['DPS(ModernEra)'] = {
-            {
-                name = "StripBuffSpell",
-                type = "Spell",
-                cond = function(self, spell, target)
-                    if not Config:GetSetting('DoStripBuff') then return false end
-                    return target.Beneficial()
-                end,
-            },
-            {
-                name = "Focus of Arcanum",
-                type = "AA",
-            },
-            {
-                name = "DichoSpell",
-                type = "Spell",
-                cond = function(self, spell)
-                    return Casting.DetSpellCheck(spell) and Casting.HaveManaToNuke()
-                end,
-            },
-            {
-                name = "ManaDot",
-                type = "Spell",
-                cond = function(self, spell)
-                    return Casting.DotSpellCheck(spell) and Casting.HaveManaToDot()
-                end,
-            },
-            {
-                name = "NukeSpell",
-                type = "Spell",
-                cond = function(self, spell, target)
-                    return Casting.HaveManaToNuke()
-                end,
-            },
-            { --Mana check used instead of dot mana check because this is spammed like a nuke
-                name = "DotSpell1",
-                type = "Spell",
-                cond = function(self)
-                    return Casting.HaveManaToNuke()
-                end,
-            },
-            { --this is not an error, we want the spell twice in a row as part of the rotation.
-                name = "DotSpell1",
-                type = "Spell",
-                cond = function(self)
-                    return Casting.HaveManaToNuke()
-                end,
-            },
-            { --used when the chanter or group members are low mana
-                name = "ManaNuke",
-                type = "Spell",
-                cond = function(self)
-                    return (mq.TLO.Group.LowMana(80)() or -1) > 1 or not Casting.HaveManaToNuke()
-                end,
-            },
-        },
+        -- ['DPS(ModernEra)'] = {
+        --     {
+        --         name = "StripBuffSpell",
+        --         type = "Spell",
+        --         cond = function(self, spell, target)
+        --             if not Config:GetSetting('DoStripBuff') then return false end
+        --             return target.Beneficial()
+        --         end,
+        --     },
+        --     {
+        --         name = "Focus of Arcanum",
+        --         type = "AA",
+        --     },
+        --     {
+        --         name = "DichoSpell",
+        --         type = "Spell",
+        --         cond = function(self, spell)
+        --             return Casting.DetSpellCheck(spell) and Casting.HaveManaToNuke()
+        --         end,
+        --     },
+        --     {
+        --         name = "ManaDot",
+        --         type = "Spell",
+        --         cond = function(self, spell)
+        --             return Casting.DotSpellCheck(spell) and Casting.HaveManaToDot()
+        --         end,
+        --     },
+        --     {
+        --         name = "NukeSpell",
+        --         type = "Spell",
+        --         cond = function(self, spell, target)
+        --             return Casting.HaveManaToNuke()
+        --         end,
+        --     },
+        --     { --Mana check used instead of dot mana check because this is spammed like a nuke
+        --         name = "DotSpell1",
+        --         type = "Spell",
+        --         cond = function(self)
+        --             return Casting.HaveManaToNuke()
+        --         end,
+        --     },
+        --     { --this is not an error, we want the spell twice in a row as part of the rotation.
+        --         name = "DotSpell1",
+        --         type = "Spell",
+        --         cond = function(self)
+        --             return Casting.HaveManaToNuke()
+        --         end,
+        --     },
+        --     { --used when the chanter or group members are low mana
+        --         name = "ManaNuke",
+        --         type = "Spell",
+        --         cond = function(self)
+        --             return (mq.TLO.Group.LowMana(80)() or -1) > 1 or not Casting.HaveManaToNuke()
+        --         end,
+        --     },
+        --},
         ['Burn'] = {
             {
                 name = "Illusions of Grandeur",
@@ -1388,15 +1404,15 @@ local _ClassConfig = {
             {
                 name = "TashSpell",
                 type = "Spell",
-                cond = function(self, spell)
-                    return Casting.DetSpellCheck(spell)
+                cond = function(self, spell, target)
+                    return Casting.DetSpellCheck(spell) and (not Casting.TargetHasBuff("Bite of Tashani") or Targeting.IsNamed(target))
                 end,
             },
             {
                 name = "Bite of Tashani",
                 type = "AA",
                 cond = function(self, aaName)
-                    return Casting.DetAACheck(aaName)
+                    return Casting.DetAACheck(aaName) and Targeting.GetXTHaterCount() > 1
                 end,
             },
         },
@@ -1466,70 +1482,101 @@ local _ClassConfig = {
         {
             gem = 3,
             spells = {
-                { name = "CharmSpell",     cond = function(self) return Config:GetSetting('CharmOn') and Core.IsModeActive("ModernEra") end, },
-                { name = "StripBuffSpell", cond = function(self) return Config:GetSetting('DoStripBuff') and Core.IsModeActive("ModernEra") end, },
-                { name = "TashSpell",      cond = function(self) return not Casting.CanUseAA("Bite of Tashani") end, },
-                { name = "SpellProcBuff",  cond = function(self) return Config:GetSetting('DoProcBuff') end, },
+                { name = "CharmSpell", cond = function(self) return Config:GetSetting('CharmOn') end, },
+                { name = "TashSpell", },
             },
         },
         {
             gem = 4,
             spells = {
-                { name = "SlowSpell",      cond = function(self) return not Casting.CanUseAA("Dreary Deeds") end, },
-                { name = "ManaDrainSpell", cond = function(self) return true end, },
-            },
+                { name = "TashSpell", },
+                { name = "SlowSpell",      cond = function(self) return Config:GetSetting('DoSlow') and not Casting.CanUseAA("Dreary Deeds") end, },
+                { name = "CrippleSpell",   cond = function(self) return Config:GetSetting('DoCripple') end, },
+                { name = "StripBuffSpell", cond = function(self) return Config:GetSetting('DoStripBuff') end, },
+                { name = "NdtBuff", }, },
         },
         {
             gem = 5,
             spells = {
-                { name = "ManaDot",    cond = function(self) return Core.IsModeActive("ModernEra") end, },
-                { name = "CharmSpell", cond = function(self) return Config:GetSetting('CharmOn') end, },
+                { name = "SlowSpell",      cond = function(self) return Config:GetSetting('DoSlow') and not Casting.CanUseAA("Dreary Deeds") end, },
+                { name = "CrippleSpell",   cond = function(self) return Config:GetSetting('DoCripple') end, },
+                { name = "StripBuffSpell", cond = function(self) return Config:GetSetting('DoStripBuff') end, },
                 { name = "NdtBuff", },
+                { name = "ColoredNuke", },
             },
         },
         {
             gem = 6,
             spells = {
-                { name = "NukeSpell", },
+                { name = "CrippleSpell",   cond = function(self) return Config:GetSetting('DoCripple') end, },
+                { name = "StripBuffSpell", cond = function(self) return Config:GetSetting('DoStripBuff') end, },
+                { name = "NdtBuff", },
+                { name = "ColoredNuke", },
+                { name = "ManaDot", },
             },
         },
         {
             gem = 7,
             spells = {
-                { name = "DotSpell1", },
+                { name = "CrippleSpell",   cond = function(self) return Config:GetSetting('DoCripple') end, },
+                { name = "StripBuffSpell", cond = function(self) return Config:GetSetting('DoStripBuff') end, },
+                { name = "ColoredNuke", },
+                { name = "NdtBuff", },
+                { name = "ManaDot", },
+                { name = "NukeSpell", },
             },
         },
         {
             gem = 8,
             spells = {
-                { name = "ManaNuke",       cond = function(self) return Core.IsModeActive("ModernEra") end, },
-                { name = "CrippleSpell",   cond = function(self) return Config:GetSetting('DoCripple') end, },
                 { name = "StripBuffSpell", cond = function(self) return Config:GetSetting('DoStripBuff') end, },
-                { name = "ManaDrainSpell", cond = function(self) return true end, },
+                { name = "ColoredNuke", },
+                { name = "NdtBuff", },
+                { name = "ManaDot", },
+                { name = "NukeSpell", },
+                { name = "SpellProcBuff",  cond = function(self) return Config:GetSetting('DoProcBuff') end, },
+                { name = "DotSpell1", },
             },
         },
         {
             gem = 9,
             cond = function(self, gem) return mq.TLO.Me.NumGems() >= gem end,
             spells = {
-                { name = "NdtBuff",       cond = function(self) return Core.IsModeActive("ModernEra") end, },
-                { name = "ManaDot",       cond = function(self) return true end, },
-                { name = "SpellProcBuff", cond = function(self) return Config:GetSetting('DoProcBuff') end, },
+                { name = "ColoredNuke", },
+                { name = "NdtBuff", },
+                { name = "ManaDot", },
+                { name = "NukeSpell", },
+                { name = "SpellProcBuff",    cond = function(self) return Config:GetSetting('DoProcBuff') end, },
+                { name = "DotSpell1", },
+                { name = "SingleRune",       cond = function(self) return Config:GetSetting('RuneChoice') == 1 end, },
+                { name = "GroupRune",        cond = function(self) return Config:GetSetting('RuneChoice') == 2 end, },
+                { name = "GroupSpellShield", cond = function(self) return true end, },
             },
         },
         {
             gem = 10,
             cond = function(self, gem) return mq.TLO.Me.NumGems() >= gem end,
             spells = {
-                { name = "SingleRune",    cond = function(self) return Config:GetSetting('RuneChoice') == 1 end, },
-                { name = "GroupRune",     cond = function(self) return Config:GetSetting('RuneChoice') == 2 end, },
-                { name = "SpellProcBuff", cond = function(self) return Config:GetSetting('DoProcBuff') end, },
+                { name = "NdtBuff", },
+                { name = "ManaDot", },
+                { name = "NukeSpell", },
+                { name = "SpellProcBuff",    cond = function(self) return Config:GetSetting('DoProcBuff') end, },
+                { name = "DotSpell1", },
+                { name = "SingleRune",       cond = function(self) return Config:GetSetting('RuneChoice') == 1 end, },
+                { name = "GroupRune",        cond = function(self) return Config:GetSetting('RuneChoice') == 2 end, },
+                { name = "GroupSpellShield", cond = function(self) return true end, },
             },
         },
         {
             gem = 11,
             cond = function(self, gem) return mq.TLO.Me.NumGems() >= gem end,
             spells = {
+                { name = "ManaDot", },
+                { name = "NukeSpell", },
+                { name = "SpellProcBuff",    cond = function(self) return Config:GetSetting('DoProcBuff') end, },
+                { name = "DotSpell1", },
+                { name = "SingleRune",       cond = function(self) return Config:GetSetting('RuneChoice') == 1 end, },
+                { name = "GroupRune",        cond = function(self) return Config:GetSetting('RuneChoice') == 2 end, },
                 { name = "GroupSpellShield", cond = function(self) return true end, },
             },
         },
@@ -1537,17 +1584,12 @@ local _ClassConfig = {
             gem = 12,
             cond = function(self, gem) return mq.TLO.Me.NumGems() >= gem end,
             spells = {
-                { name = "SpellProcBuff", cond = function(self) return Config:GetSetting('DoProcBuff') and Core.IsModeActive("ModernEra") end, },
-                { name = "DichoSpell",    cond = function(self) return true end, },
-            },
-        },
-        {
-            gem = 13,
-            cond = function(self, gem) return mq.TLO.Me.NumGems() >= gem end,
-            spells = {
-                { name = "AllianceSpell",    cond = function(self) return Config:GetSetting('DoAlliance') end, },
-                { name = "GroupAuspiceBuff", cond = function(self) return Core.IsModeActive("ModernEra") end, },
-                { name = "ManaDrainSpell",   cond = function(self) return Core.IsModeActive("Default") end, },
+                { name = "NukeSpell", },
+                { name = "SpellProcBuff",    cond = function(self) return Config:GetSetting('DoProcBuff') end, },
+                { name = "DotSpell1", },
+                { name = "SingleRune",       cond = function(self) return Config:GetSetting('RuneChoice') == 1 end, },
+                { name = "GroupRune",        cond = function(self) return Config:GetSetting('RuneChoice') == 2 end, },
+                { name = "GroupSpellShield", cond = function(self) return true end, },
             },
         },
     },
@@ -1578,7 +1620,7 @@ local _ClassConfig = {
         },
     },
     ['DefaultConfig']   = {
-        ['Mode']           = {
+        ['Mode']               = {
             DisplayName = "Mode",
             Category = "Combat",
             Tooltip = "Select the Combat Mode for this PC. Default: The original RGMercs Config. ModernEra: DPS rotation and spellset aimed at modern live play (~90+)",
@@ -1586,14 +1628,14 @@ local _ClassConfig = {
             RequiresLoadoutChange = true,
             Default = 1,
             Min = 1,
-            Max = 2,
+            Max = 1,
             FAQ = "What are the different Modes about?",
             Answer = "The Default Mode is the original RGMercs configuration designed for levels 1 - 90.\n" ..
                 "ModernEra Mode is a DPS rotation and spellset aimed at modern live play (~90+).\n" ..
                 "The ModernEra Mode is designed to be used with the ModernEra DPS rotation and spellset.\n" ..
                 "It should function well starting around level 90, but may not fully come into its own for a few levels after.",
         },
-        ['UseAura']        = {
+        ['UseAura']            = {
             DisplayName = "Aura Selection:",
             Category = "Buffs",
             Index = 1,
@@ -1608,7 +1650,7 @@ local _ClassConfig = {
             Answer = "Aura choice can be made on the buff tab.\n" ..
                 "Once the PC has purchased Auroria Mastery, this setting is ignored in favor of using the AA.",
         },
-        ['DoArcanumWeave'] = {
+        ['DoArcanumWeave']     = {
             DisplayName = "Weave Arcanums",
             Category = "Buffs",
             Tooltip = "Weave Empowered/Enlighted/Acute Focus of Arcanum into your standard combat routine (Focus of Arcanum is saved for burns).",
@@ -1618,7 +1660,7 @@ local _ClassConfig = {
             Answer =
             "The Focus of Arcanum series of AA decreases your spell resist rates.\nIf you have purchased all four, you can likely easily weave them to keep 100% uptime on one.",
         },
-        ['AESlowCount']    = {
+        ['AESlowCount']        = {
             DisplayName = "Slow Count",
             Category = "Debuffs",
             Tooltip = "Number of XT Haters before we start AE slowing",
@@ -1629,7 +1671,7 @@ local _ClassConfig = {
             Answer = "The [AESlowCount] setting determines the number of XT Haters before we start AE slowing.\n" ..
                 "If you are not AE slowing, you may need to adjust the [AESlowCount] setting.",
         },
-        ['DoTash']         = {
+        ['DoTash']             = {
             DisplayName = "Do Tash",
             Category = "Debuffs",
             Tooltip = "Cast Tash Spells",
@@ -1639,15 +1681,15 @@ local _ClassConfig = {
             Answer = "The [DoTash] setting determines whether or not your PC will cast Tash Spells.\n" ..
                 "If you are not Tashing, you may need to Enable the [DoTash] setting.",
         },
-        ['DoDot']          = {
-            DisplayName = "Cast DOTs",
+        ['DoDot']              = {
+            DisplayName = "Cast DOT1",
             Category = "Combat",
             Tooltip = "Enable casting Damage Over Time spells. (Dots always used for ModernEra Mode)",
             Default = true,
             FAQ = "I turned Cast DOTS off, why am I still using them?",
             Answer = "The Modern Era mode does not respect this setting, as DoTs are integral to the DPS rotation.",
         },
-        ['DoSlow']         = {
+        ['DoSlow']             = {
             DisplayName = "Cast Slow",
             Category = "Debuffs",
             Tooltip = "Enable casting Slow spells.",
@@ -1657,7 +1699,7 @@ local _ClassConfig = {
             Answer = "The [DoSlow] setting determines whether or not your PC will cast Slow spells.\n" ..
                 "If you are not Slowing, you may need to Enable the [DoSlow] setting.",
         },
-        ['DoCripple']      = {
+        ['DoCripple']          = {
             DisplayName = "Cast Cripple",
             Category = "Debuffs",
             Tooltip = "Enable casting Cripple spells.",
@@ -1668,16 +1710,16 @@ local _ClassConfig = {
                 "If you are not Crippling, you may need to Enable the [DoCripple] setting.\n" ..
                 "Please note that eventually, Cripple and Slow lines are merged together in the Helix line.",
         },
-        ['DoDicho']        = {
-            DisplayName = "Cast Dicho",
-            Category = "Combat",
-            Tooltip = "Enable casting Dicho spells.(Dicho always used for ModernEra Mode)",
-            Default = true,
-            FAQ = "Why am I not using Dicho spells?",
-            Answer = "The Cast Dicho setting determines whether or not your PC will cast Dicho spells.\n" ..
-                "Modern Era mode will always use the Dicho spell as a core part of its function.",
-        },
-        ['DoNDTBuff']      = {
+        -- ['DoDicho']            = {
+        --     DisplayName = "Cast Dicho",
+        --     Category = "Combat",
+        --     Tooltip = "Enable casting Dicho spells.(Dicho always used for ModernEra Mode)",
+        --     Default = true,
+        --     FAQ = "Why am I not using Dicho spells?",
+        --     Answer = "The Cast Dicho setting determines whether or not your PC will cast Dicho spells.\n" ..
+        --         "Modern Era mode will always use the Dicho spell as a core part of its function.",
+        -- },
+        ['DoNDTBuff']          = {
             DisplayName = "Cast NDT",
             Category = "Buffs",
             Tooltip = "Enable casting use Melee Proc Buff (Night's Dark Terror Line).",
@@ -1687,7 +1729,7 @@ local _ClassConfig = {
             Answer = "The [DoNDTBuff] setting determines whether or not your PC will cast the Night's Dark Terror Line.\n" ..
                 "Please note that the single target versions are only set to be used on melee.",
         },
-        ['RuneChoice']     = {
+        ['RuneChoice']         = {
             DisplayName = "Rune Selection:",
             Category = "Buffs",
             Index = 1,
@@ -1712,17 +1754,17 @@ local _ClassConfig = {
         --     Answer = "The [DoAggroRune] setting determines whether or not your PC will cast the Tank Aggro Rune.\n" ..
         --         "If you are not using the Aggro Rune, you may need to Enable the [DoAggroRune] setting.",
         -- },
-        -- ['DoGroupDotShield'] = {
-        --     DisplayName = "Do Group DoT Shield",
-        --     Category = "Buffs",
-        --     Index = 3,
-        --     Tooltip = "Enable casting the Group DoT Shield Line.",
-        --     Default = true,
-        --     FAQ = "Why am I not using Group DoT Shield?",
-        --     Answer = "The [DoGroupDotShield] setting determines whether or not your PC will cast the Group DoT Shield Line.\n" ..
-        --         "If you are not using Group DoT Shield, you may need to Enable the [DoGroupDotShield] setting.",
-        -- },
-        ['DoProcBuff']     = {
+        ['DoGroupSpellShield'] = {
+            DisplayName = "Do Group Spellshield",
+            Category = "Buffs",
+            Index = 3,
+            Tooltip = "Enable casting the Group Spell Shield Line.",
+            Default = true,
+            FAQ = "Why am I not using Group Spell Shield?",
+            Answer = "The Do Group Spellshield setting determines whether or not your PC will cast the Group Spell Shield Line.\n" ..
+                "If you are not using Group DoT Shield, you may need to Enable the Do Group Spellshield setting.",
+        },
+        ['DoProcBuff']         = {
             DisplayName = "Do Spellproc Buff",
             Category = "Buffs",
             Index = 4,
@@ -1731,7 +1773,7 @@ local _ClassConfig = {
             FAQ = "Why am I using a spell proc buff on ... class?",
             Answer = "By default, the spell proc buff will be used on any casters (including tanks/hybrids). You can change this option on the Buffs tab.",
         },
-        ['DoStripBuff']    = {
+        ['DoStripBuff']        = {
             DisplayName = "Do Strip Buffs",
             Category = "Debuffs",
             Tooltip = "Enable removing beneficial enemy effects.",
@@ -1740,7 +1782,7 @@ local _ClassConfig = {
             Answer = "The [DoStripBuff] setting determines whether or not your PC will remove beneficial enemy effects.\n" ..
                 "If you are not stripping buffs, you may need to Enable the [DoStripBuff] setting.",
         },
-        ['DoChestClick']   = {
+        ['DoChestClick']       = {
             DisplayName = "Do Chest Click",
             Category = "Combat",
             Tooltip = "Click your equipped chest item during burns.",

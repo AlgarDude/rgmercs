@@ -120,6 +120,7 @@ local _ClassConfig = {
         },
     },
     ['AbilitySets']     = {
+        --Laz spells to look into: Fickle Shadows
         ['Mantle'] = {
             "Ichor Guard", -- Level 56, Timer 5
             "Soul Guard",
@@ -752,7 +753,7 @@ local _ClassConfig = {
             state = 1,
             steps = 1,
             load_cond = function() return Core.IsTanking() end,
-            targetId = function(self) return mq.TLO.Target.ID() == Config.Globals.AutoTargetID and { Config.Globals.AutoTargetID, } or {} end,
+            targetId = function(self) return Targeting.CheckForAutoTargetID() end,
             cond = function(self, combat_state)
                 return combat_state == "Combat" and mq.TLO.Me.PctHPs() > Config:GetSetting('EmergencyLockout')
             end,
@@ -762,7 +763,7 @@ local _ClassConfig = {
             state = 1,
             steps = 1,
             doFullRotation = true,
-            targetId = function(self) return mq.TLO.Target.ID() == Config.Globals.AutoTargetID and { Config.Globals.AutoTargetID, } or {} end,
+            targetId = function(self) return Targeting.CheckForAutoTargetID() end,
             cond = function(self, combat_state)
                 return combat_state == "Combat" and mq.TLO.Me.PctHPs() <= Config:GetSetting('EmergencyStart')
             end,
@@ -772,7 +773,7 @@ local _ClassConfig = {
             state = 1,
             steps = 1,
             doFullRotation = true,
-            targetId = function(self) return mq.TLO.Target.ID() == Config.Globals.AutoTargetID and { Config.Globals.AutoTargetID, } or {} end,
+            targetId = function(self) return Targeting.CheckForAutoTargetID() end,
             cond = function(self, combat_state)
                 return combat_state == "Combat"
             end,
@@ -783,7 +784,7 @@ local _ClassConfig = {
             steps = 1,
             load_cond = function() return Config:GetSetting('UseBandolier') end,
             doFullRotation = true,
-            targetId = function(self) return mq.TLO.Target.ID() == Config.Globals.AutoTargetID and { Config.Globals.AutoTargetID, } or {} end,
+            targetId = function(self) return Targeting.CheckForAutoTargetID() end,
             cond = function(self, combat_state)
                 return combat_state == "Combat"
             end,
@@ -792,7 +793,7 @@ local _ClassConfig = {
             name = 'Defenses',
             state = 1,
             steps = 1,
-            targetId = function(self) return mq.TLO.Target.ID() == Config.Globals.AutoTargetID and { Config.Globals.AutoTargetID, } or {} end,
+            targetId = function(self) return Targeting.CheckForAutoTargetID() end,
             cond = function(self, combat_state)
                 --need to look at rotation and decide if it should fire during emergencies. leaning towards no
                 return combat_state == "Combat" and mq.TLO.Me.PctHPs() > Config:GetSetting('EmergencyLockout')
@@ -803,7 +804,7 @@ local _ClassConfig = {
             state = 1,
             steps = 1,
             load_cond = function() return Config:GetSetting('DoSnare') end,
-            targetId = function(self) return mq.TLO.Target.ID() == Config.Globals.AutoTargetID and { Config.Globals.AutoTargetID, } or {} end,
+            targetId = function(self) return Targeting.CheckForAutoTargetID() end,
             cond = function(self, combat_state)
                 return combat_state == "Combat" and mq.TLO.Me.PctHPs() > Config:GetSetting('EmergencyLockout') and
                     Targeting.GetXTHaterCount() <= Config:GetSetting('SnareCount')
@@ -813,7 +814,7 @@ local _ClassConfig = {
             name = 'Burn',
             state = 1,
             steps = 2,
-            targetId = function(self) return mq.TLO.Target.ID() == Config.Globals.AutoTargetID and { Config.Globals.AutoTargetID, } or {} end,
+            targetId = function(self) return Targeting.CheckForAutoTargetID() end,
             cond = function(self, combat_state)
                 return combat_state == "Combat" and Casting.BurnCheck() and mq.TLO.Me.PctHPs() > Config:GetSetting('EmergencyStart')
             end,
@@ -822,7 +823,7 @@ local _ClassConfig = {
             name = 'CombatWeave',
             state = 1,
             steps = 1,
-            targetId = function(self) return mq.TLO.Target.ID() == Config.Globals.AutoTargetID and { Config.Globals.AutoTargetID, } or {} end,
+            targetId = function(self) return Targeting.CheckForAutoTargetID() end,
             cond = function(self, combat_state)
                 return combat_state == "Combat" and mq.TLO.Me.PctHPs() > Config:GetSetting('EmergencyLockout')
             end,
@@ -831,7 +832,7 @@ local _ClassConfig = {
             name = 'Combat',
             state = 1,
             steps = 1,
-            targetId = function(self) return mq.TLO.Target.ID() == Config.Globals.AutoTargetID and { Config.Globals.AutoTargetID, } or {} end,
+            targetId = function(self) return Targeting.CheckForAutoTargetID() end,
             cond = function(self, combat_state)
                 return combat_state == "Combat" and mq.TLO.Me.PctHPs() > Config:GetSetting('EmergencyLockout')
             end,
@@ -960,6 +961,8 @@ local _ClassConfig = {
                 active_cond = function(self, spell) return Casting.IHaveBuff(spell) end,
                 cond = function(self, spell)
                     return spell.RankName.Stacks() and (mq.TLO.Me.Buff(spell).Duration.TotalSeconds() or 0) < 60
+                        --laz specific deconflict
+                        and not Casting.IHaveBuff("Necrotic Pustules")
                 end,
             },
             {
@@ -1888,6 +1891,7 @@ local _ClassConfig = {
                 { name = "PowerTapAtk", cond = function(self) return Config:GetSetting('DoAtkTap') and mq.TLO.Me.Level() < 76 end, },
                 { name = "AELifeTap",   cond = function(self) return Config:GetSetting('DoAELifeTap') end, },
                 { name = "Skin",        cond = function(self) return Core.IsTanking() and mq.TLO.Me.NumGems() < 13 end, },
+                { name = "HateBuff",    cond = function(self) return Config:GetSetting('DoHateBuff') and not Casting.CanUseAA("Voice of Thule") end, },
                 { name = "LifeTap2", },
                 {
                     name = "Terror2",
@@ -1896,7 +1900,7 @@ local _ClassConfig = {
                         return setting == 3 or (setting == 2 and mq.TLO.Me.Level() < 72)
                     end,
                 },
-                { name = "HateBuff", cond = function(self) return Config:GetSetting('DoHateBuff') and not Casting.CanUseAA("Voice of Thule") end, },
+
             },
         },
         { -- Level 55
@@ -1918,6 +1922,7 @@ local _ClassConfig = {
                 { name = "PowerTapAtk", cond = function(self) return Config:GetSetting('DoAtkTap') and mq.TLO.Me.Level() < 76 end, },
                 { name = "AELifeTap",   cond = function(self) return Config:GetSetting('DoAELifeTap') end, },
                 { name = "Skin",        cond = function(self) return Core.IsTanking() and mq.TLO.Me.NumGems() < 13 end, },
+                { name = "HateBuff",    cond = function(self) return Config:GetSetting('DoHateBuff') and not Casting.CanUseAA("Voice of Thule") end, },
                 { name = "LifeTap2", },
                 {
                     name = "Terror2",
@@ -1926,7 +1931,6 @@ local _ClassConfig = {
                         return setting == 3 or (setting == 2 and mq.TLO.Me.Level() < 72)
                     end,
                 },
-                { name = "HateBuff", cond = function(self) return Config:GetSetting('DoHateBuff') and not Casting.CanUseAA("Voice of Thule") end, },
             },
         },
         { -- Level 75
@@ -1947,6 +1951,7 @@ local _ClassConfig = {
                 { name = "PowerTapAtk", cond = function(self) return Config:GetSetting('DoAtkTap') and mq.TLO.Me.Level() < 76 end, },
                 { name = "AELifeTap",   cond = function(self) return Config:GetSetting('DoAELifeTap') end, },
                 { name = "Skin",        cond = function(self) return Core.IsTanking() and mq.TLO.Me.NumGems() < 13 end, },
+                { name = "HateBuff",    cond = function(self) return Config:GetSetting('DoHateBuff') and not Casting.CanUseAA("Voice of Thule") end, },
                 { name = "LifeTap2", },
                 {
                     name = "Terror2",
@@ -1955,7 +1960,6 @@ local _ClassConfig = {
                         return setting == 3 or (setting == 2 and mq.TLO.Me.Level() < 72)
                     end,
                 },
-                { name = "HateBuff", cond = function(self) return Config:GetSetting('DoHateBuff') and not Casting.CanUseAA("Voice of Thule") end, },
             },
         },
         { -- Level 80
@@ -1976,6 +1980,7 @@ local _ClassConfig = {
                 { name = "PowerTapAtk", cond = function(self) return Config:GetSetting('DoAtkTap') and mq.TLO.Me.Level() < 76 end, },
                 { name = "AELifeTap",   cond = function(self) return Config:GetSetting('DoAELifeTap') end, },
                 { name = "Skin",        cond = function(self) return Core.IsTanking() and mq.TLO.Me.NumGems() < 13 end, },
+                { name = "HateBuff",    cond = function(self) return Config:GetSetting('DoHateBuff') and not Casting.CanUseAA("Voice of Thule") end, },
                 { name = "LifeTap2", },
                 {
                     name = "Terror2",
@@ -1984,7 +1989,6 @@ local _ClassConfig = {
                         return setting == 3 or (setting == 2 and mq.TLO.Me.Level() < 72)
                     end,
                 },
-                { name = "HateBuff", cond = function(self) return Config:GetSetting('DoHateBuff') and not Casting.CanUseAA("Voice of Thule") end, },
             },
         },
         { -- Level 80
@@ -2004,6 +2008,7 @@ local _ClassConfig = {
                 { name = "PowerTapAtk", cond = function(self) return Config:GetSetting('DoAtkTap') and mq.TLO.Me.Level() < 76 end, },
                 { name = "AELifeTap",   cond = function(self) return Config:GetSetting('DoAELifeTap') end, },
                 { name = "HealBurn",    cond = function(self) return Core.IsTanking() and mq.TLO.Me.NumGems() < 13 end, },
+                { name = "HateBuff",    cond = function(self) return Config:GetSetting('DoHateBuff') and not Casting.CanUseAA("Voice of Thule") end, },
                 { name = "LifeTap2", },
                 {
                     name = "Terror2",
@@ -2012,14 +2017,6 @@ local _ClassConfig = {
                         return setting == 3 or (setting == 2 and mq.TLO.Me.Level() < 72)
                     end,
                 },
-                { name = "HateBuff", cond = function(self) return Config:GetSetting('DoHateBuff') and not Casting.CanUseAA("Voice of Thule") end, },
-            },
-        },
-        { -- Level 106
-            gem = 13,
-            cond = function(self, gem) return mq.TLO.Me.NumGems() >= gem end,
-            spells = {
-                { name = "HealBurn", cond = function(self) return Core.IsTanking() end, }, --level 103, this may be overwritten by pauses but it is fine, it has a low refresh time. At least it will be there on start.
             },
         },
     },
