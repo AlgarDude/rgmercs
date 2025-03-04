@@ -798,7 +798,7 @@ local _ClassConfig = {
             name = 'MainHealPoint',
             state = 1,
             steps = 1,
-            cond = function(self, target) return (target.PctHPs() or 999) < Config:GetSetting('MainHealPoint') end,
+            cond = function(self, target) return Targeting.MainHealsNeeded(target) end,
         },
     },
     ['HealRotations']     = {
@@ -808,7 +808,7 @@ local _ClassConfig = {
                 type = "AA",
                 cond = function(self, aaName, target)
                     if not mq.TLO.Group() then return false end
-                    return self.CombatState == "Combat" and mq.TLO.Group.Injured(Config:GetSetting('BigHealPoint'))() > Config:GetSetting('GroupInjureCnt')
+                    return self.CombatState == "Combat" and Targeting.BigGroupHealsNeeded()
                 end,
             },
             {
@@ -816,7 +816,7 @@ local _ClassConfig = {
                 type = "AA",
                 cond = function(self, aaName, target)
                     if not mq.TLO.Group() then return false end
-                    return self.CombatState == "Combat" and mq.TLO.Group.Injured(Config:GetSetting('BigHealPoint'))() > Config:GetSetting('GroupInjureCnt')
+                    return self.CombatState == "Combat" and Targeting.BigGroupHealsNeeded()
                 end,
             },
             {
@@ -831,7 +831,7 @@ local _ClassConfig = {
                 type = "Spell",
                 cond = function(self, spell)
                     if not mq.TLO.Group() then return false end
-                    return Casting.CastReady(spell) and mq.TLO.Group.Injured(Config:GetSetting('GroupHealPoint'))() > Config:GetSetting('GroupInjureCnt')
+                    return Casting.CastReady(spell) and Targeting.GroupHealsNeeded()
                 end,
             },
             {
@@ -839,7 +839,7 @@ local _ClassConfig = {
                 type = "Spell",
                 cond = function(self, spell)
                     if not mq.TLO.Group() then return false end
-                    return Casting.CastReady(spell) and mq.TLO.Group.Injured(Config:GetSetting('GroupHealPoint'))() > Config:GetSetting('GroupInjureCnt')
+                    return Casting.CastReady(spell) and Targeting.GroupHealsNeeded()
                 end,
             },
         },
@@ -1386,7 +1386,7 @@ local _ClassConfig = {
                 name = "ReflexStrike",
                 type = "Disc",
                 cond = function(self, discSpell)
-                    return (mq.TLO.Group.Injured(80)() or 0) > 2
+                    return Targeting.GroupHealsNeeded()
                 end,
             },
             {

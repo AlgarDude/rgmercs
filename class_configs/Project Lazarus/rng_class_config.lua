@@ -818,21 +818,19 @@ local _ClassConfig = {
             name  = 'LowLevelHealPoint', -- Fastheal
             state = 1,
             steps = 1,
-            cond  = function(self, target)
-                return mq.TLO.Me.Level() >= 89 and Core.GetMainAssistPctHPs() <= Config:GetSetting('MainHealPoint')
-            end,
+            cond  = function(self, target) return mq.TLO.Me.Level() >= 89 and Targeting.HPInMainHealRange(Core.GetMainAssistSpawn()) end,
         },
         {
             name = 'MainHealPoint', -- Heal
             state = 1,
             steps = 1,
-            cond = function(self, target) return Core.GetMainAssistPctHPs() <= Config:GetSetting('MainHealPoint') end,
+            cond = function(self, target) return Targeting.HPInMainHealRange(Core.GetMainAssistSpawn()) end,
         },
         {
             name = 'GroupHealPoint', -- TotHeal
             state = 1,
             steps = 1,
-            cond = function(self, target) return mq.TLO.Group() and mq.TLO.Group.Injured(Config:GetSetting('GroupHealPoint'))() > Config:GetSetting('GroupInjureCnt') end,
+            cond = function(self, target) return mq.TLO.Group() and Targeting.GroupHealsNeeded() end,
         },
     },
     ['HealRotations']     = {

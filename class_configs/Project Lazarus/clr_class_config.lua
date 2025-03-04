@@ -730,20 +730,14 @@ local _ClassConfig = {
             state = 1,
             steps = 1,
             load_cond = function() return mq.TLO.Me.Level() > 97 end,
-            cond = function(self, target)
-                if not Targeting.GroupedWithTarget(target) then return false end
-                return (mq.TLO.Group.Injured(Config:GetSetting('GroupHealPoint'))() or 0) >= Config:GetSetting('GroupInjureCnt')
-            end,
+            cond = function(self, target) Targeting.GroupHealsNeeded() end,
         },
         { -- Level 1-97
             name = 'GroupHeal(1-97)',
             state = 1,
             steps = 1,
             load_cond = function() return mq.TLO.Me.Level() < 98 end,
-            cond = function(self, target)
-                if not Targeting.GroupedWithTarget(target) then return false end
-                return (mq.TLO.Group.Injured(Config:GetSetting('GroupHealPoint'))() or 0) >= Config:GetSetting('GroupInjureCnt')
-            end,
+            cond = function(self, target) Targeting.GroupHealsNeeded() end,
         },
         { -- Level 77+
             name = 'BigHeal(77+)',
@@ -751,7 +745,7 @@ local _ClassConfig = {
             steps = 1,
             load_cond = function() return mq.TLO.Me.Level() > 76 end,
             cond = function(self, target)
-                return (target.PctHPs() or 999) < Config:GetSetting('BigHealPoint')
+                return Targeting.BigHealsNeeded(target)
             end,
         },
         { -- Level 59-76
@@ -760,7 +754,7 @@ local _ClassConfig = {
             steps = 1,
             load_cond = function() return mq.TLO.Me.Level() > 58 and mq.TLO.Me.Level() < 77 end,
             cond = function(self, target)
-                return (target.PctHPs() or 999) < Config:GetSetting('BigHealPoint')
+                return Targeting.BigHealsNeeded(target)
             end,
         },
         { -- Level 101+
@@ -769,7 +763,7 @@ local _ClassConfig = {
             steps = 1,
             load_cond = function() return mq.TLO.Me.Level() > 100 end,
             cond = function(self, target)
-                return (target.PctHPs() or 999) < Config:GetSetting('MainHealPoint')
+                return Targeting.MainHealsNeeded(target)
             end,
         },
         { -- Level 80-100
@@ -778,7 +772,7 @@ local _ClassConfig = {
             steps = 1,
             load_cond = function() return mq.TLO.Me.Level() > 79 and mq.TLO.Me.Level() < 101 end,
             cond = function(self, target)
-                return (target.PctHPs() or 999) <= Config:GetSetting('MainHealPoint')
+                return Targeting.MainHealsNeeded(target)
             end,
         },
         { -- Level 1-70
@@ -787,7 +781,7 @@ local _ClassConfig = {
             steps = 1,
             load_cond = function() return mq.TLO.Me.Level() < 80 end,
             cond = function(self, target)
-                return (target.PctHPs() or 999) <= Config:GetSetting('MainHealPoint')
+                return Targeting.MainHealsNeeded(target)
             end,
         },
     },
@@ -797,7 +791,7 @@ local _ClassConfig = {
                 name = "DichoHeal",
                 type = "Spell",
                 cond = function(self, spell)
-                    return (mq.TLO.Group.Injured(Config:GetSetting('BigHealPoint'))() or 0) >= Config:GetSetting('GroupInjureCnt')
+                    return Targeting.BigGroupHealsNeeded()
                 end,
             },
             {
@@ -838,7 +832,7 @@ local _ClassConfig = {
                 name = "Celestial Regeneration",
                 type = "AA",
                 cond = function(self, aaName, target)
-                    return (target.PctHPs() or 999) <= Config:GetSetting('BigHealPoint')
+                    return Targeting.BigHealsNeeded(target) -- if multiples are hurt with at least one needing big heals
                 end,
             },
             {
@@ -1269,23 +1263,22 @@ local _ClassConfig = {
             --     name = "NukeHeal",
             --     type = "Spell",
             --     cond = function(self, spell, target)
-            --         if Core.GetMainAssistPctHPs() > Config:GetSetting('LightHealPoint') then return false end
-            --         return Casting.HaveManaToNuke()
+            --         return Targeting.LightHealsNeeded(Core.GetMainAssistSpawn()) and Casting.HaveManaToNuke()
             --     end,
             -- },
             -- {
             --     name = "NukeHeal2",
             --     type = "Spell",
             --     cond = function(self, spell, target)
-            --         if Core.GetMainAssistPctHPs() > Config:GetSetting('LightHealPoint') then return false end
-            --         return Casting.HaveManaToNuke()            --     end,
+            --          return Targeting.LightHealsNeeded(Core.GetMainAssistSpawn()) and Casting.HaveManaToNuke()
+            --     end,
             -- },
             -- {
             --     name = "NukeHeal3",
             --     type = "Spell",
             --     cond = function(self, spell, target)
-            --         if Core.GetMainAssistPctHPs() > Config:GetSetting('LightHealPoint') then return false end
-            --         return Casting.HaveManaToNuke()            --     end,
+            --        return Targeting.LightHealsNeeded(Core.GetMainAssistSpawn()) and Casting.HaveManaToNuke()
+            --      end,
             -- },
             {
                 name = "Yaulp",

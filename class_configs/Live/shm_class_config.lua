@@ -716,7 +716,7 @@ local _ClassConfig = {
             steps = 1,
             load_cond = function() return mq.TLO.Me.Level() < 65 end,
             cond = function(self, target)
-                return (target.PctHPs() or 999) <= Config:GetSetting('MainHealPoint')
+                return Targeting.MainHealsNeeded(target)
             end,
         },
         {
@@ -724,23 +724,21 @@ local _ClassConfig = {
             state = 1,
             steps = 1,
             load_cond = function() return mq.TLO.Me.Level() > 64 end,
-            cond = function(self, target)
-                return (mq.TLO.Group.Injured(Config:GetSetting('GroupHealPoint'))() or 0) >= Config:GetSetting('GroupInjureCnt')
-            end,
+            cond = function(self, target) return Targeting.GroupHealsNeeded() end,
         },
         {
             name = 'BigHealPoint',
             state = 1,
             steps = 1,
             load_cond = function() return mq.TLO.Me.Level() > 64 end,
-            cond = function(self, target) return (target.PctHPs() or 999) < Config:GetSetting('BigHealPoint') end,
+            cond = function(self, target) return Targeting.BigHealsNeeded(target) end,
         },
         {
             name = 'MainHealPoint',
             state = 1,
             steps = 1,
             load_cond = function() return mq.TLO.Me.Level() > 64 end,
-            cond = function(self, target) return (target.PctHPs() or 999) < Config:GetSetting('MainHealPoint') end,
+            cond = function(self, target) return Targeting.MainHealsNeeded(target) end,
         },
     },
     ['HealRotations']     = {
@@ -749,7 +747,7 @@ local _ClassConfig = {
                 name = "Call of the Ancients",
                 type = "AA",
                 cond = function(self, aaName, target)
-                    return (target.PctHPs() or 999) < Config:GetSetting('BigHealPoint')
+                    return Targeting.BigHealsNeeded(target)
                 end,
             },
             {
@@ -770,14 +768,14 @@ local _ClassConfig = {
                 name = "InterventionHeal",
                 type = "Spell",
                 cond = function(self, spell, target)
-                    return (target.PctHPs() or 999) <= Config:GetSetting('BigHealPoint')
+                    return Targeting.BigHealsNeeded(target) -- if multiples hurt with at least one in big heal range
                 end,
             },
             {
                 name = "Soothsayer's Intervention",
                 type = "AA",
                 cond = function(self, aaName, target)
-                    return (target.PctHPs() or 999) <= Config:GetSetting('BigHealPoint')
+                    return Targeting.BigGroupHealsNeeded() -- if multiples hurt with multiples in big heal range
                 end,
             },
             {

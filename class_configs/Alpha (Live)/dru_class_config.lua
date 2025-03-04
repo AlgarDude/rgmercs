@@ -718,22 +718,19 @@ local _ClassConfig = {
             name  = 'BigHealPoint',
             state = 1,
             steps = 1,
-            cond  = function(self, target) return (target.PctHPs() or 999) < Config:GetSetting('BigHealPoint') end,
+            cond  = function(self, target) return Targeting.BigHealsNeeded(target) end,
         },
         {
             name = 'GroupHealPoint',
             state = 1,
             steps = 1,
-            cond = function(self, target)
-                return (mq.TLO.Group.Injured(Config:GetSetting('GroupHealPoint'))() or 0) >
-                    Config:GetSetting('GroupInjureCnt')
-            end,
+            cond = function(self, target) return Targeting.GroupHealsNeeded() end,
         },
         {
             name = 'MainHealPoint',
             state = 1,
             steps = 1,
-            cond = function(self, target) return (target.PctHPs() or 999) < Config:GetSetting('MainHealPoint') end,
+            cond = function(self, target) return Targeting.MainHealsNeeded(target) end,
         },
     },
     ['HealRotations']     = {
@@ -779,7 +776,7 @@ local _ClassConfig = {
                 name = "Blessing of Tunare",
                 type = "AA",
                 cond = function(self, aaName, target)
-                    return (target.PctHPs() or 999) < Config:GetSetting('BigHealPoint')
+                    return Targeting.BigHealsNeeded(target)
                 end,
             },
             {
@@ -926,14 +923,14 @@ local _ClassConfig = {
                 name = "DichoSpell",
                 type = "Spell",
                 cond = function(self, spell)
-                    return Casting.HaveManaToNuke() and (mq.TLO.Me.TargetOfTarget.PctHPs() or 0) <= Config:GetSetting('LightHealPoint')
+                    return Casting.HaveManaToNuke() and Targeting.LightHealsNeeded(mq.TLO.Me.TargetOfTarget)
                 end,
             },
             {
                 name = "RemoteSunDD",
                 type = "Spell",
                 cond = function(self, spell, target)
-                    return (mq.TLO.Me.TargetOfTarget.PctHPs() or 0) <= Config:GetSetting('LightHealPoint')
+                    return Targeting.LightHealsNeeded(mq.TLO.Me.TargetOfTarget)
                 end,
             },
             {

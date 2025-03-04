@@ -1534,7 +1534,7 @@ local _ClassConfig = {
                 type = "Disc",
                 tooltip = Tooltips.ReflexStrike,
                 cond = function(self, discSpell)
-                    return (mq.TLO.Group.Injured(80)() or 0) > 2
+                    return Targeting.GroupHealsNeeded()
                 end,
             },
             {

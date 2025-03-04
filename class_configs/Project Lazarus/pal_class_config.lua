@@ -741,13 +741,13 @@ return {
             name = 'MainHealPoint',
             state = 1,
             steps = 1,
-            cond = function(self, target) return (target.PctHPs() or 999) < Config:GetSetting('MainHealPoint') end,
+            cond = function(self, target) return Targeting.MainHealsNeeded(target) end,
         },
         {
             name = 'LightHealPoint',
             state = 1,
             steps = 1,
-            cond = function(self, target) return (target.PctHPs() or 999) < Config:GetSetting('LightHealPoint') end,
+            cond = function(self, target) return Targeting.LightHealsNeeded(target) end,
         },
     },
     ['HealRotations']     = {
@@ -764,7 +764,7 @@ return {
                 type = "Spell",
                 cond = function(self, _)
                     if not mq.TLO.Group() then return false end
-                    return mq.TLO.Group.Injured(Config:GetSetting('GroupHealPoint'))() > Config:GetSetting('GroupInjureCnt')
+                    return Targeting.GroupHealsNeeded()
                 end,
             },
             {
@@ -772,7 +772,7 @@ return {
                 type = "Spell",
                 cond = function(self, _)
                     if not mq.TLO.Group() then return false end
-                    return mq.TLO.Group.Injured(Config:GetSetting('GroupHealPoint'))() > Config:GetSetting('GroupInjureCnt')
+                    return Targeting.GroupHealsNeeded()
                 end,
             },
             {
@@ -780,7 +780,7 @@ return {
                 type = "Spell",
                 cond = function(self, _)
                     if not mq.TLO.Group() then return false end
-                    return mq.TLO.Group.Injured(Config:GetSetting('GroupHealPoint'))() > Config:GetSetting('GroupInjureCnt')
+                    return Targeting.GroupHealsNeeded()
                 end,
             },
             {
@@ -788,7 +788,7 @@ return {
                 type = "AA",
                 cond = function(self, aaName)
                     if not mq.TLO.Group() then return false end
-                    return mq.TLO.Group.Injured(Config:GetSetting('GroupHealPoint'))() > Config:GetSetting('GroupInjureCnt')
+                    return Targeting.GroupHealsNeeded()
                 end,
             },
             {
@@ -796,7 +796,7 @@ return {
                 type = "AA",
                 cond = function(self, aaName)
                     if not mq.TLO.Group() then return false end
-                    return mq.TLO.Group.Injured(Config:GetSetting('GroupHealPoint'))() > Config:GetSetting('GroupInjureCnt')
+                    return Targeting.GroupHealsNeeded()
                 end,
             },
             {
