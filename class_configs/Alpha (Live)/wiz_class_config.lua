@@ -619,8 +619,7 @@ return {
         end,
         RainCheck = function(target) -- I made a funny
             if not (Config:GetSetting('DoRain') and Config:GetSetting('DoAEDamage')) then return false end
-            return Targeting.GetTargetDistance() >= Config:GetSetting('RainDistance') and
-                (Targeting.GetAutoTargetPctHPs() >= Config:GetSetting('HPStopBigNuke') or Targeting.IsNamed(target))
+            return Targeting.GetTargetDistance() >= Config:GetSetting('RainDistance') and Targeting.MobNotLowHP(target)
         end,
     },
     ['RotationOrder']   = {
@@ -850,14 +849,14 @@ return {
                 name = "Atol's Shackles",
                 type = "AA",
                 cond = function(self, aaName, target)
-                    return Casting.DetAACheck(aaName) and Targeting.GetAutoTargetPctHPs() < 50
+                    return Casting.DetAACheck(aaName) and Targeting.MobHasLowHP(target)
                 end,
             },
             {
                 name = "SnareSpell",
                 type = "Spell",
                 cond = function(self, spell, target)
-                    return Casting.DetSpellCheck(spell) and Targeting.GetAutoTargetPctHPs() < 50
+                    return Casting.DetSpellCheck(spell) and Targeting.MobHasLowHP(target)
                 end,
             },
         },
@@ -919,7 +918,7 @@ return {
             {
                 name = "VortexNuke",
                 type = "Spell",
-                cond = function(self, spell) --using DotSpellCheck to leverage HPStopDot settings to ensure we aren't casting just before trash dies (default: stop at 25% on named, 50% on trash)
+                cond = function(self, spell) --using DotSpellCheck to leverage MobLowHP settings to ensure we aren't casting just before trash dies (default: stop at 25% on named, 50% on trash)
                     return Casting.GambitCheck() or Casting.DotSpellCheck(spell)
                 end,
             },
@@ -1026,8 +1025,7 @@ return {
                 name = "BigFireNuke",
                 type = "Spell",
                 cond = function(self, spell, target)
-                    if (Targeting.GetAutoTargetPctHPs() < Config:GetSetting('HPStopBigNuke') and not Targeting.IsNamed(target)) then return false end
-                    return Casting.HaveManaToNuke()
+                    return Casting.HaveManaToNuke() and Targeting.MobNotLowHP(target)
                 end,
             },
             {
@@ -1059,8 +1057,7 @@ return {
                 name = "BigIceNuke",
                 type = "Spell",
                 cond = function(self, spell, target)
-                    if (Targeting.GetAutoTargetPctHPs() < Config:GetSetting('BigNukeMinHealth') and not Targeting.IsNamed(target)) then return false end
-                    return Casting.HaveManaToNuke()
+                    return Casting.HaveManaToNuke() and Targeting.MobNotLowHP(target)
                 end,
             },
             {
@@ -1084,8 +1081,7 @@ return {
                 name = "BigMagicNuke",
                 type = "Spell",
                 cond = function(self, spell, target)
-                    if (Targeting.GetAutoTargetPctHPs() < Config:GetSetting('BigNukeMinHealth') and not Targeting.IsNamed(target)) then return false end
-                    return Casting.HaveManaToNuke()
+                    return Casting.HaveManaToNuke() and Targeting.MobNotLowHP(target)
                 end,
             },
             {
@@ -1349,21 +1345,10 @@ return {
             FAQ = "WIP?",
             Answer = "WIP.",
         },
-        ['HPStopBigNuke']        = {
-            DisplayName = "Stop Big Nuke",
-            Category = "DPS Low Level",
-            Index = 2,
-            Tooltip = "Don't use our Big Nuke below this health percentage.",
-            Default = 50,
-            Min = 1,
-            Max = 100,
-            FAQ = "WIP?",
-            Answer = "WIP.",
-        },
         ['DoRain']               = {
             DisplayName = "Do Rain",
             Category = "DPS Low Level",
-            Index = 3,
+            Index = 2,
             RequiresLoadoutChange = true,
             ConfigType = "Advanced",
             Tooltip = "**WILL BREAK MEZ** Use your selected element's Rain Spell as a single-target nuke. **WILL BREAK MEZ***",
@@ -1375,7 +1360,7 @@ return {
         ['RainDist']             = {
             DisplayName = "Min Rain Distance",
             Category = "DPS Low Level",
-            Index = 4,
+            Index = 3,
             ConfigType = "Advanced",
             Tooltip = "The minimum distance a target must be to use a Rain (Rain AE Range: 25').",
             Default = 30,
@@ -1387,6 +1372,7 @@ return {
         ['DoStun']               = {
             DisplayName = "Do Stun",
             Category = "DPS Low Level",
+            Index = 4,
             Tooltip = "Use your Stun Nukes (Stun with DD, not mana efficient).",
             RequiresLoadoutChange = true,
             Default = false,

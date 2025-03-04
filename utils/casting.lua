@@ -471,15 +471,6 @@ function Casting.OkayToDebuff()
     return conLevel >= Config:GetSetting('DebuffMinCon') or (Targeting.IsNamed(Targeting.GetAutoTarget()) and Config:GetSetting('DebuffNamedAlways'))
 end
 
---- Checks if target health exceeds minimum thresholds to use Dots.
-function Casting.EnoughMobHPToDot(target)
-    if not target then target = Targeting.GetAutoTarget() or mq.TLO.Target end
-    if not (target and target()) then return false end
-
-    local threshold = Targeting.IsNamed(target) and Config:GetSetting('NamedStopDOT') or Config:GetSetting('HPStopDOT')
-    return Targeting.GetTargetPctHPs(target) < threshold
-end
-
 --- Determines if the PC can/should use buffs if their corpse is nearby.
 --- @return boolean True if the entity can be buffed, false otherwise.
 function Casting.AmIBuffable()
@@ -702,7 +693,7 @@ function Casting.DotSpellCheck(spell, target)
     if not (spell and spell()) then return false end
     if not target then target = Targeting.GetAutoTarget() or mq.TLO.Target end
 
-    if not Casting.EnoughMobHPToDot() then return false end
+    if Targeting.MobHasLowHP(target) then return false end
 
     return Casting.TargetBuffCheck(spell, target)
 end

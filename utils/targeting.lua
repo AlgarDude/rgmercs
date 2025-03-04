@@ -465,4 +465,20 @@ function Targeting.TargetIsMyself(target)
     return target.ID() == mq.TLO.Me.ID()
 end
 
+function Targeting.MobNotLowHP(target)
+    if not target then target = Targeting.GetAutoTarget() or mq.TLO.Target end
+    if not (target and target()) then return false end
+
+    local threshold = Targeting.IsNamed(target) and Config:GetSetting('NamedLowHP') or Config:GetSetting('MobLowHP')
+    return Targeting.GetTargetPctHPs(target) < threshold
+end
+
+function Targeting.MobHasLowHP(target)
+    if not target then target = Targeting.GetAutoTarget() or mq.TLO.Target end
+    if not (target and target()) then return false end
+
+    local threshold = Targeting.IsNamed(target) and Config:GetSetting('NamedLowHP') or Config:GetSetting('MobLowHP')
+    return threshold > Targeting.GetTargetPctHPs(target)
+end
+
 return Targeting

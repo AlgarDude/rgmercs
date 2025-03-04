@@ -386,7 +386,7 @@ function Module:Render()
 
         ImGui.Separator()
 
-        if ImGui.CollapsingHeader("Config Options") then
+        if ImGui.CollapsingHeader("Class-Specific Options") then
             self.settings, pressed, loadoutChange = Ui.RenderSettings(self.settings,
                 self.ClassConfig.DefaultConfig, self.DefaultCategories)
             if pressed then

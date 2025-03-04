@@ -834,11 +834,7 @@ local _ClassConfig = {
         end,
         DotSongCheck = function(songSpell) --Check dot stacking, stop dotting when HP threshold is reached based on mob type, can't use utils function because we try to refresh just as the dot is ending
             if not songSpell or not songSpell() then return false end
-            local named = Targeting.IsNamed(Targeting.GetAutoTarget())
-            local targethp = Targeting.GetTargetPctHPs()
-
-            return songSpell.StacksTarget() and ((named and (Config:GetSetting('NamedStopDOT') < targethp)) or
-                (not named and Config:GetSetting('HPStopDOT') < targethp))
+            return songSpell.StacksTarget() and Targeting.MobNotLowHP(Targeting.GetAutoTarget())
         end,
         GetDetSongDuration = function(songSpell) -- Checks target for duration remaining on dot songs
             local duration = mq.TLO.Target.FindBuff("name " .. songSpell.Name()).Duration.TotalSeconds() or 0

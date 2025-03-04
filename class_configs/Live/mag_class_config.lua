@@ -1578,8 +1578,7 @@ _ClassConfig      = {
                 type = "Spell",
                 cond = function(self, spell, target)
                     if Config:GetSetting('ElementChoice') ~= 1 then return false end
-                    if (Targeting.GetAutoTargetPctHPs() < Config:GetSetting('HPStopBigNuke') and not Targeting.IsNamed(target)) then return false end
-                    return Casting.HaveManaToNuke()
+                    return Casting.HaveManaToNuke() and Targeting.MobNotLowHP(target)
                 end,
             },
             {
@@ -2014,7 +2013,7 @@ _ClassConfig      = {
         },
         ['DoForce']        = {
             DisplayName = "Do Force",
-            Category = "Spells and Abilties",
+            Category = "Spells and Abilities",
             Tooltip = "Use Force of Elements AA",
             Default = true,
             FAQ = "I want to use Force of Elements AA in my rotation, how do I do that?",
@@ -2033,16 +2032,6 @@ _ClassConfig      = {
             RequiresLoadoutChange = true,
             FAQ = "I'm fighting fire-resistant mobs, how can I use my magic nukes?",
             Answer = "If you are under level 70, you can swap to magic nukes on the DPS Low Level tab.",
-        },
-        ['HPStopBigNuke']  = {
-            DisplayName = "Stop Big Nuke",
-            Category = "DPS Low Level",
-            Tooltip = "Don't use our Big Nuke below this health percentage.",
-            Default = 50,
-            Min = 1,
-            Max = 100,
-            FAQ = "What is a Big Nuke?",
-            Answer = "Low level mages have fast(light) and slow(heavy) spell options, the Big Nuke is the latter; we don't want to start casting this when a mob is near death.",
         },
         ['DoChestClick']   = {
             DisplayName = "Do Chest Click",

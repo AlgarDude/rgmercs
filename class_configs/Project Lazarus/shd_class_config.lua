@@ -1324,8 +1324,8 @@ local _ClassConfig = {
                 name = "Encroaching Darkness",
                 tooltip = Tooltips.EncroachingDarkness,
                 type = "AA",
-                cond = function(self, aaName)
-                    return Casting.DetAACheck(aaName)
+                cond = function(self, aaName, target)
+                    return Casting.DetAACheck(aaName) and Targeting.MobHasLowHP(target)
                 end,
             },
             {
@@ -1334,7 +1334,7 @@ local _ClassConfig = {
                 tooltip = Tooltips.SnareDot,
                 cond = function(self, spell, target)
                     if Casting.CanUseAA("Encroaching Darkness") then return false end
-                    return Casting.DetSpellCheck(spell) and Targeting.GetAutoTargetPctHPs() < 50
+                    return Casting.DetSpellCheck(spell) and Targeting.MobHasLowHP(target)
                 end,
             },
         },

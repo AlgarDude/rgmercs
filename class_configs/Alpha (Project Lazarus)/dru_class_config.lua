@@ -1013,16 +1013,16 @@ local _ClassConfig = {
             {
                 name = "Entrap",
                 type = "AA",
-                cond = function(self, aaName)
-                    return Casting.DetAACheck(aaName) and Targeting.GetAutoTargetPctHPs() < 50
+                cond = function(self, aaName, target)
+                    return Casting.DetAACheck(aaName) and Targeting.MobHasLowHP(target)
                 end,
             },
             {
                 name = "SnareSpell",
                 type = "Spell",
-                cond = function(self, spell)
+                cond = function(self, spell, target)
                     if Casting.CanUseAA("Entrap") then return false end
-                    return Casting.DetSpellCheck(spell) and Targeting.GetAutoTargetPctHPs() < 50
+                    return Casting.DetSpellCheck(spell) and Targeting.MobHasLowHP(target)
                 end,
             },
         },

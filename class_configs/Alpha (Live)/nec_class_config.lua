@@ -937,7 +937,7 @@ local _ClassConfig = {
                 name = "SwarmPet",
                 type = "Spell",
                 cond = function(self, spell, target)
-                    return (not Casting.EnoughMobHPToDot() or Targeting.IsNamed(target)) and Casting.HaveManaToNuke()
+                    return (Targeting.MobHasLowHP or Targeting.IsNamed(target)) and Casting.HaveManaToNuke()
                 end,
             },
             {
@@ -951,7 +951,7 @@ local _ClassConfig = {
                 name = "FireNuke",
                 type = "Spell",
                 cond = function(self, spell, target)
-                    return not Casting.EnoughMobHPToDot() and Casting.HaveManaToNuke()
+                    return Targeting.MobHasLowHP and Casting.HaveManaToNuke()
                 end,
             },
             {
