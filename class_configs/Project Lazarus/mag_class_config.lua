@@ -752,9 +752,9 @@ _ClassConfig      = {
             "Summon Wintry Paradox",
         },
         ['FireOrbSummon'] = {
-            "Summon Molten Komatiite Orb",
-            "Summon Firebound Orb",
-            "Summon Blazing Orb",
+            -- "Summon Molten Komatiite Orb",
+            -- "Summon Firebound Orb",
+            -- "Summon Blazing Orb",
             "Summon: Molten Orb",
             "Summon: Lava Orb",
         },

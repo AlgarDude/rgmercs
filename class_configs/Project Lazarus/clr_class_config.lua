@@ -62,6 +62,11 @@ local _ClassConfig = {
         },
     },
     ['AbilitySets']       = {
+        -- Laz Spells that may need to be added: Ward of Retribution,
+
+
+
+
         ['WardBuff'] = { -- Level 97+
             "Ward of Certitude",
             "Ward of Surety",
@@ -1239,6 +1244,10 @@ local _ClassConfig = {
             { --homework: Check if this is necessary (does not exceed 50% spell haste cap)
                 name = "Celestial Rapidity",
                 type = "AA",
+            },
+            {
+                name = "Graverobber's Icon",
+                type = "Item",
             },
         },
         ['DPS'] = {

@@ -853,15 +853,6 @@ local _ClassConfig = {
                 end,
             },
         },
-        ["GroupHealPoint"] = {
-            {
-                name = "Heal",
-                type = "Spell",
-                cond = function(self, _, target)
-                    return Config:GetSetting('DoHeals')
-                end,
-            },
-        },
     },
     ['RotationOrder']     = {
         -- Downtime doesn't have state because we run the whole rotation at once.

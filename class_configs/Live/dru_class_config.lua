@@ -870,7 +870,7 @@ local _ClassConfig = {
                 name = "Blessing of Tunare",
                 type = "AA",
                 cond = function(self, aaName, target)
-                    return Targeting.BigHealsNeeded(target)
+                    return Targeting.BigGroupHealsNeeded()
                 end,
             },
             {

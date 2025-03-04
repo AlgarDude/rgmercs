@@ -473,8 +473,8 @@ local _ClassConfig = {
         },
         ['SnareSpell'] = {
             -- Snare Spells
-            "Thornmaw Vines",
-            "Hungry Vines",
+            -- "Thornmaw Vines",
+            -- "Hungry Vines", -- The out-of-era Serpent Vines is much less mana and lasts longer without the Dot And melee guard
             "Serpent Vines",
             "Entangle",
             "Mire Thorns",

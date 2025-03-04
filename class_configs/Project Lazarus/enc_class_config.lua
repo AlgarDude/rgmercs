@@ -1055,6 +1055,7 @@ local _ClassConfig = {
                 type = "Spell",
                 active_cond = function(self, spell) return mq.TLO.Me.FindBuff("id " .. tostring(spell.ID()))() ~= nil end,
                 cond = function(self, spell, target)
+                    if not Config:GetSetting('DoGroupSpellShield') then return false end
                     return Casting.GroupBuffCheck(spell, target) and Casting.ReagentCheck(spell)
                 end,
             },
@@ -1578,7 +1579,7 @@ local _ClassConfig = {
         },
     },
     ['DefaultConfig']   = {
-        ['Mode']           = {
+        ['Mode']               = {
             DisplayName = "Mode",
             Category = "Combat",
             Tooltip = "Select the Combat Mode for this PC. Default: The original RGMercs Config. ModernEra: DPS rotation and spellset aimed at modern live play (~90+)",
@@ -1593,7 +1594,7 @@ local _ClassConfig = {
                 "The ModernEra Mode is designed to be used with the ModernEra DPS rotation and spellset.\n" ..
                 "It should function well starting around level 90, but may not fully come into its own for a few levels after.",
         },
-        ['UseAura']        = {
+        ['UseAura']            = {
             DisplayName = "Aura Selection:",
             Category = "Buffs",
             Index = 1,
@@ -1608,7 +1609,7 @@ local _ClassConfig = {
             Answer = "Aura choice can be made on the buff tab.\n" ..
                 "Once the PC has purchased Auroria Mastery, this setting is ignored in favor of using the AA.",
         },
-        ['DoArcanumWeave'] = {
+        ['DoArcanumWeave']     = {
             DisplayName = "Weave Arcanums",
             Category = "Buffs",
             Tooltip = "Weave Empowered/Enlighted/Acute Focus of Arcanum into your standard combat routine (Focus of Arcanum is saved for burns).",
@@ -1618,7 +1619,7 @@ local _ClassConfig = {
             Answer =
             "The Focus of Arcanum series of AA decreases your spell resist rates.\nIf you have purchased all four, you can likely easily weave them to keep 100% uptime on one.",
         },
-        ['AESlowCount']    = {
+        ['AESlowCount']        = {
             DisplayName = "Slow Count",
             Category = "Debuffs",
             Tooltip = "Number of XT Haters before we start AE slowing",
@@ -1629,7 +1630,7 @@ local _ClassConfig = {
             Answer = "The [AESlowCount] setting determines the number of XT Haters before we start AE slowing.\n" ..
                 "If you are not AE slowing, you may need to adjust the [AESlowCount] setting.",
         },
-        ['DoTash']         = {
+        ['DoTash']             = {
             DisplayName = "Do Tash",
             Category = "Debuffs",
             Tooltip = "Cast Tash Spells",
@@ -1639,7 +1640,7 @@ local _ClassConfig = {
             Answer = "The [DoTash] setting determines whether or not your PC will cast Tash Spells.\n" ..
                 "If you are not Tashing, you may need to Enable the [DoTash] setting.",
         },
-        ['DoDot']          = {
+        ['DoDot']              = {
             DisplayName = "Cast DOTs",
             Category = "Combat",
             Tooltip = "Enable casting Damage Over Time spells. (Dots always used for ModernEra Mode)",
@@ -1647,7 +1648,7 @@ local _ClassConfig = {
             FAQ = "I turned Cast DOTS off, why am I still using them?",
             Answer = "The Modern Era mode does not respect this setting, as DoTs are integral to the DPS rotation.",
         },
-        ['DoSlow']         = {
+        ['DoSlow']             = {
             DisplayName = "Cast Slow",
             Category = "Debuffs",
             Tooltip = "Enable casting Slow spells.",
@@ -1657,7 +1658,7 @@ local _ClassConfig = {
             Answer = "The [DoSlow] setting determines whether or not your PC will cast Slow spells.\n" ..
                 "If you are not Slowing, you may need to Enable the [DoSlow] setting.",
         },
-        ['DoCripple']      = {
+        ['DoCripple']          = {
             DisplayName = "Cast Cripple",
             Category = "Debuffs",
             Tooltip = "Enable casting Cripple spells.",
@@ -1668,7 +1669,7 @@ local _ClassConfig = {
                 "If you are not Crippling, you may need to Enable the [DoCripple] setting.\n" ..
                 "Please note that eventually, Cripple and Slow lines are merged together in the Helix line.",
         },
-        ['DoDicho']        = {
+        ['DoDicho']            = {
             DisplayName = "Cast Dicho",
             Category = "Combat",
             Tooltip = "Enable casting Dicho spells.(Dicho always used for ModernEra Mode)",
@@ -1677,7 +1678,7 @@ local _ClassConfig = {
             Answer = "The Cast Dicho setting determines whether or not your PC will cast Dicho spells.\n" ..
                 "Modern Era mode will always use the Dicho spell as a core part of its function.",
         },
-        ['DoNDTBuff']      = {
+        ['DoNDTBuff']          = {
             DisplayName = "Cast NDT",
             Category = "Buffs",
             Tooltip = "Enable casting use Melee Proc Buff (Night's Dark Terror Line).",
@@ -1687,7 +1688,7 @@ local _ClassConfig = {
             Answer = "The [DoNDTBuff] setting determines whether or not your PC will cast the Night's Dark Terror Line.\n" ..
                 "Please note that the single target versions are only set to be used on melee.",
         },
-        ['RuneChoice']     = {
+        ['RuneChoice']         = {
             DisplayName = "Rune Selection:",
             Category = "Buffs",
             Index = 1,
@@ -1712,17 +1713,17 @@ local _ClassConfig = {
         --     Answer = "The [DoAggroRune] setting determines whether or not your PC will cast the Tank Aggro Rune.\n" ..
         --         "If you are not using the Aggro Rune, you may need to Enable the [DoAggroRune] setting.",
         -- },
-        -- ['DoGroupDotShield'] = {
-        --     DisplayName = "Do Group DoT Shield",
-        --     Category = "Buffs",
-        --     Index = 3,
-        --     Tooltip = "Enable casting the Group DoT Shield Line.",
-        --     Default = true,
-        --     FAQ = "Why am I not using Group DoT Shield?",
-        --     Answer = "The [DoGroupDotShield] setting determines whether or not your PC will cast the Group DoT Shield Line.\n" ..
-        --         "If you are not using Group DoT Shield, you may need to Enable the [DoGroupDotShield] setting.",
-        -- },
-        ['DoProcBuff']     = {
+        ['DoGroupSpellShield'] = {
+            DisplayName = "Do Group Spellshield",
+            Category = "Buffs",
+            Index = 3,
+            Tooltip = "Enable casting the Group Spell Shield Line.",
+            Default = true,
+            FAQ = "Why am I not using Group Spell Shield?",
+            Answer = "The Do Group Spellshield setting determines whether or not your PC will cast the Group Spell Shield Line.\n" ..
+                "If you are not using Group DoT Shield, you may need to Enable the Do Group Spellshield setting.",
+        },
+        ['DoProcBuff']         = {
             DisplayName = "Do Spellproc Buff",
             Category = "Buffs",
             Index = 4,
@@ -1731,7 +1732,7 @@ local _ClassConfig = {
             FAQ = "Why am I using a spell proc buff on ... class?",
             Answer = "By default, the spell proc buff will be used on any casters (including tanks/hybrids). You can change this option on the Buffs tab.",
         },
-        ['DoStripBuff']    = {
+        ['DoStripBuff']        = {
             DisplayName = "Do Strip Buffs",
             Category = "Debuffs",
             Tooltip = "Enable removing beneficial enemy effects.",
@@ -1740,7 +1741,7 @@ local _ClassConfig = {
             Answer = "The [DoStripBuff] setting determines whether or not your PC will remove beneficial enemy effects.\n" ..
                 "If you are not stripping buffs, you may need to Enable the [DoStripBuff] setting.",
         },
-        ['DoChestClick']   = {
+        ['DoChestClick']       = {
             DisplayName = "Do Chest Click",
             Category = "Combat",
             Tooltip = "Click your equipped chest item during burns.",
