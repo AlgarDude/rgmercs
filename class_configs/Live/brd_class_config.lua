@@ -87,8 +87,8 @@ local function generateSongList()
     end
 
     local function AddCriticalSongs()
-        ConditionallyAddSong("UseAEAAMez", "MezAESong", 85)
-        ConditionallyAddSong("UseSingleTgtMez", "MezSong", 15)
+        ConditionallyAddSong("DoAEMez", "MezAESong", 85)
+        ConditionallyAddSong("DoSTMez", "MezSong", 15)
         ConditionallyAddSong("DoSTSlow", "SlowSong", 23)
         ConditionallyAddSong("DoAESlow", "AESlowSong", 20)
         if Config:GetSetting('UseRunBuff') == 2 and myLevel >= 49 then
@@ -209,7 +209,7 @@ local _ClassConfig = {
     ['ModeChecks']      = {
         CanMez     = function() return true end,
         CanCharm   = function() return true end,
-        IsMezzing  = function() return Config:GetSetting('UseSingleTgtMez') or Config:GetSetting('UseAEAAMez') end,
+        IsMezzing  = function() return Config:GetSetting('MezOn') end,
         IsCuring   = function() return Config:GetSetting('UseCure') end,
         IsCharming = function() return Config:GetSetting('CharmOn') and mq.TLO.Pet.ID() == 0 end,
     },

@@ -13,7 +13,7 @@ local _ClassConfig = {
         CanMez     = function() return true end,
         CanCharm   = function() return true end,
         IsCharming = function() return Config:GetSetting('CharmOn') end,
-        IsMezzing  = function() return true end,
+        IsMezzing  = function() return Config:GetSetting('MezOn') end,
     },
     ['Modes']           = {
         'Default',
