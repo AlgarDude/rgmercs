@@ -224,10 +224,7 @@ local _ClassConfig = {
         ['Epic'] = {
             "Blade of Vesagran",
             "Prismatic Dragon Blade",
-        },
-        ['Dreadstone'] = {
-            "Possessed Dreadstone Minstrel's Rapier",
-        },
+        },1
         ['SymphonyOfBattle'] = {
             "Rapier of Somber Notes",
             "Songblade of the Eternal",
@@ -238,32 +235,14 @@ local _ClassConfig = {
         },
     },
     ['AbilitySets']     = {
-        ['ShortRunBuff'] = {
-            --runbuffs are split to cover the level spread where we have accelerato but not selo's AA, if not, we force the bard into short duration only.
-            "Selo's Accelerato",
-            "Selo's Accelerando",
-        },
-        ['LongRunBuff'] = {
-            --Removed due to causing Bugs with Invis and rotation.
-            -- "Selo's Accelerating Canto",
-            -- "Selo's Song of Travel",
+        ['RunBuff'] = {
             "Selo's Accelerating Chorus",
+            "Selo's Accelerando",
         },
         ['EndBreathSong'] = {
             "Tarew's Aquatic Ayre", --Level 16
         },
         ['MainAriaSong'] = {
-            -- MainAriaSong - Level Ranges 45 - 111
-            "Aria of Tenisbre", -- 125
-            "Aria of Pli Xin Liako",
-            "Aria of Margidor",
-            "Aria of Begalru",
-            "Aria of Maetanrus",
-            "Aria of Va'Ker",
-            "Aria of the Orator",
-            "Aria of the Composer",
-            "Aria of the Poet",
-            "Performer's Psalm of Pyrotechnics",
             "Ancient: Call of Power",
             "Aria of the Artist",
             "Yelhun's Mystic Call",
@@ -273,144 +252,15 @@ local _ClassConfig = {
             "Rizlona's Fire",
             "Rizlona's Embers",
         },
-        ['SufferingSong'] = {
-            -- SufferingSong - Level Range 89 - 114
-            "Kanghammer's Song of Suffering", -- 125
-            "Shojralen's Song of Suffering",
-            "Omorden's Song of Suffering",
-            "Travenro's Song of Suffering",
-            "Fjilnauk's Song of Suffering",
-            "Kaficus' Song of Suffering",
-            "Hykast's Song of Suffering",
-            "Noira's Song of Suffering",
-        },
-        ['SprySonataSong'] = {
-            -- SprySonataSong - Level Range 77 - 118
-            "Dhakka's Spry Sonata",
-            "Xetheg's Spry Sonata",
-            "Kellek's Spry Sonata",
-            "Kluzen's Spry Sonata",
-            "Doben's Spry Sonata",
-            "Terasal's Spry Sonata",
-            "Sionachie's Spry Sonata",
-            "Coldcrow's Spry Sonata",
-        },
-        ['CrescendoSong'] = {
-            -- CrescendoSong - Level Range 75 - 114
-            "Regar's Lively Crescendo", -- 125
-            "Zelinstein's Lively Crescendo",
-            "Zburator's Lively Crescendo",
-            "Jembel's Lively Crescendo",
-            "Silisia's Lively Crescendo",
-            "Motlak's Lively Crescendo",
-            "Kolain's Lively Crescendo",
-            "Lyssa's Lively Crescendo",
-            "Gruber's Lively Crescendo",
-            "Kaerra's Spirited Crescendo",
-            "Veshma's Lively Crescendo",
-        },
         ['ArcaneSong'] = {
-            -- ArcaneSong - Level Range 70 - 115
-            "Arcane Rhythm", -- 125
-            "Arcane Harmony",
-            "Arcane Symphony",
-            "Arcane Ballad",
-            "Arcane Melody",
-            "Arcane Hymn",
-            "Arcane Address",
-            "Arcane Chorus",
-            "Arcane Arietta",
-            "Arcane Anthem",
             "Arcane Aria",
         },
-        ['InsultSong'] = {
-            --Bard Timers alternate between 6 and 3 every expansion. (Update: TOB has thrown this on its head)
-            --We have to manage selection so we don't have insultsong2 using the same timer.
-            --To circumvent issues with f2p accounts, for now, Sogran's is prioritized over Nord's. The code to distinguish this is excessive IMO.
-            "Yaran's Disdain",  -- 123 nopush, timer 6, TOB *THIS TIMER MAY BE INCORRECT, does not follow pattern*
-            "Eoreg's Insult",   -- 122 push, timer 3, LS
-            --"Nord's Disdain",       -- 118 nopush, timer 6, NoS
-            "Sogran's Insult",  -- 117 push, timer 6, ToL
-            "Yelinak's Insult", -- 115 nopush, timer 3
-            --"Omorden's Insult",     -- 112 push, timer 3
-            "Sathir's Insult",  -- 110 nopush, timer 6
-            --"Travenro's Insult",    -- 107 push, timer 6
-            "Tsaph's Insult",   -- 105 nopush, timer 3
-            --"Fjilnauk's Insult",    -- 102 push, timer 3
-            --"Kaficus' Insult",      -- 100 push, timer 6 --Note push/nopush levels reversed this expansion compared to later
-            "Garath's Insult",  -- 97 nopush, timer 6
-            "Hykast's Insult",  -- 95 nopush, timer 3
-            "Lyrin's Insult",   -- 90 nopush, timer 6
-            "Venimor's Insult", -- 85, nopush, timer 3
-            -- Below Level 85 This line turns into "bellow" instead of "Insult" and I don't know of anyone who uses them, but keeping for posterity
-            -- "Bellow of Chaos", --66, interrupt
-            -- "Brusco's Bombastic Bellow", --55, stun
-            -- "Brusco's Boastful Bellow", --12,
-        },
-        ['InsultSong2'] = {
-            "Yaran's Disdain",  -- 123 nopush, timer 6, TOB *THIS TIMER MAY BE INCORRECT, does not follow pattern*
-            "Eoreg's Insult",   -- 122 push, timer 3, LS
-            --"Nord's Disdain",       -- 118 nopush, timer 6, NoS
-            "Sogran's Insult",  -- 117 push, timer 6, ToL
-            "Yelinak's Insult", -- 115 nopush, timer 3
-            --"Omorden's Insult",     -- 112 push, timer 3
-            "Sathir's Insult",  -- 110 nopush, timer 6
-            --"Travenro's Insult",    -- 107 push, timer 6
-            "Tsaph's Insult",   -- 105 nopush, timer 3
-            --"Fjilnauk's Insult",    -- 102 push, timer 3
-            --"Kaficus' Insult",      -- 100 push, timer 6 --Note push/nopush levels reversed this expansion compared to later
-            "Garath's Insult",  -- 97 nopush, timer 6
-            "Hykast's Insult",  -- 95 nopush, timer 3
-            "Lyrin's Insult",   -- 90 nopush, timer 6
-            "Venimor's Insult", -- 85, nopush, timer 3
-        },
-        ['DichoSong'] = {
-            -- DichoSong Level Range - 101+
-            "Reciprocal Psalm",
-            "Ecliptic Psalm",
-            "Composite Psalm",
-            "Dissident Psalm",
-            "Dichotomic Psalm",
-        },
+        
         ['BardDPSAura'] = {
-            -- BardDPSAura - Level Ranges 55 - 125
-            "Aura of Tenisbre", -- 125
-            "Aura of Pli Xin Liako",
-            "Aura of Margidor",
-            "Aura of Begalru",
-            "Aura of Maetanrus",
-            "Aura of Va'Ker",
-            "Aura of the Orator",
-            "Aura of the Composer",
-            "Aura of the Poet",
-            "Aura of the Artist",
             "Aura of the Muse",
             "Aura of Insight",
         },
-        ['BardRegenAura'] = {
-            "Aura of Shalowain",
-            "Aura of Shei Vinitras",
-            "Aura of Vhal`Sera",
-            "Aura of Xigam",
-            "Aura of Sionachie",
-            "Aura of Salarra",
-            "Aura of Lunanyn",
-            "Aura of Renewal",
-            "Aura of Rodcet",
-        },
         ['GroupRegenSong'] = {
-            --Note level 77 pulse only offers a heal% buff and is not included here.
-            "Pulse of August", -- 125
-            "Pulse of Nikolas",
-            "Pulse of Vhal`Sera",
-            "Pulse of Xigam",
-            "Pulse of Sionachie",
-            "Pulse of Salarra",
-            "Pulse of Lunanyn",
-            "Pulse of Renewal",              -- 86 start hp/mana/endurance
-            "Cantata of Rodcet",             -- 81
-            "Cantata of Restoration",        -- 76
-            "Erollisi's Cantata",            -- 71
             "Cantata of Life",               -- 67
             "Wind of Marr",                  -- 62
             "Cantata of Replenishment",      -- 55
@@ -418,38 +268,14 @@ local _ClassConfig = {
             "Cassindra's Chorus of Clarity", -- 32, mana only
             "Cassindra's Chant of Clarity",  -- 20, mana only
             "Hymn of Restoration",           -- 7, hp only
-
         },
         ['AreaRegenSong'] = {
-            -- ChorusRegenSong - Level Range 58 - 113
-            "Chorus of Shalowain",     -- 123
-            "Chorus of Shei Vinitras", -- 118
-            "Chorus of Vhal`Sera",     -- 113
-            "Chorus of Xigam",         -- 108
-            "Chorus of Sionachie",     -- 103
-            "Chorus of Salarra",       -- 98
-            "Chorus of Lunanyn",       -- 93
-            "Chorus of Renewal",       -- 88
-            "Chorus of Rodcet",        -- 83
-            "Chorus of Restoration",   -- 78
-            "Erollisi's Chorus",       -- 73
             "Chorus of Life",          -- 69
             "Chorus of Marr",          -- 64
             "Ancient: Lcea's Lament",  -- 60
             "Chorus of Replenishment", -- 58
         },
         ['WarMarchSong'] = {
-            -- WarMarchSong Level Range 10 - 114
-            "War March of Nokk", -- 125
-            "War March of Centien Xi Va Xakra",
-            "War March of Radiwol",
-            "War March of Dekloaz",
-            "War March of Jocelyn",
-            "War March of Protan",
-            "War March of Illdaera",
-            "War March of Dagda",
-            "War March of Brekt",
-            "War March of Meldrath",
             "War March of Muram",
             "War March of the Mastruq",
             "Warsong of Zek",
@@ -460,19 +286,6 @@ local _ClassConfig = {
             "Vilia's Verses of Celerity",
             "Anthem de Arms",
         },
-        ['FireBuffSong'] = {
-            -- CasterAriaSong - Level Range 72 - 113
-            "Flariton's Aria", -- 125
-            "Constance's Aria",
-            "Sontalak's Aria",
-            "Qunard's Aria",
-            "Nilsara's Aria",
-            "Gosik's Aria",
-            "Daevan's Aria",
-            "Sotor's Aria",
-            "Talendor's Aria",
-            "Performer's Explosive Aria",
-        },
         ['SlowSong'] = {
             "Requiem of Time",
             "Angstlich's Assonance",    --snare/slow
@@ -480,88 +293,15 @@ local _ClassConfig = {
             "Selo's Consonant Chain",   --snare/slow
         },
         ['AESlowSong'] = {
-            -- AESlowSong - Level Range 20 - 114 (Single target works better)
-            "Zinnia's Melodic Binding", -- 125
-            "Radiwol's Melodic Binding",
-            "Dekloaz's Melodic Binding",
-            "Protan's Melodic Binding",
             "Largo's Melodic Binding",
         },
-        ['AccelerandoSong'] = {
-            -- AccelerandoSong - Level Range 88 - 113 **
-            "Appeasing Accelerando", -- 125
-            "Satisfying Accelerando",
-            "Placating Accelerando",
-            "Atoning Accelerando",
-            "Allaying Accelerando",
-            "Ameliorating Accelerando",
-            "Assuaging Accelerando",
-            "Alleviating Accelerando",
-        },
-        ['SpitefulSong'] = {
-            -- SpitefulSong - Level Range 90 -
-            "Tatalros' Spiteful Lyric", -- 125
-            "Von Deek's Spiteful Lyric",
-            "Omorden's Spiteful Lyric",
-            "Travenro's Spiteful Lyric",
-            "Fjilnauk's Spiteful Lyric",
-            "Kaficus' Spiteful Lyric",
-            "Hykast's Spiteful Lyric",
-            "Lyrin's Spiteful Lyric",
-        },
-        ['RecklessSong'] = {
-            -- RecklessSong - Level Range 93 - 113 **
-            "Grayleaf's Reckless Renewal", -- 125
-            "Kai's Reckless Renewal",
-            "Reivaj's Reckless Renewal",
-            "Rigelon's Reckless Renewal",
-            "Rytan's Reckless Renewal",
-            "Ruaabri's Reckless Renewal",
-            "Ryken's Reckless Renewal",
-        },
-        ['ColdBuffSong'] = {
-            -- ColdBuffSong - Level Range 72 - 112 **
-            "Fatesong of Zoraxmen", -- 125
-            "Fatesong of Lucca",
-            "Fatesong of Radiwol",
-            "Fatesong of Dekloaz",
-            "Fatesong of Jocelyn",
-            "Fatesong of Protan",
-            "Fatesong of Illdaera",
-            "Fatesong of Fergar",
-            "Fatesong of the Gelidran",
-            "Garadell's Fatesong",
-            "Weshlu's Chillsong Aria",
-        },
-
-        ['DotBuffSong'] = {
-            -- Fire & Magic Dots song
-            "Tatalros' Psalm of Potency", -- 125
-            "Fyrthek Fior's Psalm of Potency",
-            "Velketor's Psalm of Potency",
-            "Akett's Psalm of Potency",
-            "Horthin's Psalm of Potency",
-            "Siavonn's Psalm of Potency",
-            "Wasinai's Psalm of Potency",
-            "Lyrin's Psalm of Potency",
-            "Druzzil's Psalm of Potency",
-            "Erradien's Psalm of Potency",
-        },
         ['FireDotSong'] = {
-            "Kindleheart's Chant of Flame", -- 125
-            "Shak Dathor's Chant of Flame",
-            "Sontalak's Chant of Flame",
-            "Qunard's Chant of Flame",
-            "Nilsara's Chant of Flame",
-            "Gosik's Chant of Flame",
-            "Daevan's Chant of Flame",
-            "Sotor's Chant of Flame",
-            "Talendor's Chant of Flame",
-            "Tjudawos' Chant of Flame",
             "Vulka's Chant of Flame",
             "Tuyen's Chant of Fire",
             "Tuyen's Chant of Flame",
 
+
+            -- Algar possibly nake these a spell line. 
             -- Misc Dot -- Or Minsc Dot (HEY HEY BOO BOO!)
             "Ancient: Chaos Chant",
             "Angstlich's Assonance",
@@ -569,18 +309,6 @@ local _ClassConfig = {
             "Fufil's Curtailing Chant",
         },
         ['IceDotSong'] = {
-
-            -- Ice Dot
-            "Swarn's Chant of Frost",
-            "Sylra Fris' Chant of Frost",
-            "Yelinak's Chant of Frost",
-            "Ekron's Chant of Frost",
-            "Kirchen's Chant of Frost",
-            "Edoth's Chant of Frost",
-            "Kalbrok's Chant of Frost",
-            "Fergar's Chant of Frost",
-            "Gorenaire's Chant of Frost",
-            "Zeixshi-Kar's Chant of Frost",
             "Vulka's Chant of Frost",
             "Tuyen's Chant of Ice",
             "Tuyen's Chant of Frost",
@@ -594,19 +322,6 @@ local _ClassConfig = {
             "Fufil's Curtailing Chant",
         },
         ['PoisonDotSong'] = {
-            -- DotSongs - Level Range 30 - 115
-
-
-            "Marsin's Chant of Poison",
-            "Cruor's Chant of Poison",
-            "Malvus's Chant of Poison",
-            "Nexona's Chant of Poison",
-            "Serisaria's Chant of Poison",
-            "Slaunk's Chant of Poison",
-            "Hiqork's Chant of Poison",
-            "Spinechiller's Chant of Poison",
-            "Severilous' Chant of Poison",
-            "Kildrukaun's Chant of Poison",
             "Vulka's Chant of Poison",
             "Tuyen's Chant of Venom",
             "Tuyen's Chant of Poison",
@@ -620,18 +335,6 @@ local _ClassConfig = {
             "Fufil's Curtailing Chant",
         },
         ['DiseaseDotSong'] = {
-            -- DotSongs - Level Range 30 - 115
-
-            "Goremand's Chant of Disease", -- 125
-            "Coagulus' Chant of Disease",
-            "Zlexak's Chant of Disease",
-            "Hoshkar's Chant of Disease",
-            "Horthin's Chant of Disease",
-            "Siavonn's Chant of Disease",
-            "Wasinai's Chant of Disease",
-            "Shiverback's Chant of Disease",
-            "Trakanon's Chant of Disease",
-            "Vyskudra's Chant of Disease",
             "Vulka's Chant of Disease",
             "Tuyen's Chant of the Plague",
             "Tuyen's Chant of Disease",
@@ -643,19 +346,8 @@ local _ClassConfig = {
             "Fufil's Curtailing Chant",
         },
         ['CureSong'] = {
-            "Aria of Absolution",
-            "Aria of Impeccability",
-            "Aria of Amelioration",
             --"Aria of Innocence", --curse only
             "Aria of Asceticism", --poison/disease Only
-
-        },
-        ['AllianceSong'] = {
-            "Covariance of Sticks and Stones",
-            "Conjunction of Sticks and Stones",
-            "Alliance of Sticks and Stones",
-            "Covenant of Sticks and Stones",
-            "Coalition of Sticks and Stones",
         },
         ['CharmSong'] = {
             "Voice of Suja", -- 125
