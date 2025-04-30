@@ -216,15 +216,17 @@ local _ClassConfig = {
     ['Cures']           = {
         CureNow = function(self, type, targetId)
             local cureSong = Core.GetResolvedActionMapItem('CureSong')
-            if not cureSong or not cureSong() then return false end
-            return Casting.UseSong(cureSong.RankName.Name(), targetId, true)
+            local downtime = mq.TLO.Me.CombatState():lower() ~= "combat"
+            if type:lower() == ("disease" or "poison") and Casting.SongReady(cureSong, downtime) then
+                return Casting.UseSong(cureSong.RankName.Name(), targetId, downtime)
+            end
         end,
     },
     ['ItemSets']        = {
         ['Epic'] = {
             "Blade of Vesagran",
             "Prismatic Dragon Blade",
-        },1
+        },
         ['SymphonyOfBattle'] = {
             "Rapier of Somber Notes",
             "Songblade of the Eternal",
@@ -255,7 +257,6 @@ local _ClassConfig = {
         ['ArcaneSong'] = {
             "Arcane Aria",
         },
-        
         ['BardDPSAura'] = {
             "Aura of the Muse",
             "Aura of Insight",
@@ -299,54 +300,24 @@ local _ClassConfig = {
             "Vulka's Chant of Flame",
             "Tuyen's Chant of Fire",
             "Tuyen's Chant of Flame",
-
-
-            -- Algar possibly nake these a spell line. 
-            -- Misc Dot -- Or Minsc Dot (HEY HEY BOO BOO!)
-            "Ancient: Chaos Chant",
-            "Angstlich's Assonance",
-            "Fufil's Diminishing Dirge",
-            "Fufil's Curtailing Chant",
         },
         ['IceDotSong'] = {
             "Vulka's Chant of Frost",
             "Tuyen's Chant of Ice",
             "Tuyen's Chant of Frost",
-
-
-
-            -- Misc Dot -- Or Minsc Dot (HEY HEY BOO BOO!)
-            "Ancient: Chaos Chant",
-            "Angstlich's Assonance",
-            "Fufil's Diminishing Dirge",
-            "Fufil's Curtailing Chant",
         },
         ['PoisonDotSong'] = {
             "Vulka's Chant of Poison",
             "Tuyen's Chant of Venom",
             "Tuyen's Chant of Poison",
-
-
-
-            -- Misc Dot -- Or Minsc Dot (HEY HEY BOO BOO!)
-            "Ancient: Chaos Chant",
-            "Angstlich's Assonance",
-            "Fufil's Diminishing Dirge",
-            "Fufil's Curtailing Chant",
         },
         ['DiseaseDotSong'] = {
             "Vulka's Chant of Disease",
             "Tuyen's Chant of the Plague",
             "Tuyen's Chant of Disease",
-
-            -- Misc Dot -- Or Minsc Dot (HEY HEY BOO BOO!)
-            "Ancient: Chaos Chant",
-            "Angstlich's Assonance",
-            "Fufil's Diminishing Dirge",
-            "Fufil's Curtailing Chant",
         },
         ['CureSong'] = {
-            --"Aria of Innocence", --curse only
+            --"Aria of Innocence", --curse only, and only 2 x 2 counters
             "Aria of Asceticism", --poison/disease Only
         },
         ['CharmSong'] = {
@@ -394,9 +365,9 @@ local _ClassConfig = {
         },
         ['CalmSong'] = {
             -- CalmSong - Level Range 8+ --Included for manual use with /rgl usemap
-           "Luvwen's Aria of Serenity", -- Level 66
+            "Luvwen's Aria of Serenity", -- Level 66
             "Silent Song of Quellious",  -- Level 61
-             "Kelin's Lugubrious Lament", -- Level 8 (Max Mob Level of 60)
+            "Kelin's Lugubrious Lament", -- Level 8 (Max Mob Level of 60)
         },
     },
     ['HelperFunctions'] = {
@@ -407,7 +378,7 @@ local _ClassConfig = {
                 ItemManager.SwapItemToSlot("offhand", Config:GetSetting('PercInst'))
                 return
             elseif type == "Wind Instruments" then
-                ItemManager.SwapItemToSlot("offhand", Cofig:GetSetting('WindInst'))
+                ItemManager.SwapItemToSlot("offhand", Config:GetSetting('WindInst'))
                 return
             elseif type == "Brass Instruments" then
                 ItemManager.SwapItemToSlot("offhand", Config:GetSetting('BrassInst'))
@@ -1745,6 +1716,7 @@ local _ClassConfig = {
             Category = "Instruments",
             Tooltip = "Item to swap in when no instrument is available or needed.",
             Type = "ClickyItem",
+
             Default = "",
             FAQ = "How do I make sure we put back the correct item after using an instrument?",
             Answer = "Place your desired off-hand item on your cursor and select the proper text box on your Instrument tab.\n" ..
