@@ -350,31 +350,10 @@ local _ClassConfig = {
             "Aria of Asceticism", --poison/disease Only
         },
         ['CharmSong'] = {
-            "Voice of Suja", -- 125
-            "Voice of the Diabo",
-            "Omiyad's Demand",
-            "Voice of Zburator",
-            "Desirae's Demand",
-            "Voice of Jembel",
-            "Dawnbreeze's Demand",
-            "Voice of Silisia",
-            "Silisia's Demand",
-            "Voice of Motlak",
-            "Voice of Kolain",
-            "Voice of Sionachie",
-            "Voice of the Mindshear",
-            "Yowl of the Bloodmoon",
-            "Beckon of the Tuffein",
             "Voice of the Vampire",
             "Call of the Banshee",        -- 65
             "Solon's Bewitching Bravura", -- 39
             "Solon's Song of the Sirens", -- 27
-        },
-        ['ReflexStrike'] = {
-            -- Bard ReflexStrike - Restores mana to group
-            "Reflexive Retort",
-            "Reflexive Rejoinder",
-            "Reflexive Rebuttal",
         },
         ['ChordsAE'] = {
             "Chords of Dissonance",
@@ -393,40 +372,9 @@ local _ClassConfig = {
             "Druzzil's Disillusionment",
         },
         ['ResistSong'] = {
-            -- Resists Song
-            "Psalm of Cooling",
-            "Psalm of Purity",
-            "Psalm of Warmth",
-            "Psalm of Vitality",
             "Psalm of Veeshan",
-            "Psalm of the Forsaken",
-            "Second Psalm of Veeshan",
-            "Psalm of the Restless",
-            "Psalm of the Pious",
         },
         ['MezSong'] = {
-            -- MezSong - Level Range 15 - 114
-            "Slumber of Suja", -- 125
-            "Slumber of the Diabo",
-            -- [] = "Lullaby of Nightfall",
-            -- [] = "Lullaby of Zburator",
-            "Slumber of Zburator",
-            "Slumber of Jembel",
-            -- [] = "Lullaby of Jembel",
-            "Slumber of Silisia",
-            -- [] = "Lullaby of Silisia",
-            "Slumber of Motlak",
-            -- [] = "Lullaby of the Forsaken",
-            "Slumber of Kolain",
-            -- [] = "Lullaby of the Forlorn",
-            "Slumber of Sionachie",
-            -- [] = "Lullaby of the Lost",
-            "Slumber of the Mindshear",
-            "Serenity of Oceangreen",
-            "Amber's Last Lullaby",
-            "Queen Eletyl's Screech",
-            "Command of Queen Veneneu",
-            "Aelfric's Last Lullaby",
             "Vulka's Lullaby",
             "Creeping Dreams",
             "Luvwen's Lullaby",
@@ -439,40 +387,16 @@ local _ClassConfig = {
             "Crission's Pixie Strike",
             "Kelin's Lucid Lullaby",
         },
-        ['MezAESong'] = {
-            -- MezAESong - Level Range 85 - 115 **
-            "Wave of Stupor", -- 125
-            "Wave of Nocturn",
-            "Wave of Sleep",
-            "Wave of Somnolence",
-            "Wave of Torpor",
-            "Wave of Quietude",
-            "Wave of the Conductor",
-            "Wave of Dreams",
-            "Wave of Slumber",
-        },
         ['Jonthan'] = {
-            "Jonthan's Mightful Caretaker",
             "Jonthan's Inspiration",
             "Jonthan's Provocation",
             "Jonthan's Whistling Warsong",
         },
         ['CalmSong'] = {
             -- CalmSong - Level Range 8+ --Included for manual use with /rgl usemap
-            "Kelin's Lugubrious Lament", -- Level 8 (Max Mob Level of 60)
+           "Luvwen's Aria of Serenity", -- Level 66
             "Silent Song of Quellious",  -- Level 61
-            "Luvwen's Aria of Serenity", -- Level 66
-            "Whispersong of Veshma",     -- Level 71
-            "Elddar's Dawnsong",         -- Level 76
-            "Silence of the Void",       -- Level 81
-            "Silence of the Dreamer",    -- Level 86
-            "Silence of the Windsong",   -- Level 91
-            "Silence of the Forsaken",   -- Level 96
-            "Silence of the Silisia",    -- Level 101
-            "Silence of Jembel",         -- Level 106
-            "Silence of Zburator",       -- Level 111
-            "Silence of Quietus",        -- Level 116
-            "Silence of the Forgotten",  -- Level 121
+             "Kelin's Lugubrious Lament", -- Level 8 (Max Mob Level of 60)
         },
         ['ThousandBlades'] = {
             "Thousand Blades",
@@ -486,7 +410,7 @@ local _ClassConfig = {
                 ItemManager.SwapItemToSlot("offhand", Config:GetSetting('PercInst'))
                 return
             elseif type == "Wind Instruments" then
-                ItemManager.SwapItemToSlot("offhand", Config:GetSetting('WindInst'))
+                ItemManager.SwapItemToSlot("offhand", Cofig:GetSetting('WindInst'))
                 return
             elseif type == "Brass Instruments" then
                 ItemManager.SwapItemToSlot("offhand", Config:GetSetting('BrassInst'))
