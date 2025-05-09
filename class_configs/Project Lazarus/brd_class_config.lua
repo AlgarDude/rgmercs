@@ -1,203 +1,48 @@
 --- @type Mq
-local mq          = require('mq')
-local Config      = require('utils.config')
-local Core        = require("utils.core")
-local Targeting   = require("utils.targeting")
-local Casting     = require("utils.casting")
-local Strings     = require("utils.strings")
-local Logger      = require("utils.logger")
-local ItemManager = require('utils.item_manager')
+local mq           = require('mq')
+local Config       = require('utils.config')
+local Core         = require("utils.core")
+local Targeting    = require("utils.targeting")
+local Casting      = require("utils.casting")
+local Strings      = require("utils.strings")
+local Logger       = require("utils.logger")
+local ItemManager  = require('utils.item_manager')
 
-local Tooltips    = {
-    Epic            = 'Item: Casts Epic Weapon Ability',
-    BardRunBuff     = "Song Line: Movement Speed Modifier",
-    MainAriaSong    = "Song Line: Spell Damage Focus / Haste v3 Modifier",
-    WarMarchSong    = "Song Line: Melee Haste / DS / STR/ATK Increase",
-    SufferingSong   = "Song Line: Melee Proc With Damage and Agro Reduction",
-    SpitefulSong    = "Song Line: Increase AC / Agro Increase Proc",
-    SprySonataSong  = "Song Line: Magic Asorb / AC Increase / Mitigate Damage Shield / Resist Spells",
-    DotBuffSong     = "Song Line: Fire and Magic DoT Modifier",
-    CrescendoSong   = "Song Line: Group v2 Increase Hit Points and Mana",
-    ArcaneSong      = "Song Line: Group Melee and Spell Proc",
-    InsultSong      = "Song Line: Single Target DD (Group Spell Proc Effect at higher levels)",
-    DichoSong       = "Song Line: HP/Mana/End Increase / Melee and Caster Damage Increase",
-    BardDPSAura     = "Aura Line: OverHaste / Melee and Caster DPS",
-    BardRegenAura   = "Aura Line: HP/Mana Regen",
-    AreaRegenSong   = "Song Line: AE HP/Mana Regen",
-    GroupRegenSong  = "Song Line: Group HP/Mana Regen",
-    FireBuffSong    = "Song Line: Fire DD Spell Damage Increase and Effiency",
-    SlowSong        = "Song Line: ST Melee Attack Slow",
-    AESlowSong      = "Song Line: PBAE Melee Attack Slow",
-    AccelerandoSong = "Song Line: Reduce Beneficial Spell Casttime / Agro Reduction Modifier",
-    RecklessSong    = "Song Line: Increase Crit Heal and Crit HoT Chance",
-    ColdBuffSong    = "Song Line: Cold DD Damage Increase and Effiency",
-    FireDotSong     = "Song Line: Fire DoT and minor resist debuff",
-    DiseaseDotSong  = "Song Line: Disease DoT and minor resist debuff",
-    PoisonDotSong   = "Song Line: Poison DoT and minor resist debuff",
-    IceDotSong      = "Song Line: Ice DoT and minor resist debuff",
-    EndBreathSong   = "Song Line: Enduring Breath",
-    CureSong        = "Song Line: Single Target Cure: Poison/Disease/Corruption",
-    AllianceSong    = "Song Line: Mob Debuff Increase Insult Damage for other Bards",
-    CharmSong       = "Song Line: Charm Mob",
-    ReflexStrike    = "Disc Line: Attack 4 times to restore Mana to Group",
-    ChordsAE        = "Song Line: PBAE Damage if Target isn't moving",
-    LowAriaSong     = "Song Line: Warsong and BattleCry prior to combination of effects into Aria",
-    AmpSong         = "Song Line: Increase Singing Skill",
-    DispelSong      = "Song Line: Dispel a Benefical Effect",
-    ResistSong      = "Song Line: Damage Shield / Group Resist Increase",
-    MezSong         = "Song Line: Single Target Mez",
-    MezAESong       = "Song Line: PBAE Mez",
-    Bellow          = "AA: DD + Resist Debuff that leads to a much larger DD upon expiry",
-    Spire           = "AA: Lowers Incoming Melee Damage / Increases Melee and Spell Damage",
-    FuneralDirge    = "AA: DD / Increases Melee Damage Taken on Target",
-    FierceEye       = "AA: Increases Base and Crit Melee Damage / Increase Proc Rate / Increase Spell Crit Chance",
-    QuickTime       = "AA: Hundred Hands Effect / Increase Melee Hit / Increase Atk",
-    BladedSong      = "AA: Reverse Damage Shield",
-    Jonthan         = "Song Line: (Self-only) Haste / Melee Damage Modifier / Melee Min Damage Modifier / Proc Modifier",
+local Tooltips     = {
+    Epic           = 'Item: Casts Epic Weapon Ability',
+    BardRunBuff    = "Song Line: Movement Speed Modifier",
+    MainAriaSong   = "Song Line: Spell Damage Focus / Haste v3 Modifier",
+    WarMarchSong   = "Song Line: Melee Haste / DS / STR/ATK Increase",
+    ArcaneSong     = "Song Line: Group Melee and Spell Proc",
+    BardDPSAura    = "Aura Line: OverHaste / Melee and Caster DPS",
+    BardRegenAura  = "Aura Line: HP/Mana Regen",
+    AreaRegenSong  = "Song Line: AE HP/Mana Regen",
+    GroupRegenSong = "Song Line: Group HP/Mana Regen",
+    SlowSong       = "Song Line: ST Melee Attack Slow",
+    AESlowSong     = "Song Line: PBAE Melee Attack Slow",
+    FireDotSong    = "Song Line: Fire DoT and minor resist debuff",
+    DiseaseDotSong = "Song Line: Disease DoT and minor resist debuff",
+    PoisonDotSong  = "Song Line: Poison DoT and minor resist debuff",
+    IceDotSong     = "Song Line: Ice DoT and minor resist debuff",
+    EndBreathSong  = "Song Line: Enduring Breath",
+    CureSong       = "Song Line: Single Target Cure: Poison/Disease/Corruption",
+    CharmSong      = "Song Line: Charm Mob",
+    ReflexStrike   = "Disc Line: Attack 4 times to restore Mana to Group",
+    LowAriaSong    = "Song Line: Warsong and BattleCry prior to combination of effects into Aria",
+    AmpSong        = "Song Line: Increase Singing Skill",
+    DispelSong     = "Song Line: Dispel a Benefical Effect",
+    ResistSong     = "Song Line: Damage Shield / Group Resist Increase",
+    MezSong        = "Song Line: Single Target Mez",
+    MezAESong      = "Song Line: PBAE Mez",
+    Bellow         = "AA: DD + Resist Debuff that leads to a much larger DD upon expiry",
+    FuneralDirge   = "AA: DD / Increases Melee Damage Taken on Target",
+    FierceEye      = "AA: Increases Base and Crit Melee Damage / Increase Proc Rate / Increase Spell Crit Chance",
+    QuickTime      = "AA: Hundred Hands Effect / Increase Melee Hit / Increase Atk",
+    Jonthan        = "Song Line: (Self-only) Haste / Melee Damage Modifier / Melee Min Damage Modifier / Proc Modifier",
 }
 
-local function generateSongList()
-    if mq.TLO.Plugin('MQ2Medley').IsLoaded() then
-        Core.DoCmd("/plugin medley unload")
-    end
-    Logger.log_info(
-        "Bard Gem List being calculated. *** PLEASE NOTE: Click-happy behavior when selecting songs in the configuration may lead to low uptime or songs not being gemmed at all! YOU HAVE BEEN WARNED. ***")
-    local songCache = { CollapseGems = true, }
-    local songCount = 0
-    local myLevel = mq.TLO.Me.Level()
-    --------------------------------------------------------------------------------------
-    local function addSong(songToAdd)
-        if songCount >= mq.TLO.Me.NumGems() then return end
-        songCount = songCount + 1
-        table.insert(songCache, {
-            gem = songCount,
-            spells = {
-                { name = songToAdd, cond = function(self) return true end, },
-            },
-        })
-    end
-
-    local function ConditionallyAddSong(settingToCheck, songToAdd, minLevel, configType)
-        if myLevel < minLevel then return false end
-        if configType == "combo" then
-            if Config:GetSetting(settingToCheck) > 1 then addSong(songToAdd) end
-        else --if a third category is ever needed this can become "toggle" or somesuch
-            if Config:GetSetting(settingToCheck) then addSong(songToAdd) end
-        end
-    end
-
-    local function AddCriticalSongs()
-        ConditionallyAddSong("DoAEMez", "MezAESong", 85)
-        ConditionallyAddSong("DoSTMez", "MezSong", 15)
-        ConditionallyAddSong("DoSTSlow", "SlowSong", 23)
-        ConditionallyAddSong("DoAESlow", "AESlowSong", 20)
-        if Config:GetSetting('UseRunBuff') == 2 and myLevel >= 49 then
-            addSong("LongRunBuff")
-        elseif Config:GetSetting('UseRunBuff') == 3 then
-            addSong("ShortRunBuff")
-        end
-        ConditionallyAddSong("UseEndBreath", "EndBreathSong", 16)
-        ConditionallyAddSong("CharmOn", "CharmSong", 16)
-        ConditionallyAddSong("DoDispel", "DispelSong", 40)
-    end
-
-    local function AddMainGroupDPSSongs()
-        if myLevel >= 10 then addSong('WarMarchSong') end --leaving this mandatory but may revisit pending feedback
-        if myLevel >= 64 or (myLevel >= 45 and Config:GetSetting('AriaBeforeOverhaste')) then addSong('MainAriaSong') end
-        ConditionallyAddSong("UseArcane", "ArcaneSong", 70, "combo")
-        ConditionallyAddSong('UseDicho', 'DichoSong', 101, "combo")
-    end
-
-    local function AddSelfDPSSongs()
-        ConditionallyAddSong("UseAlliance", "AllianceSong", 102)
-        if Config:GetSetting('UseInsult') > 1 and myLevel >= 85 then addSong("InsultSong") end
-        ConditionallyAddSong("UseFireDots", "FireDotSong", 30)
-        ConditionallyAddSong("UseIceDots", "IceDotSong", 30)
-        ConditionallyAddSong("UseDiseaseDots", "DiseaseDotSong", 30)
-        ConditionallyAddSong("UsePoisonDots", "PoisonDotSong", 30)
-        ConditionallyAddSong("UseJonthan", "Jonthan", 7, "combo")
-        if Config:GetSetting('UseInsult') == 3 and myLevel >= 90 then addSong("InsultSong2") end
-    end
-
-    local function AddMeleeDPSSongs()
-        ConditionallyAddSong("UseSuffering", "SufferingSong", 89, "combo")
-    end
-
-    local function AddTankSongs()
-        ConditionallyAddSong("UseSpiteful", "SpitefulSong", 90, "combo")
-        ConditionallyAddSong("UseSpry", "SprySonataSong", 77, "combo")
-        ConditionallyAddSong("UseResist", "ResistSong", 33, "combo")
-    end
-
-    local function AddHealerSongs()
-        ConditionallyAddSong("UseReckless", "RecklessSong", 93, "combo")
-    end
-
-    local function AddCasterDPSSongs()
-        ConditionallyAddSong("UseFireBuff", "FireBuffSong", 78, "combo")
-        ConditionallyAddSong("UseColdBuff", "ColdBuffSong", 72, "combo")
-        ConditionallyAddSong("UseDotBuff", "DotBuffSong", 78, "combo")
-    end
-
-    local function AddRegenSongs()
-        if Config:GetSetting('RegenSong') == 2
-        then
-            addSong("GroupRegenSong")
-        elseif Config:GetSetting('RegenSong') == 3 and myLevel >= 58
-        then
-            addSong("AreaRegenSong")
-        end
-        ConditionallyAddSong("UseCrescendo", "CrescendoSong", 75)
-        ConditionallyAddSong("UseAmp", "AmpSong", 30, "combo")
-    end
-    -----------------------------------------------------------------------------------------
-
-    AddCriticalSongs()
-    if Core.IsModeActive("General") then
-        AddMainGroupDPSSongs()
-        AddRegenSongs()
-        AddSelfDPSSongs()
-        AddMeleeDPSSongs()
-        AddCasterDPSSongs()
-        AddHealerSongs()
-        AddTankSongs()
-    elseif Core.IsModeActive("Tank") then -- Tank
-        AddTankSongs()
-        AddMainGroupDPSSongs()
-        AddHealerSongs()
-        AddMeleeDPSSongs()
-        AddRegenSongs()
-        AddSelfDPSSongs()
-        AddCasterDPSSongs()
-    elseif Core.IsModeActive("Caster") then
-        AddMainGroupDPSSongs()
-        AddCasterDPSSongs()
-        AddRegenSongs()
-        AddSelfDPSSongs()
-        AddMeleeDPSSongs()
-        AddHealerSongs()
-        AddTankSongs()
-    elseif Core.IsModeActive("Healer") then -- Healer
-        AddHealerSongs()
-        AddMainGroupDPSSongs()
-        AddRegenSongs()
-        AddSelfDPSSongs()
-        AddCasterDPSSongs()
-        AddTankSongs()
-        AddMeleeDPSSongs()
-    else
-        Logger.log_warn("Bard Mode not found!  Adding DPS songs, but you should select a mode.")
-        AddMainGroupDPSSongs()
-        AddSelfDPSSongs()
-        AddRegenSongs()
-        AddMeleeDPSSongs()
-        AddCasterDPSSongs()
-    end
-    return songCache
-end
-
 local _ClassConfig = {
-    _version            = "2.1 - Project Lazarus",
+    _version            = "2.2 - Project Lazarus",
     _author             = "Algar, Derple, Grimmier, Tiddliestix, SonicZentropy",
     ['Modes']           = { --simply determine the priority you gem spells in. Perhaps one day this could be configured to save different loadouts/change options.
         'General',
@@ -369,6 +214,9 @@ local _ClassConfig = {
             "Silent Song of Quellious",  -- Level 61
             "Kelin's Lugubrious Lament", -- Level 8 (Max Mob Level of 60)
         },
+        ['ThousandBlades'] = {
+            "Thousand Blades",
+        },
     },
     ['HelperFunctions'] = {
         SwapInst = function(type)
@@ -509,8 +357,11 @@ local _ClassConfig = {
                 name = "Funeral Dirge",
                 type = "AA",
             },
-            {
-                name = "Spire of the Minstrels",
+            { -- Spire, the SpireChoice setting will determine which ability is displayed/used.
+                name_func = function(self)
+                    local spireAbil = string.format("Fundament: %s Spire of Nature", Config.Constants.SpireChoices[Config:GetSetting('SpireChoice') or 4])
+                    return Casting.CanUseAA(spireAbil) and spireAbil or "Spire Not Purchased/Selected"
+                end,
                 type = "AA",
             },
             {
@@ -522,7 +373,7 @@ local _ClassConfig = {
                 type = "AA",
             },
             {
-                name = "Thousand Blades",
+                name = "ThousandBlades",
                 type = "Disc",
             },
             {
@@ -997,6 +848,36 @@ local _ClassConfig = {
                     if not Config:GetSetting('DoCoating') then return false end
                     return mq.TLO.Me.PctHPs() <= Config:GetSetting('EmergencyStart') and Casting.SelfBuffItemCheck(itemName)
                 end,
+            },
+        },
+    },
+    ['SpellList']       = { -- New style spell list, gemless, priority-based. Will use the first set whose conditions are met.
+        {
+            name = "Default Mode",
+            -- cond = function(self) return true end, --Code kept here for illustration, if there is no condition to check, this line is not required
+            spells = {
+                { name = "MezSong",          cond = function(self) return Config:GetSetting('DoSTMez') end, },
+                { name = "SlowSong",         cond = function(self) return Config:GetSetting('DoAEMez') end, },
+                { name = "AESlowSong",       cond = function(self) return Config:GetSetting('CharmOn') end, },
+                { name = "RunBuff",          cond = function(self) return Config:GetSetting('DoTash') end, },
+                { name = "EndBreathSong",    cond = function(self) return Config:GetSetting('DoSlow') and not Casting.CanUseAA("Dreary Deeds") end, },
+                { name = "CharmSong",        cond = function(self) return Config:GetSetting('DoCrippleSpell') end, },
+                { name = "DispelSong",       cond = function(self) return Config:GetSetting('DoAEStun') > 1 end, },
+                { name = "GroupRegenSong",   cond = function(self) return Config:GetSetting('DoNDTBuff') end, },
+                { name = "AreaRegenSong",    cond = function(self) return Config:GetSetting('DoProcBuff') end, },
+                { name = "AmpSong",          cond = function(self) return Config:GetSetting('DoStripBuff') end, },
+                { name = "WarMarchSong",     cond = function(self) return Config:GetSetting('DoColored') end, },
+                { name = "MainAriaSong",     cond = function(self) return Config:GetSetting('DoChroma') end, },
+                { name = "ArcaneSong",       cond = function(self) return Config:GetSetting('DoNuke') end, },
+                { name = "ResistSong",       cond = function(self) return Config:GetSetting('DoStrangleDot') end, },
+                { name = "Jonthan",          cond = function(self) return Config:GetSetting('RuneChoice') == 1 end, },
+                { name = "FireDotSong",      cond = function(self) return Config:GetSetting('DoMindDot') end, },
+                { name = "IceDotSong",       cond = function(self) return Config:GetSetting('DoMindDot') end, },
+                { name = "PoisonDotSong",    cond = function(self) return Config:GetSetting('DoMindDot') end, },
+                { name = "DiseaseDotSong",   cond = function(self) return Config:GetSetting('DoMindDot') end, },
+                { name = "SingleRune",       cond = function(self) return Config:GetSetting('RuneChoice') == 1 end, },
+                { name = "GroupRune",        cond = function(self) return Config:GetSetting('RuneChoice') == 2 end, },
+                { name = "GroupSpellShield", cond = function(self) return Config:GetSetting('DoGroupSpellShield') end, },
             },
         },
     },
@@ -1723,6 +1604,5 @@ local _ClassConfig = {
                 "Also, make sure you have Auto Swap Instrument enabled.",
         },
     },
-    ['Spells']          = { getSpellCallback = generateSongList, },
 }
 return _ClassConfig
