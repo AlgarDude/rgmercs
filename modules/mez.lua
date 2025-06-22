@@ -411,22 +411,23 @@ function Module:MezNow(mezId, useAE, useAA)
         if not aeMezSpell or not aeMezSpell() then return end
         Logger.log_debug("Performing AE MEZ --> %d", mezId)
 
-        if not Casting.SpellReady(aeMezSpell) then
-            -- previous code checked for the enchanter class, but AAready will simply return false on any other class
-            -- lets only try to use beam of slumber if we are in global, since a beam may not catch everything.
-            if useAA and self.settings.DoAAMez and Casting.AAReady("Beam of Slumber") then
-                -- This is a beam AE so I need ot face the target and cast.
-                Core.DoCmd("/face fast")
-                -- Delay to wait till face finishes
-                mq.delay(5)
-                Comms.HandleAnnounce(string.format("\aw I AM \ar AE AA MEZZING \ag Beam of Slumber"), Config:GetSetting('MezAnnounceGroup'),
-                    Config:GetSetting('MezAnnounce'))
-                Casting.UseAA("Beam of Slumber", mezId)
-                Comms.HandleAnnounce(string.format("\aw I JUST CAST \ar AE AA MEZ \ag Beam of Slumber"), Config:GetSetting('MezAnnounceGroup'),
-                    Config:GetSetting('MezAnnounce'))
-                mq.doevents()
-                return
-            elseif (mq.TLO.Me.GemTimer(aeMezSpell)() or -1) == 0 then
+        -- previous code checked for the enchanter class, but AAready will simply return false on any other class
+        -- lets only try to use beam of slumber if we are in global, since a beam may not catch everything.
+        if useAA and self.settings.DoAAMez and Casting.AAReady("Beam of Slumber") then
+            -- This is a beam AE so I need ot face the target and cast.
+            Core.DoCmd("/face fast")
+            -- Delay to wait till face finishes
+            mq.delay(5)
+            Comms.HandleAnnounce(string.format("\aw I AM \ar AE AA MEZZING \ag Beam of Slumber"), Config:GetSetting('MezAnnounceGroup'),
+                Config:GetSetting('MezAnnounce'))
+            Casting.UseAA("Beam of Slumber", mezId)
+            Comms.HandleAnnounce(string.format("\aw I JUST CAST \ar AE AA MEZ \ag Beam of Slumber"), Config:GetSetting('MezAnnounceGroup'),
+                Config:GetSetting('MezAnnounce'))
+            mq.doevents()
+            return
+        elseif (mq.TLO.Me.GemTimer(aeMezSpell)() or -1) == 0 then
+                
+            if not Casting.SpellReady(aeMezSpell) then
                 local maxWaitToMez = 1500 + (mq.TLO.Window("CastingWindow").Open() and (mq.TLO.Me.Casting.MyCastTime() or 3000) or 0)
                 while maxWaitToMez > 0 do
                     Logger.log_verbose("MEZ: Waiting for cast to finish to use AE Mez.")
@@ -441,22 +442,23 @@ function Module:MezNow(mezId, useAE, useAA)
                     Logger.log_verbose("Mez: Timeout while waiting to use AE Mez (%s).", aeMezSpell)
                     return
                 end
+            end
+            
+        else
+            Logger.log_verbose("Mez: Our AEMez Spell (%s) or AA does not appear to be ready.", aeMezSpell)
+        end
+
+        if Casting.SpellReady(aeMezSpell) then
+            Comms.HandleAnnounce(string.format("\aw I AM \ar AE SPELL MEZZING \ag %s", aeMezSpell.RankName()), Config:GetSetting('MezAnnounceGroup'),
+                Config:GetSetting('MezAnnounce'))
+
+            if Core.MyClassIs("brd") then
+                Casting.UseSong(aeMezSpell.RankName(), mezId, false, 3)
             else
-                Logger.log_verbose("Mez: Our AEMez Spell (%s) or AA does not appear to be ready.", aeMezSpell)
+                Casting.UseSpell(aeMezSpell.RankName(), mezId, false)
             end
-
-            if Casting.SpellReady(aeMezSpell) then
-                Comms.HandleAnnounce(string.format("\aw I AM \ar AE SPELL MEZZING \ag %s", aeMezSpell.RankName()), Config:GetSetting('MezAnnounceGroup'),
-                    Config:GetSetting('MezAnnounce'))
-
-                if Core.MyClassIs("brd") then
-                    Casting.UseSong(aeMezSpell.RankName(), mezId, false, 3)
-                else
-                    Casting.UseSpell(aeMezSpell.RankName(), mezId, false)
-                end
-                Comms.HandleAnnounce(string.format("\aw I JUST CAST \ar AE SPELL MEZ \ag %s", aeMezSpell.RankName()), Config:GetSetting('MezAnnounceGroup'),
-                    Config:GetSetting('MezAnnounce'))
-            end
+            Comms.HandleAnnounce(string.format("\aw I JUST CAST \ar AE SPELL MEZ \ag %s", aeMezSpell.RankName()), Config:GetSetting('MezAnnounceGroup'),
+                Config:GetSetting('MezAnnounce'))
         end
         -- In case they're mez immune
         mq.doevents()
@@ -493,8 +495,8 @@ function Module:MezNow(mezId, useAE, useAA)
             if (mq.TLO.Me.GemTimer(mezSpell)() or -1) == 0 then
                 local maxWaitToMez = 1500 + (mq.TLO.Window("CastingWindow").Open() and (mq.TLO.Me.Casting.MyCastTime() or 3000) or 0)
                 while maxWaitToMez > 0 do
-                    Logger.log_verbose("MEZ: Waiting for cast to finish to use AE Mez.")
-                    if Casting.SpellReady(aeMezSpell) then
+                    Logger.log_verbose("MEZ: Waiting for cast to finish to use ST Mez.")
+                    if Casting.SpellReady(mezSpell) then
                         break
                     end
                     mq.delay(50)
