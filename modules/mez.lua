@@ -582,13 +582,8 @@ function Module:AEMezCheck()
         end
         if mobCount > angryMobCount then return end
     end
-    -- Checking to see if we are auto attacking, or if we are actively casting a spell (Algar comment: we turn attack off, why do we care about auto-attacking enchanters here?)
-    -- purpose for this is to catch auto attacking enchanters and bards who never are not casting.
-    if mq.TLO.Me.Combat() or mq.TLO.Me.Casting() then
-        Logger.log_debug("\awNOTICE:\ax Stopping cast or song so I can cast AE mez.")
-        Core.DoCmd("/stopcast")
-        Core.DoCmd("/stopsong")
-    end
+
+    self:StopCast()
 
     -- Call MezNow and pass the AE flag and allow it to use the AA if the Spell isn't ready.
     -- This won't effect bards at all.
@@ -621,6 +616,8 @@ function Module:AddCCTarget(mobId)
         Logger.log_debug("\awNOTICE:\ax Unable to mez %d - it is immune", mobId)
         return false
     end
+
+    self:StopAttack()
 
     Targeting.SetTarget(mobId)
 
@@ -768,17 +765,10 @@ function Module:ProcessMezList()
                         table.insert(removeList, id)
                     else
                         Logger.log_debug("\ayProcessMezList(%d) :: Mob needs mezed.", id)
-                        if mq.TLO.Me.Combat() then
-                            Logger.log_debug(
-                                " \awNOTICE:\ax Stopping Melee/Singing -- must retarget to start mez.")
-                            Core.DoCmd("/attack off")
-                            mq.delay("3s", function() return not mq.TLO.Me.Combat() end)
-                        end
-                        if mq.TLO.Me.Casting() then
-                            Core.DoCmd("/stopcast")
-                            Core.DoCmd("/stopsong")
-                            mq.delay("3s", function() return not mq.TLO.Window("CastingWindow").Open() end)
-                        end
+
+                        self:StopAttack()
+
+                        self:StopCast()
 
                         -- Algar note 4/5/2025: This entire thing could likely be refactored. It works much better than before, where we would have ae mez checked once and then we would use 6 single target mezzes instead.
                         -- The choice of using the autotarget for an AEMez really sucks on targets that die quickly; but I suppose the mez isn't as important if they do.
@@ -915,5 +905,21 @@ end
 mq.bind("/rgupmez", function()
     Modules:ExecModule("Mez", "UpdateMezList")
 end)
+
+function Module:StopAttack()
+    if mq.TLO.Me.Combat() then
+        Logger.log_debug("\awMEZ:\ax Stopping attack to avoid breaking mez.")
+        Core.DoCmd("/attack off")
+        mq.delay(500, function() return not mq.TLO.Me.Combat() end)
+    end
+end
+
+function Module:StopCast()
+    if mq.TLO.Me.Casting() then
+        Logger.log_debug("\awMEZ:\ax Stopping cast or song so I can mez.")
+        mq.TLO.Me.StopCast()
+        mq.delay("3s", function() return not mq.TLO.Window("CastingWindow").Open() end)
+    end
+end
 
 return Module
