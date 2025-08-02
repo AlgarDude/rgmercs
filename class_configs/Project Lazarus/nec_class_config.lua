@@ -452,7 +452,7 @@ local _ClassConfig = {
         },
         ['Scent'] = {
             {
-                name = "Scent of Thule",
+                name = "Scent of Terris",
                 type = "AA",
                 cond = function(self, aaName, target)
                     return Casting.DetAACheck(aaName)
@@ -486,13 +486,6 @@ local _ClassConfig = {
                 type = "AA",
                 cond = function(self, aaName)
                     return Casting.SelfBuffAACheck(aaName) and Targeting.GetTargetPctHPs() < 50
-                end,
-            },
-            {
-                name = "Dying Grasp",
-                type = "AA",
-                cond = function(self, aaName)
-                    return Casting.SelfBuffAACheck(aaName) and mq.TLO.Me.PctAggro() <= 50
                 end,
             },
             {
@@ -580,22 +573,6 @@ local _ClassConfig = {
                 type = "Item",
             },
             {
-                name = "Funeral Pyre",
-                type = "AA",
-            },
-            {
-                name = "Hand of Death",
-                type = "AA",
-            },
-            {
-                name = "Mercurial Torment",
-                type = "AA",
-            },
-            {
-                name = "Heretic's Twincast",
-                type = "AA",
-            },
-            {
                 name = "Gathering Dusk",
                 type = "AA",
                 cond = function(self, aaName, target) return Targeting.IsNamed(target) end,
@@ -606,10 +583,6 @@ local _ClassConfig = {
                 cond = function(self, aaName)
                     return Casting.SelfBuffAACheck(aaName)
                 end,
-            },
-            {
-                name = "Frenzy of the Dead",
-                type = "AA",
             },
             {
                 name = "Rise of Bones",
@@ -629,19 +602,13 @@ local _ClassConfig = {
                     return Casting.SelfBuffAACheck(aaName)
                 end,
             },
-            {
-                name = "Spire of Necromancy",
-                type = "AA",
-                cond = function(self, aaName)
-                    return Casting.SelfBuffAACheck(aaName)
+            { -- Spire, the SpireChoice setting will determine which ability is displayed/used.
+                name_func = function(self)
+                    local spireAbil = string.format("Fundament: %s Spire of Necromancy", Config.Constants.SpireChoices[Config:GetSetting('SpireChoice') or 4])
+                    return Casting.CanUseAA(spireAbil) and spireAbil or "Spire Not Purchased/Selected"
                 end,
+                type = "AA",
             },
-            --{
-            --    name = "BestowBuff",
-            --    type = "Spell",
-            --    active_cond = function(self, spell) return Casting.IHaveBuff(spell) end,
-            --    cond = function(self, spell) return not Casting.IHaveBuff(spell) end,
-            --},
         },
         ['ArcanumWeave'] = {
             {
@@ -676,14 +643,6 @@ local _ClassConfig = {
                 custom_func = function(_)
                     Core.DoCmd("/stand")
                     return true
-                end,
-            },
-            {
-                name = "Mortifier's Unity",
-                type = "AA",
-                active_cond = function(self) return Casting.IHaveBuff("Shield of Darkness") and Casting.IHaveBuff("Otherside") end,
-                cond = function(self, aaName)
-                    return Config:GetSetting('DoUnity') and Casting.SelfBuffAACheck(aaName)
                 end,
             },
             {
@@ -754,13 +713,6 @@ local _ClassConfig = {
             },
             {
                 name = "Aegis of Kildrukaun",
-                type = "AA",
-                cond = function(self, aaName)
-                    return Casting.PetBuffAACheck(aaName)
-                end,
-            },
-            {
-                name = "Fortify Companion",
                 type = "AA",
                 cond = function(self, aaName)
                     return Casting.PetBuffAACheck(aaName)
@@ -1043,6 +995,22 @@ local _ClassConfig = {
             Default = false,
             FAQ = "Why am I not using a Scent debuff?",
             Answer = "You can enable Scent use on the Spells and Abilities tab.",
+        },
+        ['SpireChoice']       = {
+            DisplayName = "Spire Choice:",
+            Category = "Buffs",
+            Index = 6,
+            Tooltip = "Choose which Fundament you would like to use during burns:\n" ..
+                "First Spire: DoT Crit Chance Buff.\n" ..
+                "Second Spire: Pet Damage Proc Buff.\n" ..
+                "Third Spire: DoT Crit Damage Buff.",
+            Type = "Combo",
+            ComboOptions = Config.Constants.SpireChoices,
+            Default = 3,
+            Min = 1,
+            Max = #Config.Constants.SpireChoices,
+            FAQ = "Why am I using the wrong spire?",
+            Answer = "You can choose which spire you prefer in the Class Options.",
         },
     },
 
