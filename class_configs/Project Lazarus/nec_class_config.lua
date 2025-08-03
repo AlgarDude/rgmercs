@@ -94,7 +94,7 @@ local _ClassConfig = {
             "Lesser Shielding",
             "Minor Shielding",
         },
-        ['SelfRune1'] = {
+        ['SelfRune'] = {
             "Dull Pain",
             "Force Shield",
             "Manaskin",
@@ -102,10 +102,6 @@ local _ClassConfig = {
             "Steelskin",
             "Leatherskin",
             "Shieldskin",
-        },
-        ['FDSpell'] = {
-            -- Fd Spell
-            "Death Peace",
         },
         ['CharmSpell'] = {
             "Word of Chaos",
@@ -142,7 +138,7 @@ local _ClassConfig = {
             "Shadow Compact",
             "Leech",
         },
-        ['PoisonNuke1'] = {
+        ['PoisonNuke'] = {
             "Acikin",
             "Neurotoxin",
             "Ancient: Lifebane",
@@ -152,8 +148,18 @@ local _ClassConfig = {
             "Shock of Poison",
         },
         ['FireDot'] = {
-            "Pyre of Mori",
             "Dread Pyre",
+            "Pyre of Mori",
+            "Night Fire",
+            "Funeral Pyre of Kelador",
+            "Pyrocruor",
+            "Ignite Blood",
+            "Boil Blood",
+            "Heat Blood",
+        },
+        ['FireDot2'] = {
+            "Dread Pyre",
+            "Pyre of Mori",
             "Night Fire",
             "Funeral Pyre of Kelador",
             "Pyrocruor",
@@ -166,6 +172,13 @@ local _ClassConfig = {
             "Splurt",
         },
         ['Magic2'] = {
+            "Ancient: Curse of Mori",
+            "Dark Nightmare",
+            "Horror",
+            "Imprecation",
+            "Dark Soul",
+        },
+        ['Magic2_2'] = {
             "Ancient: Curse of Mori",
             "Dark Nightmare",
             "Horror",
@@ -293,10 +306,10 @@ local _ClassConfig = {
         ['Pustules'] = {
             "Necrotic Pustules",
         },
-        ['GroupLeech'] = {
-            "Night Stalker",
-            "Zevfeer's Theft of Vitae",
-        },
+        -- ['GroupLeech'] = {
+        --     "Night Stalker",
+        --     "Zevfeer's Theft of Vitae",
+        -- },
         ['FeignSpell'] = {
             "Death Peace",
             "Comatose",
@@ -466,6 +479,90 @@ local _ClassConfig = {
                 end,
             },
         },
+        ['NewDPS'] = {
+            {
+                name = "Wake the Dead",
+                type = "AA",
+                cond = function(self, aaName)
+                    return mq.TLO.SpawnCount("corpse radius 100")() >= Config:GetSetting('WakeDeadCorpseCnt')
+                end,
+            },
+            {
+                name = "Poison3",
+                type = "Spell",
+                cond = function(self, spell)
+                    return Casting.DotSpellCheck(spell)
+                end,
+            },
+            {
+                name = "Poison2",
+                type = "Spell",
+                cond = function(self, spell, target)
+                    return Targeting.IsNamed(target) and Casting.DotSpellCheck(spell)
+                end,
+            },
+            {
+                name = "FireDot",
+                type = "Spell",
+                cond = function(self, spell, target)
+                    return Targeting.IsNamed(target) and Casting.DotSpellCheck(spell)
+                end,
+            },
+            {
+                name = "Magic2",
+                type = "Spell",
+                cond = function(self, spell, target)
+                    return Targeting.IsNamed(target) and Casting.DotSpellCheck(spell)
+                end,
+            },
+            {
+                name = "Disease1",
+                type = "Spell",
+                cond = function(self, spell, target)
+                    return Casting.DotSpellCheck(spell)
+                end,
+            },
+            {
+                name = "FireDot2",
+                type = "Spell",
+                cond = function(self, spell, target)
+                    return Targeting.IsNamed(target) and Casting.DotSpellCheck(spell)
+                end,
+            },
+            {
+                name = "Magic2_2",
+                type = "Spell",
+                cond = function(self, spell, target)
+                    return Targeting.IsNamed(target) and Casting.DotSpellCheck(spell)
+                end,
+            },
+            {
+                name = "Scythe of the Shadowed Soul",
+                type = "Item",
+                cond = function(self, itemName, target)
+                    return Targeting.IsNamed(target) and Targeting.MobNotLowHP(target) and Casting.DetItemCheck(itemName, target)
+                end,
+            },
+            {
+                name = "CallNuke",
+                type = "Spell",
+                cond = function(self, spell, target)
+                    return Targeting.MobHasLowHP(target) and Casting.OkayToNuke()
+                end,
+            },
+            {
+                name = "PoisonNuke",
+                type = "Spell",
+                cond = function(self, spell, target)
+                    return Casting.OkayToNuke()
+                end,
+            },
+            {
+                name = "LifeTap",
+                type = "Spell",
+                -- TO DO
+            },
+        },
         ['DPS'] = {
             {
                 name = "Wake the Dead",
@@ -538,7 +635,7 @@ local _ClassConfig = {
                 cond = function(self, spell) return Casting.DotSpellCheck(spell) end,
             },
             {
-                name = "PoisonNuke1",
+                name = "PoisonNuke",
                 type = "Spell",
                 cond = function(self, _) return Casting.OkayToNuke() end,
             },
@@ -652,7 +749,7 @@ local _ClassConfig = {
                 cond = function(self, spell) return Casting.SelfBuffCheck(spell) end,
             },
             {
-                name = "SelfRune1",
+                name = "SelfRune",
                 type = "Spell",
                 active_cond = function(self, spell) return Casting.IHaveBuff(spell) end,
                 cond = function(self, spell) return Casting.SelfBuffCheck(spell) end,
@@ -769,7 +866,7 @@ local _ClassConfig = {
         {
             gem = 4,
             spells = {
-                { name = "PoisonNuke1", cond = function(self) return mq.TLO.Me.Level() < 75 end, },
+                { name = "PoisonNuke", cond = function(self) return mq.TLO.Me.Level() < 75 end, },
             },
         },
         {
