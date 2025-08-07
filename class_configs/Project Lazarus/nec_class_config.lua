@@ -167,30 +167,30 @@ local _ClassConfig = {
             "Boil Blood",
             "Heat Blood",
         },
-        ['Magic1'] = {
+        [''] = {
             "Splort",
             "Splurt",
         },
-        ['Magic2'] = {
+        ['CurseDot'] = {
             "Ancient: Curse of Mori",
             "Dark Nightmare",
             "Horror",
             "Imprecation",
             "Dark Soul",
         },
-        ['Magic2_2'] = {
+        ['CurseDot2'] = {
             "Ancient: Curse of Mori",
             "Dark Nightmare",
             "Horror",
             "Imprecation",
             "Dark Soul",
         },
-        ['Disease1'] = {
+        ['PlagueDot'] = {
             "Chaos Plague",
             "Dark Plague",
             "Cessation of Cor",
         },
-        ['Disease2'] = {
+        ['DebuffDot'] = {
             "Grip of Mori",
             "Plague",
             "Asystole",
@@ -199,10 +199,10 @@ local _ClassConfig = {
             "Infectious Cloud",
             "Disease Cloud",
         },
-        ['Poison3'] = {
+        ['PoisonDotDD'] = {
             "Venom of Anguish",
         },
-        ['Poison2'] = {
+        ['PoisonDot'] = {
             "Chaos Venom",
             "Blood of Thule",
             "Envenomed Bolt",
@@ -467,6 +467,7 @@ local _ClassConfig = {
             {
                 name = "Scent of Terris",
                 type = "AA",
+                load_cond = function(self) return Casting.CanUseAA("Scent of Terris") end,
                 cond = function(self, aaName, target)
                     return Casting.DetAACheck(aaName)
                 end,
@@ -474,6 +475,7 @@ local _ClassConfig = {
             {
                 name = "ScentDebuff",
                 type = "Spell",
+                load_cond = function(self) return not Casting.CanUseAA("Scent of Terris") end,
                 cond = function(self, spell, target)
                     return Casting.DetSpellCheck(spell)
                 end,
