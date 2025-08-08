@@ -389,6 +389,17 @@ local _ClassConfig = {
                 return combat_state == "Combat" and not Casting.IAmFeigning() and Casting.OkayToDebuff()
             end,
         },
+        { --Keep things from running
+            name = 'Snare',
+            state = 1,
+            steps = 1,
+            load_cond = function() return Config:GetSetting('DoSnare') end,
+            targetId = function(self) return Targeting.CheckForAutoTargetID() end,
+            cond = function(self, combat_state)
+                if mq.TLO.Me.PctHPs() <= Config:GetSetting('EmergencyStart') then return false end
+                return combat_state == "Combat" and not Targeting.IsNamed(Targeting.GetAutoTarget()) and Targeting.GetXTHaterCount() <= Config:GetSetting('SnareCount')
+            end,
+        },
         {
             name = 'DPS',
             state = 1,
@@ -407,6 +418,13 @@ local _ClassConfig = {
             cond = function(self, combat_state)
                 return combat_state == "Combat" and not Casting.IAmFeigning() and not mq.TLO.Me.Buff("Focus of Arcanum")()
             end,
+        },
+        {
+            name = 'PetHealPoint',
+            state = 1,
+            steps = 1,
+            targetId = function(self) return { mq.TLO.Me.Pet.ID(), } end,
+            cond = function(self, _) return mq.TLO.Me.Pet.ID() > 0 and (mq.TLO.Me.Pet.PctHPs() or 100) < Config:GetSetting('PetHealPct') end,
         },
     },
     ['Rotations']       = {
@@ -481,7 +499,47 @@ local _ClassConfig = {
                 end,
             },
         },
+        ['Snare'] = {
+            {
+                name = "Encroaching Darkness",
+                type = "AA",
+                cond = function(self, aaName, target)
+                    return Casting.DetAACheck(aaName) and Targeting.MobHasLowHP(target)
+                end,
+            },
+            {
+                name = "SnareDot",
+                type = "Spell",
+                cond = function(self, spell, target)
+                    if Casting.CanUseAA("Encroaching Darkness") then return false end
+                    return Casting.DetSpellCheck(spell) and Targeting.MobHasLowHP(target)
+                end,
+            },
+        },
+        ['CombatBuff'] = {
+            {
+                name = "Death Bloom",
+                type = "AA",
+                cond = function(self, aaName)
+                    return Casting.SelfBuffAACheck(aaName) and mq.TLO.Me.PctMana() < Config:GetSetting('DeathBloomPercent') and mq.TLO.Me.PctHPs() > 50
+                end,
+            },
+            {
+                name = "Reluctant Benevolence",
+                type = "AA",
+                active_cond = function(self, aaName) return Casting.IHaveBuff(mq.TLO.AltAbility(aaName).Spell.RankName()) end,
+                cond = function(self, aaName) return Casting.SelfBuffAACheck(aaName) end,
+            },
+        },
         ['NewDPS'] = {
+            {
+                name = "Epic",
+                type = "Item",
+                cond = function(self, itemName)
+                    if Config:GetSetting('UseEpic') == 1 then return false end
+                    return (Config:GetSetting('UseEpic') == 3 or (Config:GetSetting('UseEpic') == 2 and Casting.BurnCheck()))
+                end,
+            },
             {
                 name = "Wake the Dead",
                 type = "AA",
@@ -672,22 +730,6 @@ local _ClassConfig = {
                 type = "Item",
             },
             {
-                name = "Gathering Dusk",
-                type = "AA",
-                cond = function(self, aaName, target) return Targeting.IsNamed(target) end,
-            },
-            {
-                name = "Swarm of Decay",
-                type = "AA",
-                cond = function(self, aaName)
-                    return Casting.SelfBuffAACheck(aaName)
-                end,
-            },
-            {
-                name = "Rise of Bones",
-                type = "AA",
-            },
-            {
                 name = "Focus of Arcanum",
                 type = "AA",
                 cond = function(self, aaName, target)
@@ -695,10 +737,35 @@ local _ClassConfig = {
                 end,
             },
             {
-                name = "Forceful Rejuvenation",
+                name = "Gathering Dusk",
                 type = "AA",
-                cond = function(self, aaName)
-                    return Casting.SelfBuffAACheck(aaName)
+                cond = function(self, aaName, target) return Targeting.IsNamed(target) end,
+            },
+            {
+                name = "Swarm of Decay",
+                type = "AA",
+            },
+            {
+                name = "Rise of Bones",
+                type = "AA",
+            },
+            {
+                name = "Graverobber's Icon",
+                type = "Item",
+            },
+            {
+                name = "Army of the Dead",
+                type = "AA",
+            },
+            {
+                name = "Frenzy of the Dead",
+                type = "AA",
+            },
+            {
+                name = "Improved Twincast",
+                type = "AA",
+                cond = function(self)
+                    return not Casting.IHaveBuff("Twincast")
                 end,
             },
             { -- Spire, the SpireChoice setting will determine which ability is displayed/used.
@@ -707,6 +774,38 @@ local _ClassConfig = {
                     return Casting.CanUseAA(spireAbil) and spireAbil or "Spire Not Purchased/Selected"
                 end,
                 type = "AA",
+            },
+            {
+                name = "Forceful Rejuvenation",
+                type = "AA",
+                cond = function(self, aaName)
+                    return Casting.SelfBuffAACheck(aaName)
+                end,
+            },
+        },
+        ['PetHealPoint'] = {
+            {
+                name = "Companion's Blessing",
+                type = "AA",
+                cond = function(self, aaName, target)
+                    return mq.TLO.Me.Pet.PctHPs() <= Config:GetSetting('BigHealPoint')
+                end,
+            },
+            {
+                name = "Minion's Memento",
+                type = "Item",
+            },
+            {
+                name = "Replenish Companion",
+                type = "AA",
+            },
+            {
+                name = "Mend Companion",
+                type = "AA",
+            },
+            {
+                name = "PetHealSpell",
+                type = "Spell",
             },
         },
         ['ArcanumWeave'] = {
@@ -761,6 +860,12 @@ local _ClassConfig = {
                 type = "AA",
                 active_cond = function(self, aaName) return Casting.IHaveBuff(mq.TLO.AltAbility(aaName).Spell.RankName()) end,
                 cond = function(self, aaName) return mq.TLO.Me.PctMana() < Config:GetSetting('DeathBloomPercent') end,
+            },
+            {
+                name = "Reluctant Benevolence",
+                type = "AA",
+                active_cond = function(self, aaName) return Casting.IHaveBuff(mq.TLO.AltAbility(aaName).Spell.RankName()) end,
+                cond = function(self, aaName) return Casting.SelfBuffAACheck(aaName) end,
             },
         },
         ['PetSummon'] = { --TODO: Double check these lists to ensure someone leveling doesn't have to change options to keep pets current at lower levels
@@ -1006,14 +1111,6 @@ local _ClassConfig = {
             FAQ = "I am using Death Bloom to early or late, how do I adjust it?",
             Answer = "Set the [DeathBloomPercent] setting to the desired % of mana you want to cast Death Bloom at.",
         },
-        ['DoSnare']           = {
-            DisplayName = "Cast Snares",
-            Category = "Spells and Abilities",
-            Tooltip = "Enable casting Snare spells.",
-            Default = true,
-            FAQ = "I want to use my Snare spells, how do I do that?",
-            Answer = "Set the [DoSnare] setting to true and the Necro will use Snare spells.",
-        },
         ['StartFDPct']        = {
             DisplayName = "FD Aggro Pct",
             Category = "Aggro Management",
@@ -1110,6 +1207,43 @@ local _ClassConfig = {
             Max = #Config.Constants.SpireChoices,
             FAQ = "Why am I using the wrong spire?",
             Answer = "You can choose which spire you prefer in the Class Options.",
+        },
+        ['DoSnare']           = {
+            DisplayName = "Use Snares",
+            Category = "Buffs/Debuffs",
+            Index = 1,
+            Tooltip = "Use Snare(Snare Dot used until AA is available).",
+            Default = false,
+            RequiresLoadoutChange = true,
+            FAQ = "Why is my Shadow Knight not snaring?",
+            Answer = "Make sure Use Snares is enabled in your class settings.",
+        },
+        ['SnareCount']        = {
+            DisplayName = "Snare Max Mob Count",
+            Category = "Buffs/Debuffs",
+            Index = 2,
+            Tooltip = "Only use snare if there are [x] or fewer mobs on aggro. Helpful for AoE groups.",
+            Default = 3,
+            Min = 1,
+            Max = 99,
+            FAQ = "Why is my Shadow Knight Not snaring?",
+            Answer = "Make sure you have [DoSnare] enabled in your class settings.\n" ..
+                "Double check the Snare Max Mob Count setting, it will prevent snare from being used if there are more than [x] mobs on aggro.",
+        },
+        ['UseEpic']           = {
+            DisplayName = "Epic Use:",
+            Category = "Buffs",
+            Index = 1,
+            Tooltip = "Use Epic 1-Never 2-Burns 3-Always",
+            Type = "Combo",
+            ComboOptions = { 'Never', 'Burns Only', 'All Combat', },
+            Default = 3,
+            Min = 1,
+            Max = 3,
+            ConfigType = "Advanced",
+            FAQ = "Why is my SHM using Epic on these trash mobs?",
+            Answer = "By default, we use the Epic in any combat, as saving it for burns ends up being a DPS loss over a long frame of time.\n" ..
+                "This can be adjusted in the Buffs tab.",
         },
     },
 
