@@ -908,104 +908,23 @@ local _ClassConfig = {
             end
         end,
     },
-    ['Spells']          = {
+    ['SpellList']       = { -- New style spell list, gemless, priority-based. Will use the first set whose conditions are met.
         {
-            gem = 1,
+            name = "Default Mode",
+            -- cond = function(self) return true end, --Code kept here for illustration, if there is no condition to check, this line is not required
             spells = {
-                { name = "Disease2", },
-                { name = "Poison3", },
-            },
-        },
-        {
-            gem = 2,
-            spells = {
-                { name = "Poison2", cond = function(self) return mq.TLO.Me.Level() < 86 end, },
-            },
-        },
-        {
-            gem = 3,
-            spells = {
-                { name = "FireDot",    cond = function(self) return mq.TLO.Me.Level() < 51 end, },
-                { name = "Magic1", },
-                { name = "GroupLeech", },
-            },
-        },
-        {
-            gem = 4,
-            spells = {
-                { name = "PoisonNuke", cond = function(self) return mq.TLO.Me.Level() < 75 end, },
-            },
-        },
-        {
-            gem = 5,
-            spells = {
-                { name = "HealthTaps", },
-                { name = "Poison2", },
-            },
-        },
-        {
-            gem = 6,
-            spells = {
-                { name = "DurationTap", },
-                { name = "Magic2", },
+                { name = "PetHealSpell", cond = function(self) return Config:GetSetting('DoPetHealSpell') end, },
+                { name = "LifeTap", },
+                { name = "PoisonNuke", },
+                { name = "FireDot", },
+                { name = "FireDot2", },
+                { name = "CurseDot", },
+                { name = "CurseDot2", },
+                { name = "PlagueDot", },
+                { name = "PoisonDotDD", },
                 { name = "LichSpell", },
-            },
-        },
-        {
-            gem = 7,
-            cond = function(self, gem) return mq.TLO.Me.NumGems() >= gem end,
-            spells = {
-                { name = "CharmSpell",  cond = function(self) return Config:GetSetting('CharmOn') end, },
-                { name = "ScentDebuff", cond = function(self) return Config:GetSetting('DoScentDebuff') and not Casting.CanUseAA("Scent of Thule") end, },
-                { name = "Disease1", },
-                { name = "Disease2", },
-            },
-        },
-        {
-            gem = 8,
-            cond = function(self, gem) return mq.TLO.Me.NumGems() >= gem end,
-            spells = {
-                { name = "SnareDot",   cond = function(self) return Config:GetSetting('DoSnare') end, },
-                { name = "Magic1",     cond = function(self) return mq.TLO.Me.Level() > 70 and mq.TLO.Me.Level() < 87 end, },
-                { name = "HealthTaps", },
-            },
-        },
-        {
-            gem = 9,
-            cond = function(self, gem) return mq.TLO.Me.NumGems() >= gem end,
-            spells = {
-                { name = "FireDot", cond = function(self) return mq.TLO.Me.Level() < 89 end, },
-                { name = "FDSpell", },
-            },
-        },
-        {
-            gem = 10,
-            cond = function(self, gem) return mq.TLO.Me.NumGems() >= gem end,
-            spells = {
-                { name = "Poison3",  cond = function(self) return mq.TLO.Me.Level() < 85 end, },
-                { name = "SwarmPet", },
-            },
-        },
-        {
-            gem = 11,
-            cond = function(self, gem) return mq.TLO.Me.NumGems() >= gem end,
-            spells = {
-                { name = "Poison3",       cond = function(self) return mq.TLO.Me.Level() < 93 end, },
-                { name = "ChaoticDebuff", },
-            },
-        },
-        {
-            gem = 12,
-            cond = function(self, gem) return mq.TLO.Me.NumGems() >= gem end,
-            spells = {
-                { name = "DichoSpell", },
-            },
-        },
-        {
-            gem = 13,
-            cond = function(self, gem) return mq.TLO.Me.NumGems() >= gem end,
-            spells = {
-                { name = "AllianceSpell", cond = function(self) return Config:GetSetting('DoAlliance') end, },
+                { name = "Pustules", },
+                { name = "HealOrb", },
             },
         },
     },
@@ -1204,6 +1123,17 @@ local _ClassConfig = {
             FAQ = "Why is my SHM using Epic on these trash mobs?",
             Answer = "By default, we use the Epic in any combat, as saving it for burns ends up being a DPS loss over a long frame of time.\n" ..
                 "This can be adjusted in the Buffs tab.",
+        },
+        ['DoPetHealSpell']    = {
+            DisplayName = "Do Pet Heals",
+            Category = "Pet Mgmt.",
+            Index = 2,
+            Tooltip = "Mem and cast your Pet Heal (Salve) spell. AA Pet Heals are always used in emergencies.",
+            Default = true,
+            RequiresLoadoutChange = true,
+            FAQ = "My Pet Keeps Dying, What Can I Do?",
+            Answer = "Make sure you have [DoPetHealSpell] enabled.\n" ..
+                "If your pet is still dying, consider using [PetHealPct] to adjust the pet heal threshold.",
         },
     },
 
