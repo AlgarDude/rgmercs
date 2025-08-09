@@ -14,6 +14,7 @@ local Comms        = require("utils.comms")
 local Core         = require("utils.core")
 local Targeting    = require("utils.targeting")
 local Casting      = require("utils.casting")
+local Logger       = require("utils.logger")
 
 local _ClassConfig = {
     _version            = "1.0 - Project Lazarus",
@@ -139,6 +140,7 @@ local _ClassConfig = {
             "Leech",
         },
         ['PoisonNuke'] = {
+            "Call for Blood",
             "Acikin",
             "Neurotoxin",
             "Ancient: Lifebane",
@@ -167,7 +169,7 @@ local _ClassConfig = {
             "Boil Blood",
             "Heat Blood",
         },
-        [''] = {
+        ['SpurtDot'] = {
             "Splort",
             "Splurt",
         },
@@ -300,9 +302,6 @@ local _ClassConfig = {
             "Renew Bones",
             "Mend Bones",
         },
-        ['CallNuke'] = {
-            "Call for Blood",
-        },
         ['Pustules'] = {
             "Necrotic Pustules",
         },
@@ -338,7 +337,7 @@ local _ClassConfig = {
             name = 'PetSummon',
             targetId = function(self) return { mq.TLO.Me.ID(), } end,
             cond = function(self, combat_state)
-                return combat_state == "Downtime" and Casting.OkayToPetBuff() and not Core.IsCharming() and Casting.AmIBuffable()
+                return combat_state == "Downtime" and mq.TLO.Me.Pet.ID() == 0 and Casting.OkayToPetBuff() and Casting.AmIBuffable()
             end,
         },
         { --Pet Buffs if we have one, timer because we don't need to constantly check this
@@ -360,23 +359,17 @@ local _ClassConfig = {
             end,
         },
         {
-            -- this will always run first in combat to check for things like FD or stand up
-            -- if you add to it make sure it remains pretty short because everythign will be
-            -- evalutated before we move to combat.
-            name = 'Safety',
+            name = 'End Feign',
             targetId = function(self) return { mq.TLO.Me.ID(), } end,
             cond = function(self, combat_state)
-                return combat_state == "Combat" and (Targeting.IHaveAggro(Config:GetSetting('StartFDPct')) or Casting.IAmFeigning())
+                return Casting.IAmFeigning()
             end,
         },
         {
-            name = 'Burn',
-            state = 1,
-            steps = 4,
-            targetId = function(self) return Targeting.CheckForAutoTargetID() end,
+            name = 'Emergency',
+            targetId = function(self) return { mq.TLO.Me.ID(), } end,
             cond = function(self, combat_state)
-                return combat_state == "Combat" and
-                    Casting.BurnCheck() and not Casting.IAmFeigning()
+                return combat_state == "Combat" and (Targeting.IHaveAggro(Config:GetSetting('StartFDPct')) or Casting.IAmFeigning())
             end,
         },
         {
@@ -401,12 +394,31 @@ local _ClassConfig = {
             end,
         },
         {
-            name = 'DPS',
+            name = 'Burn',
+            state = 1,
+            steps = 4,
+            targetId = function(self) return Targeting.CheckForAutoTargetID() end,
+            cond = function(self, combat_state)
+                return combat_state == "Combat" and
+                    Casting.BurnCheck() and not Casting.IAmFeigning()
+            end,
+        },
+        {
+            name = 'DPS(Trash)',
             state = 1,
             steps = 1,
             targetId = function(self) return Targeting.CheckForAutoTargetID() end,
             cond = function(self, combat_state)
-                return combat_state == "Combat" and not Casting.IAmFeigning()
+                return combat_state == "Combat" and not Casting.IAmFeigning() and not Targeting.IsNamed(Targeting.GetAutoTarget())
+            end,
+        },
+        {
+            name = 'DPS(Named)',
+            state = 1,
+            steps = 1,
+            targetId = function(self) return Targeting.CheckForAutoTargetID() end,
+            cond = function(self, combat_state)
+                return combat_state == "Combat" and not Casting.IAmFeigning() and Targeting.IsNamed(Targeting.GetAutoTarget())
             end,
         },
         {
@@ -454,7 +466,7 @@ local _ClassConfig = {
                 end,
             },
         },
-        ['Safety'] = {
+        ['Emergency'] = {
             {
                 name = "Death Peace",
                 type = "AA",
@@ -469,19 +481,22 @@ local _ClassConfig = {
                     return not Casting.IAmFeigning() and mq.TLO.Me.PctHPs() >= 75
                 end,
             },
+        },
+        ['EndFeign'] = {
             {
                 name = "Stand Back Up",
                 type = "CustomFunc",
                 cond = function(self)
-                    return Casting.IAmFeigning() and Targeting.GetHighestAggroPct() <= Config:GetSetting('StopFDPct')
+                    return Targeting.GetHighestAggroPct() <= Config:GetSetting('StopFDPct')
                 end,
-                custom_func = function(_)
+                custom_func = function(self)
                     Core.DoCmd("/stand")
+                    Logger.log_debug("We are under %d percent aggro again, standing back up!", Config:GetSetting('StopFDPct'))
                     return true
                 end,
             },
         },
-        ['Scent'] = {
+        ['Scent'] = { --this needs fixing once i have AA to test/check. Is rank two of AA scent of midnight?
             {
                 name = "Scent of Terris",
                 type = "AA",
@@ -503,6 +518,7 @@ local _ClassConfig = {
             {
                 name = "Encroaching Darkness",
                 type = "AA",
+                load_cond = function(self) return Casting.CanUseAA("Encroaching Darkness") end,
                 cond = function(self, aaName, target)
                     return Casting.DetAACheck(aaName) and Targeting.MobHasLowHP(target)
                 end,
@@ -510,18 +526,26 @@ local _ClassConfig = {
             {
                 name = "SnareDot",
                 type = "Spell",
+                load_cond = function(self) return not Casting.CanUseAA("Encroaching Darkness") end,
                 cond = function(self, spell, target)
-                    if Casting.CanUseAA("Encroaching Darkness") then return false end
                     return Casting.DetSpellCheck(spell) and Targeting.MobHasLowHP(target)
                 end,
             },
         },
         ['CombatBuff'] = {
             {
+                name = "Forsaken Fungus Covered Scale Tunic",
+                type = "Item",
+                load_cond = function(self) return mq.TLO.FindItem("=Forsaken Fungus Covered Scale Tunic")() end,
+                cond = function(self, itemName, target)
+                    return mq.TLO.Me.PctMana() < Config:GetSetting('DeathBloomPercent') or mq.TLO.Me.PctHPs() < 40
+                end,
+            },
+            {
                 name = "Death Bloom",
                 type = "AA",
                 cond = function(self, aaName)
-                    return Casting.SelfBuffAACheck(aaName) and mq.TLO.Me.PctMana() < Config:GetSetting('DeathBloomPercent') and mq.TLO.Me.PctHPs() > 50
+                    return mq.TLO.Me.PctMana() < Config:GetSetting('DeathBloomPercent') and mq.TLO.Me.PctHPs() > 50
                 end,
             },
             {
@@ -531,7 +555,7 @@ local _ClassConfig = {
                 cond = function(self, aaName) return Casting.SelfBuffAACheck(aaName) end,
             },
         },
-        ['NewDPS'] = {
+        ['DPS(Named)'] = {
             {
                 name = "Epic",
                 type = "Item",
@@ -548,35 +572,28 @@ local _ClassConfig = {
                 end,
             },
             {
-                name = "Poison3",
-                type = "Spell",
-                cond = function(self, spell)
-                    return Casting.DotSpellCheck(spell)
-                end,
-            },
-            {
-                name = "Poison2",
+                name = "PoisonDot",
                 type = "Spell",
                 cond = function(self, spell, target)
-                    return Targeting.IsNamed(target) and Casting.DotSpellCheck(spell)
+                    return Casting.DotSpellCheck(spell)
                 end,
             },
             {
                 name = "FireDot",
                 type = "Spell",
                 cond = function(self, spell, target)
-                    return Targeting.IsNamed(target) and Casting.DotSpellCheck(spell)
+                    return Casting.DotSpellCheck(spell)
                 end,
             },
             {
-                name = "Magic2",
+                name = "CurseDot",
                 type = "Spell",
                 cond = function(self, spell, target)
-                    return Targeting.IsNamed(target) and Casting.DotSpellCheck(spell)
+                    return Casting.DotSpellCheck(spell)
                 end,
             },
             {
-                name = "Disease1",
+                name = "PlagueDot",
                 type = "Spell",
                 cond = function(self, spell, target)
                     return Casting.DotSpellCheck(spell)
@@ -586,28 +603,28 @@ local _ClassConfig = {
                 name = "FireDot2",
                 type = "Spell",
                 cond = function(self, spell, target)
-                    return Targeting.IsNamed(target) and Casting.DotSpellCheck(spell)
+                    return Casting.DotSpellCheck(spell)
                 end,
             },
             {
-                name = "Magic2_2",
+                name = "PoisonDotDD",
+                type = "Spell",
+                cond = function(self, spell)
+                    return Casting.DotSpellCheck(spell)
+                end,
+            },
+            {
+                name = "CurseDot2",
                 type = "Spell",
                 cond = function(self, spell, target)
-                    return Targeting.IsNamed(target) and Casting.DotSpellCheck(spell)
+                    return Casting.DotSpellCheck(spell)
                 end,
             },
             {
                 name = "Scythe of the Shadowed Soul",
                 type = "Item",
                 cond = function(self, itemName, target)
-                    return Targeting.IsNamed(target) and Targeting.MobNotLowHP(target) and Casting.DetItemCheck(itemName, target)
-                end,
-            },
-            {
-                name = "CallNuke",
-                type = "Spell",
-                cond = function(self, spell, target)
-                    return Targeting.MobHasLowHP(target) and Casting.OkayToNuke()
+                    return Targeting.MobNotLowHP(target) and Casting.DetItemCheck(itemName, target)
                 end,
             },
             {
@@ -622,36 +639,6 @@ local _ClassConfig = {
                 type = "Spell",
                 -- TO DO
             },
-        },
-        ['DPS'] = {
-            {
-                name = "Wake the Dead",
-                type = "AA",
-                cond = function(self, aaName)
-                    return mq.TLO.SpawnCount("corpse radius 100")() >= Config:GetSetting('WakeDeadCorpseCnt')
-                end,
-            },
-            {
-                name = "Death Bloom",
-                type = "AA",
-                cond = function(self, aaName)
-                    return Casting.SelfBuffAACheck(aaName) and mq.TLO.Me.PctMana() < Config:GetSetting('DeathBloomPercent') and mq.TLO.Me.PctHPs() > 50
-                end,
-            },
-            {
-                name = "Encroaching Darkness",
-                type = "AA",
-                cond = function(self, aaName)
-                    return Casting.SelfBuffAACheck(aaName) and Targeting.GetTargetPctHPs() < 50
-                end,
-            },
-            {
-                name = "Silent Casting",
-                type = "AA",
-                cond = function(self, aaName, target)
-                    return Targeting.IsNamed(target) and mq.TLO.Me.PctAggro() > 60
-                end,
-            },
             {
                 name = "Life Burn",
                 type = "AA",
@@ -660,68 +647,46 @@ local _ClassConfig = {
                 end,
             },
             {
-                name = "SnareDot",
-                type = "Spell",
-                cond = function(self, spell) return Casting.DotSpellCheck(spell) and Config:GetSetting('DoSnare') end,
+                name = "Dagger of Death",
+                type = "Item",
             },
+        },
+        ['DPS(Trash)'] = {
             {
-                name = "Poison3",
+                name = "PoisonDotDD",
                 type = "Spell",
-                cond = function(self, spell) return Casting.DotSpellCheck(spell) end,
-            },
-            {
-                name = "Disease2",
-                type = "Spell",
-                cond = function(self, spell) return Casting.DotSpellCheck(spell) end,
-            },
-            {
-                name = "Poison2",
-                type = "Spell",
-                cond = function(self, spell) return Casting.DotSpellCheck(spell) end,
-            },
-            {
-                name = "Disease1",
-                type = "Spell",
-                cond = function(self, spell) return Casting.DotSpellCheck(spell) end,
-            },
-            {
-                name = "Magic2",
-                type = "Spell",
-                cond = function(self, spell) return Casting.DotSpellCheck(spell) end,
-            },
-            {
-                name = "Magic1",
-                type = "Spell",
-                cond = function(self, spell) return Casting.DotSpellCheck(spell) end,
-            },
-            {
-                name = "PoisonNuke",
-                type = "Spell",
-                cond = function(self, _) return Casting.OkayToNuke() end,
-            },
-            {
-                name = "LifeTap",
-                type = "Spell",
-                cond = function(self, spell) return Casting.DotSpellCheck(spell) end,
+                cond = function(self, spell, target)
+                    return Casting.DotSpellCheck(spell) and Targeting.MobNotLowHP(target)
+                end,
             },
             {
                 name = "FireDot",
                 type = "Spell",
-                cond = function(self, spell) return Casting.DotSpellCheck(spell) end,
-            },
-            {
-                name = "GroupLeech",
-                type = "Spell",
-                cond = function(self, spell) return Casting.DotSpellCheck(spell) end,
-            },
-            {
-                name = "DurationTap",
-                type = "Spell",
-                cond = function(self, spell) return Casting.DotSpellCheck(spell) end,
+                cond = function(self, spell, target)
+                    return Casting.DotSpellCheck(spell) and Targeting.MobNotLowHP(target)
+                end,
             },
             {
                 name = "Dagger of Death",
                 type = "Item",
+                cond = function(self, itemName, target)
+                    return Targeting.MobNotLowHP(target)
+                end,
+            },
+            {
+                name = "UndeadNuke",
+                type = "Spell",
+                load_cond = function(self) return Config:GetSetting('DoUndeadNuke') end,
+                cond = function(self, spell, target)
+                    return Casting.OkayToNuke()
+                end,
+            },
+            {
+                name = "PoisonNuke",
+                type = "Spell",
+                cond = function(self, spell, target)
+                    return Casting.OkayToNuke()
+                end,
             },
         },
         ['Burn'] = {
@@ -773,6 +738,10 @@ local _ClassConfig = {
                     local spireAbil = string.format("Fundament: %s Spire of Necromancy", Config.Constants.SpireChoices[Config:GetSetting('SpireChoice') or 4])
                     return Casting.CanUseAA(spireAbil) and spireAbil or "Spire Not Purchased/Selected"
                 end,
+                type = "AA",
+            },
+            {
+                name = "Silent Casting",
                 type = "AA",
             },
             {
@@ -833,17 +802,6 @@ local _ClassConfig = {
         },
         ['Downtime'] = {
             {
-                name = "Stand Back Up",
-                type = "CustomFunc",
-                cond = function(self)
-                    return mq.TLO.Me.State():lower() == "feign" and (mq.TLO.Me.PctAggro() < 90 or mq.TLO.Me.TargetOfTarget.ID() ~= mq.TLO.Me.ID())
-                end,
-                custom_func = function(_)
-                    Core.DoCmd("/stand")
-                    return true
-                end,
-            },
-            {
                 name = "SelfHPBuff",
                 type = "Spell",
                 active_cond = function(self, spell) return Casting.IHaveBuff(spell) end,
@@ -868,13 +826,14 @@ local _ClassConfig = {
                 cond = function(self, aaName) return Casting.SelfBuffAACheck(aaName) end,
             },
         },
-        ['PetSummon'] = { --TODO: Double check these lists to ensure someone leveling doesn't have to change options to keep pets current at lower levels
+        ['PetSummon'] = {
             {
                 name = "PetSpellWar",
                 type = "Spell",
+                load_cond = function(self) return Config:GetSetting('PetType') == 1 end,
                 active_cond = function(self, _) return mq.TLO.Me.Pet.ID() ~= 0 and mq.TLO.Me.Pet.Class.ShortName():lower() == ("war" or "mnk") end,
                 cond = function(self, spell)
-                    return Config:GetSetting('PetType') == 1 and mq.TLO.Me.Pet.ID() == 0 and Casting.ReagentCheck(spell)
+                    return Casting.ReagentCheck(spell)
                 end,
                 post_activate = function(self, spell, success)
                     local pet = mq.TLO.Me.Pet
@@ -888,9 +847,10 @@ local _ClassConfig = {
             {
                 name = "PetSpellRog",
                 type = "Spell",
+                load_cond = function(self) return Config:GetSetting('PetType') == 2 end,
                 active_cond = function(self, _) return mq.TLO.Me.Pet.ID() ~= 0 and mq.TLO.Me.Pet.Class.ShortName():lower() == "rog" end,
                 cond = function(self, spell)
-                    return Config:GetSetting('PetType') == 2 and mq.TLO.Me.Pet.ID() == 0 and Casting.ReagentCheck(spell)
+                    return Casting.ReagentCheck(spell)
                 end,
                 post_activate = function(self, spell, success)
                     local pet = mq.TLO.Me.Pet
