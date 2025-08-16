@@ -582,6 +582,9 @@ return {
             {
                 name = "Snapkick",
                 type = "Disc",
+                cond = function(self, discName, target)
+                    return mq.TLO.Me.PctEndurance() >= Config:GetSetting("ManaToNuke")
+                end,
             },
         },
         ['GroupBuff']     = {
