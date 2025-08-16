@@ -5,6 +5,8 @@ local Core      = require("utils.core")
 local Targeting = require("utils.targeting")
 local Casting   = require("utils.casting")
 local Logger    = require("utils.logger")
+local Movement  = require("utils.movement")
+local Strings   = require("utils.strings")
 
 return {
     _version              = "2.0 - Project Lazarus",
@@ -244,6 +246,15 @@ return {
             end,
         },
         {
+            name = 'Ranged Combat',
+            state = 1,
+            steps = 1,
+            targetId = function(self) return Targeting.CheckForAutoTargetID() end,
+            cond = function(self, combat_state)
+                return combat_state == "Combat" and not Config:GetSetting('DoMelee')
+            end,
+        },
+        {
             name = 'Emergency',
             state = 1,
             steps = 1,
@@ -296,17 +307,37 @@ return {
     },
     ['HelperFunctions']   = {
         combatNav = function(forceMove)
-            if not Config:GetSetting('DoMelee') and not mq.TLO.Me.AutoFire() then
-                Core.DoCmd('/squelch face')
-                Core.DoCmd('/autofire on')
-            end
+            if not Config:GetSetting('DoMelee') then
+                if not mq.TLO.Me.AutoFire() then
+                    Core.DoCmd('/squelch face fast')
+                    Core.DoCmd('/autofire on')
+                end
 
-            if not Config:GetSetting('NavCircle') and Targeting.GetTargetDistance() <= 30 then
-                Core.DoCmd("/stick %d moveback", Config:GetSetting('NavCircleDist'))
-            end
+                local targetDistance = Targeting.GetTargetDistance()
+                local chaseDistance = Config:GetSetting('ChaseDistance')
+                local useChaseDistance = chaseDistance > 75 and chaseDistance < 200
+                local tooClose = targetDistance < 30
+                --- the distance of 200 could be further refined by checking actual distances based off range + ammo distance if desired.
+                local tooFar = useChaseDistance and targetDistance > chaseDistance or targetDistance > 75
 
-            if not Config:GetSetting('NavCircle') and (Targeting.GetTargetDistance() >= 75 or forceMove) then
-                Core.DoCmd("/squelch /nav id %d facing=backward distance=%d lineofsight=on", Config.Globals.AutoTargetID, Config:GetSetting('NavCircleDist'))
+                Logger.log_verbose("Custom Ranger combatNav engaged. TargetDistance: %d, ChaseDistance: %d, forceMove: %s, tooClose: %s, tooFar: %s", targetDistance, chaseDistance,
+                    Strings.BoolToColorString(forceMove), Strings.BoolToColorString(tooClose), Strings.BoolToColorString(tooFar))
+                if Config:GetSetting('NavCircle') then
+                    if tooClose or tooFar or forceMove then
+                        Movement.NavAroundCircle(mq.TLO.Target, Config:GetSetting('BowNavDistance'))
+                    end
+                elseif tooClose then
+                    if chaseDistance < 30 then
+                        Logger.log_warning(
+                            "Custom Ranger combatNav: \arWarning! \awChase distance is %d. \ayThis may interfere with ranged combat, depending on chase target movement!",
+                            chaseDistance)
+                    end
+                    Core.DoCmd("/stick 10 moveback")
+                    Core.DoCmd('/squelch face fast')
+                elseif tooFar or forceMove then
+                    Core.DoCmd("/squelch /nav id %d facing=backward distance=%d lineofsight=on", Config.Globals.AutoTargetID, Config:GetSetting('BowNavDistance'))
+                    Core.DoCmd('/squelch face fast')
+                end
             end
         end,
         --function to make sure we don't have non-hostiles in range before we use AE damage or non-taunt AE hate abilities
@@ -331,7 +362,17 @@ return {
         end,
     },
     ['Rotations']         = {
-        ['Burn']      = {
+        ['Ranged Combat'] = {
+            {
+                name = "Ranged Mode",
+                type = "CustomFunc",
+                cond = function(self, combat_state) return not Config:GetSetting('DoMelee') end,
+                custom_func = function(self)
+                    Core.SafeCallFunc("Ranger Custom Nav", self.ClassConfig.HelperFunctions.combatNav, false)
+                end,
+            },
+        },
+        ['Burn']          = {
             {
                 name = "Auspice of the Hunter",
                 type = "AA",
@@ -412,7 +453,7 @@ return {
                 type = "AA",
             },
         },
-        ['Snare']     = {
+        ['Snare']         = {
             {
                 name = "Entrap",
                 type = "AA",
@@ -430,7 +471,7 @@ return {
                 end,
             },
         },
-        ['Emergency'] = {
+        ['Emergency']     = {
             {
                 name = "Armor of Experience",
                 type = "AA",
@@ -466,7 +507,7 @@ return {
                 end,
             },
         },
-        ['DPS']       = {
+        ['DPS']           = {
             {
                 name = "SwarmDot",
                 type = "Spell",
@@ -533,7 +574,7 @@ return {
                 type = "Spell",
             },
         },
-        ['Weaves']    = {
+        ['Weaves']        = {
             {
                 name = "Kick",
                 type = "Ability",
@@ -543,7 +584,7 @@ return {
                 type = "Disc",
             },
         },
-        ['GroupBuff'] = {
+        ['GroupBuff']     = {
 
             {
                 name = "PredatorBuff",
@@ -600,7 +641,7 @@ return {
                 end,
             },
         },
-        ['Downtime']  = {
+        ['Downtime']      = {
             {
                 name = "SelfBuff",
                 type = "Spell",
@@ -917,6 +958,27 @@ return {
             Default = true,
             FAQ = "What is a Coating?",
             Answer = "Blood Drinker's Coating is a clickable lifesteal effect added in CotF. Spirit Drinker's Coating is an upgrade added in NoS.",
+        },
+        ['NavCircle']       = {
+            DisplayName = "Nav Circle",
+            Category = "Combat",
+            Tooltip = "Use Nav to Circle your target.",
+            Default = false,
+            FAQ = "Can Circle the target on my map?",
+            Answer = "Enabling [NavCircle] will draw a circle around your target on the map.",
+        },
+        ['BowNavDistance']  = {
+            DisplayName = "Bow Nav Distance",
+            Category = "Combat",
+            Index = 2,
+            Tooltip = "The distance to nav too for ranged attacks when necessary.\n" ..
+                "If Nav Circle is enabled, the distance to circle at.",
+            Default = 45,
+            Min = 30,
+            Max = 200,
+            FAQ = "Why is my Shadow Knight Not snaring?",
+            Answer = "Make sure you have [DoSnare] enabled in your class settings.\n" ..
+                "Double check the Snare Max Mob Count setting, it will prevent snare from being used if there are more than [x] mobs on aggro.",
         },
     },
 }
