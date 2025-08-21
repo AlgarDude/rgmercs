@@ -6,7 +6,7 @@ local Logger       = require("utils.logger")
 local Core         = require("utils.core")
 
 local _ClassConfig = {
-    _version            = "2.0 - Project Lazarus",
+    _version            = "2.1 - Project Lazarus",
     _author             = "Algar, Derple",
     ['Modes']           = {
         'DPS',
@@ -28,6 +28,7 @@ local _ClassConfig = {
         },
         ['Fang'] = {
             "Dragon Fang",
+            "Clawstriker's Flurry",
         },
         ['FistsOfWu'] = {
             --- Fists of Wu - Double Attack
