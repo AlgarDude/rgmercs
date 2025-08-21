@@ -133,16 +133,6 @@ local _ClassConfig = {
                 return combat_state == "Combat" and not Casting.IAmFeigning()
             end,
         },
-        {
-            name = 'Precision',
-            state = 1,
-            steps = 1,
-            load_cond = function(self) return self:GetResolvedActionMapItem('Precision1') end,
-            targetId = function(self) return Targeting.CheckForAutoTargetID() end,
-            cond = function(self, combat_state)
-                return combat_state == "Combat" and not Casting.IAmFeigning()
-            end,
-        },
     },
     ['Rotations']       = {
         ['Downtime'] = {
@@ -330,17 +320,10 @@ local _ClassConfig = {
         },
         ['CombatBuff'] = {
             {
-                name = "CombatEndRegen",
+                name = "EndRegen",
                 type = "Disc",
                 cond = function(self, discSpell)
-                    return mq.TLO.Me.PctEndurance() < 15
-                end,
-            },
-            {
-                name = "Drunken",
-                type = "Disc",
-                cond = function(self, discSpell)
-                    return Casting.SelfBuffCheck(discSpell)
+                    return mq.TLO.Me.PctEndurance() < 40
                 end,
             },
             {
@@ -356,21 +339,6 @@ local _ClassConfig = {
                 cond = function(self, discSpell)
                     if mq.TLO.Me.Level() >= 100 then return false end
                     return Casting.SelfBuffCheck(discSpell)
-                end,
-            },
-            {
-                name = "Alliance",
-                type = "Disc",
-                cond = function(self, discSpell)
-                    if not Config:GetSetting('DoAlliance') then return false end
-                    return not Casting.TargetHasBuff(discSpell.Trigger(1))
-                end,
-            },
-            {
-                name = "Storm",
-                type = "Disc",
-                cond = function(self, discSpell)
-                    return Casting.NoDiscActive()
                 end,
             },
             {
@@ -396,7 +364,7 @@ local _ClassConfig = {
             {
                 name = "Two-Finger Wasp Touch",
                 type = "AA",
-                cond = function(self, aaName, target) --DotSpellCheck used in part to not blow this on low-health mobs
+                cond = function(self, aaName, target)
                     return Targeting.MobNotLowHP(target)
                 end,
             },
@@ -409,19 +377,8 @@ local _ClassConfig = {
                 type = "Disc",
             },
             {
-                name = "Shuriken",
-                type = "Disc",
-            },
-            {
                 name = "Five Point Palm",
                 type = "AA",
-            },
-            {
-                name = "Intimidation",
-                type = "Ability",
-                cond = function(self, abilityName)
-                    return Casting.AARank("Intimidation") > 1
-                end,
             },
             {
                 name = "Flying Kick",
@@ -437,28 +394,6 @@ local _ClassConfig = {
             {
                 name = "Tiger Claw",
                 type = "Ability",
-            },
-        },
-        ['Precision'] = {
-            {
-                name = "Precision5",
-                type = "Disc",
-            },
-            {
-                name = "Precision4",
-                type = "Disc",
-            },
-            {
-                name = "Precision3",
-                type = "Disc",
-            },
-            {
-                name = "Precision2",
-                type = "Disc",
-            },
-            {
-                name = "Precision1",
-                type = "Disc",
             },
         },
     },
