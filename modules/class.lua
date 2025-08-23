@@ -835,7 +835,7 @@ function Module:GetRotations()
 end
 
 ---@param reason string
----@return boolean
+-- ---@return boolean
 function Module:ReleaseCuresListMutex(reason)
     if not self.TempSettings.NeedCuresListMutex then
         Logger.log_error("\arReleaseCuresListMutex(%s): Mutex was not acquired, cannot release!", reason or "Unknown")
@@ -844,7 +844,7 @@ function Module:ReleaseCuresListMutex(reason)
 
     Logger.log_debug("\amReleaseCuresListMutex(%s): Mutex was released!", reason or "Unknown")
     self.TempSettings.NeedCuresListMutex = false
-    return true
+    --  return --true
 end
 
 ---@param reason string
@@ -1074,13 +1074,24 @@ function Module:AddCureToList(id, type)
         self.TempSettings.NeedCuresList = {}
     end
 
-    if self:GetCuresListMutex(string.format("AddCureToList(%d, %s)", id, type)) then
-        self.TempSettings.NeedCuresList[id] = type
-        self:ReleaseCuresListMutex(string.format("AddCureToList(%d, %s)", id, type))
+    if Module.TempSettings.NeedCuresListMutex then
+        Logger.log_verbose("\ar[Cures] Cure is needed (%s on %d), but we have mutex activity already.", type, id)
+        return false
     end
 
-    Comms.HandleAnnounce(string.format('Queueing a %s cure for %s.', type:lower(), mq.TLO.Spawn(id).CleanName() or "Target"), Config:GetSetting('CureAnnounceGroup'),
-        Config:GetSetting('CureAnnounce'))
+    if Tables.GetTableSize(self.TempSettings.NeedCuresList) == 0 then
+        if self:GetCuresListMutex(string.format("AddCureToList(%d, %s)", id, type)) then
+            self.TempSettings.NeedCuresList[id] = type
+            self:ReleaseCuresListMutex(string.format("AddCureToList(%d, %s)", id, type))
+        end
+
+        Comms.HandleAnnounce(string.format('Queueing a %s cure for %s.', type:lower(), mq.TLO.Spawn(id).CleanName() or "Target"), Config:GetSetting('CureAnnounceGroup'),
+            Config:GetSetting('CureAnnounce'))
+        return true
+    else
+        Logger.log_verbose("\ar[Cures] Cure is needed (%s on %d), but we have a cure in the queue already.", type, id)
+        return false
+    end
 end
 
 function Module:ProcessCuresList()
@@ -1149,8 +1160,7 @@ function Module:CheckPeerForCures(peer, targetId)
         if effectId:lower() ~= "null" and effectId ~= "0" then
             -- Cure it!
             if self.ClassConfig.Cures and self.ClassConfig.Cures.CureNow then
-                self:AddCureToList(targetId, data.type)
-                return true
+                return self:AddCureToList(targetId, data.type)
             end
         end
     end
@@ -1165,6 +1175,17 @@ function Module:RunCureRotation(combat_state)
         Logger.log_debug("\ay[Cures] CureCheck still running, will check again later.")
         return
     end
+
+    if self.TempSettings.NeedCuresListMutex then
+        Logger.log_debug("\ay[Cures] Mutex activity, will check again later.")
+        return
+    end
+
+    if Tables.GetTableSize(Module.TempSettings.NeedCuresList) > 0 then
+        Logger.log_debug("\ay[Cures] Cure queued already, will check again later.")
+        return
+    end
+
 
     self.TempSettings.CureCheckCoroutine = coroutine.create(function()
         self:CheckPeersForCures()
@@ -1300,7 +1321,11 @@ function Module:GiveTime(combat_state)
         if not (combat_state == "Downtime" and mq.TLO.Me.Invis() and not Config:GetSetting('BreakInvis')) then
             Logger.log_verbose("\ao[Cures] Checking for curables...")
             self:RunCureRotation(combat_state)
-            self:ProcessCuresList()
+            if not self.TempSettings.NeedCuresListMutex then
+                self:ProcessCuresList()
+            else
+                Logger.log_verbose("\ao[Cures] Mutex Lock, not processing list...")
+            end
         end
 
         if self.TempSettings.CureCheckCoroutine and coroutine.status(self.TempSettings.CureCheckCoroutine) ~= 'dead' then
