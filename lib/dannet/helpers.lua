@@ -6,7 +6,6 @@ local helpers = {}
 function helpers.query(peer, query, timeout)
     mq.cmdf('/dquery %s -q "%s"', peer, query)
     if timeout > 0 then
-        mq.delay(25)
         mq.delay(timeout or 1000, function() return (mq.TLO.DanNet(peer).Q(query).Received() or 0) > 0 end)
     end
     local value = mq.TLO.DanNet(peer).Q(query)()

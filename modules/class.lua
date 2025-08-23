@@ -865,7 +865,7 @@ function Module:GetCuresListMutex(reason, maxWaitTime)
         end
     end
 
-    Logger.log_debug("\amReleaseCuresListMutex(%s): Mutex was acquired!", reason or "Unknown")
+    Logger.log_debug("\amGetCuresListMutex(%s): Mutex was acquired!", reason or "Unknown")
     self.TempSettings.NeedCuresListMutex = true
     return true
 end
@@ -1060,14 +1060,12 @@ function Module:RunHealRotation()
     end
 end
 
-function Module:ClearCureFromList(id)
-    if self:GetCuresListMutex(string.format("ClearCureFromList(%d)", id)) then
+function Module:ClearCureList()
+    if self:GetCuresListMutex("ClearCureList") then
         if self.TempSettings.NeedCuresList then
-            if self.TempSettings.NeedCuresList[id] then
-                self.TempSettings.NeedCuresList[id] = nil
-            end
+            self.TempSettings.NeedCuresList = {}
         end
-        self:ReleaseCuresListMutex(string.format("ClearCureFromList(%d)", id))
+        self:ReleaseCuresListMutex("ClearCureList")
     end
 end
 
@@ -1076,49 +1074,35 @@ function Module:AddCureToList(id, type)
         self.TempSettings.NeedCuresList = {}
     end
 
-    local contained = false
-
     if self:GetCuresListMutex(string.format("AddCureToList(%d, %s)", id, type)) then
-        if self.TempSettings.NeedCuresList[id] then
-            contained = self.TempSettings.NeedCuresList[id]:contains(type)
-            self.TempSettings.NeedCuresList[id]:add(type)
-        else
-            self.TempSettings.NeedCuresList[id] = Set.new({ type, })
-        end
+        self.TempSettings.NeedCuresList[id] = type
         self:ReleaseCuresListMutex(string.format("AddCureToList(%d, %s)", id, type))
     end
 
-    if not contained then
-        Comms.HandleAnnounce(string.format('Queueing a %s cure for %s.', type:lower(), mq.TLO.Spawn(id).CleanName() or "Target"), Config:GetSetting('CureAnnounceGroup'),
-            Config:GetSetting('CureAnnounce'))
-    end
+    Comms.HandleAnnounce(string.format('Queueing a %s cure for %s.', type:lower(), mq.TLO.Spawn(id).CleanName() or "Target"), Config:GetSetting('CureAnnounceGroup'),
+        Config:GetSetting('CureAnnounce'))
 end
 
 function Module:ProcessCuresList()
     -- make a copy just incase it changes in the other coroutine
     local curesList = self.TempSettings.NeedCuresList
 
-    for id, types in pairs(curesList) do
+    for id, type in pairs(curesList) do
         local cureTarget = mq.TLO.Spawn(id)
         if not cureTarget or not cureTarget() then
             Logger.log_verbose("\ar[Cures] %s is no longer valid, removing from cure list.", id)
 
-            self:ClearCureFromList(id)
+            self:ClearCureList()
         else
-            local typeList = types:toList()
-            for _, type in ipairs(typeList) do
-                Core.SafeCallFunc("CureNow", self.ClassConfig.Cures.CureNow, self, type, id)
-            end
-            -- clear this person off the cure list.
-            self:ClearCureFromList(id)
-
-            -- only do 1 person per frame.
+            Core.SafeCallFunc("CureNow", self.ClassConfig.Cures.CureNow, self, type, id)
+            -- clear the list
+            self:ClearCureList()
             return
         end
     end
 end
 
-function Module:CheckPeersForCures(checks)
+function Module:CheckPeersForCures()
     local dannetPeers = mq.TLO.DanNet.PeerCount()
 
     -- should this prioritize tanks?
@@ -1135,7 +1119,7 @@ function Module:CheckPeersForCures(checks)
             --current max range on live with raid gear is 137, radiant cure still limited to 100 (300 on laz now but not changing this), but CureNow includes range checks
             if cureTarget and cureTarget() and (cureTarget.Distance() or 999) < 150 then
                 Logger.log_verbose("\ag[Cures] %s is in range - checking for curables", peer)
-                if self:CheckPeerForCures(checks, peer, cureTarget.ID()) then
+                if self:CheckPeerForCures(peer, cureTarget.ID()) then
                     -- bail after the first peer that has a cureable effect. otherwise we might use group cures etc needlessly.
                     return
                 end
@@ -1146,7 +1130,18 @@ function Module:CheckPeersForCures(checks)
     end
 end
 
-function Module:CheckPeerForCures(checks, peer, targetId)
+function Module:CheckPeerForCures(peer, targetId)
+    local checks = {
+        { type = "Poison",  check = "Me.Poisoned.ID", },
+        { type = "Disease", check = "Me.Diseased.ID", },
+        { type = "Curse",   check = "Me.Cursed.ID", },
+        { type = "Mezzed",  check = "Me.Mezzed.ID", },
+    }
+
+    if not Core.OnLaz() then
+        table.insert(checks, { type = "Corruption", check = "Me.Corrupted.ID", })
+    end
+
     for _, data in ipairs(checks) do
         local effectId = DanNet.query(peer, data.check, 1000) or "null"
         Logger.log_verbose("\ay[Cures] %s :: %s [%s] => %s", peer, data.check, data.type, effectId)
@@ -1162,8 +1157,8 @@ function Module:CheckPeerForCures(checks, peer, targetId)
     return false
 end
 
-function Module:RunCureRotation()
-    if (os.clock() - self.TempSettings.CureCheckTimer) < Config:GetSetting('CureInterval') then return end
+function Module:RunCureRotation(combat_state)
+    if combat_state == "Downtime" and (os.clock() - self.TempSettings.CureCheckTimer) < Config:GetSetting('CureInterval') then return end
     self.TempSettings.CureCheckTimer = os.clock()
 
     if self.TempSettings.CureCheckCoroutine ~= nil then
@@ -1171,19 +1166,8 @@ function Module:RunCureRotation()
         return
     end
 
-    local checks = {
-        { type = "Poison",  check = "Me.Poisoned.ID", },
-        { type = "Disease", check = "Me.Diseased.ID", },
-        { type = "Curse",   check = "Me.Cursed.ID", },
-        { type = "Mezzed",  check = "Me.Mezzed.ID", },
-    }
-
-    if not Core.OnLaz() then
-        table.insert(checks, { type = "Corruption", check = "Me.Corrupted.ID", })
-    end
-
     self.TempSettings.CureCheckCoroutine = coroutine.create(function()
-        self:CheckPeersForCures(checks)
+        self:CheckPeersForCures()
     end)
 end
 
@@ -1315,7 +1299,7 @@ function Module:GiveTime(combat_state)
     if self:IsCuring() then
         if not (combat_state == "Downtime" and mq.TLO.Me.Invis() and not Config:GetSetting('BreakInvis')) then
             Logger.log_verbose("\ao[Cures] Checking for curables...")
-            self:RunCureRotation()
+            self:RunCureRotation(combat_state)
             self:ProcessCuresList()
         end
 
