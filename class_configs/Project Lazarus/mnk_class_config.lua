@@ -39,21 +39,20 @@ local _ClassConfig = {
             "Earthwalk Discipline",
         },
         ['FistDisc'] = {
-            "Ashenhand Discipline",
             "Scaledfist Discipline",
+            "Ashenhand Discipline",
         },
         ['Heel'] = {
-            "Rapid Kick Discipline",
-            "Heel of Kanji",
             "Heel of Kai",
+            "Heel of Kanji",
         },
         ['Speed'] = {
-            "Hundred Fists Discipline",
             "Speed Focus Discipline",
+            "Hundred Fists Discipline",
         },
         ['Palm'] = {
-            "Innerflame Discipline",
             "Crystalpalm Discipline",
+            "Innerflame Discipline",
         },
     },
     ['HelperFunctions'] = {
@@ -231,10 +230,6 @@ local _ClassConfig = {
         },
         ['Burn'] = {
             { -- 5m reuse
-                name = "Dicho",
-                type = "Disc",
-            },
-            { -- 5m reuse
                 name = "Ton Po's Stance",
                 type = "AA",
             },
@@ -255,13 +250,17 @@ local _ClassConfig = {
                 type = "Disc",
             },
             {
-                name = "Spire of the Sensei",
+                name = "Fundament: Third Spire of the Sensei",
                 type = "AA",
             },
             {
-                name = "Infusion of Thunder",
+                name = "Zan Fi's Thunderous Whistle", --overwrites infusion of thunder
                 type = "AA",
+                cond = function(self, aaName)
+                    return Casting.SelfBuffAACheck(aaName)
+                end,
             },
+
             { --Chest Click, name function stops errors in rotation window when slot is empty
                 name_func = function() return mq.TLO.Me.Inventory("Chest").Name() or "ChestClick(Missing)" end,
                 type = "Item",
@@ -270,33 +269,12 @@ local _ClassConfig = {
                     return Casting.SelfBuffItemCheck(itemName)
                 end,
             },
-            { --10m reuse
-                name = "CraneStance",
-                type = "Disc",
-            },
-            { --20m reuse, using NOT burndisccheck means we will only use this with a burn disc active
-                name = "Poise",
-                type = "Disc",
-                cond = function(self, discSpell)
-                    return self.ClassConfig.HelperFunctions.BurnDiscCheck(self)
-                end,
-            },
-            { --pairs with Speed Focus Disc, AE, T2
+            {
                 name = "Destructive Force",
                 type = "AA",
                 cond = function(self, aaName)
-                    local speedDisc = self:GetResolvedActionMapItem("Speed")
-                    if not Config:GetSetting("DoAEDamage") or not speedDisc then return false end
-                    return mq.TLO.Me.ActiveDisc.Name() == speedDisc.RankName() and self.ClassConfig.HelperFunctions.AETargetCheck()
-                end,
-            },
-            { --pairs with Speed Focus Disc, single target, T2
-                name = "Focused Destructive Force",
-                type = "AA",
-                cond = function(self, aaName)
-                    local speedDisc = self:GetResolvedActionMapItem("Speed")
-                    if Config:GetSetting("DoAEDamage") or not speedDisc then return false end
-                    return mq.TLO.Me.ActiveDisc.Name() == speedDisc.RankName()
+                    if not Config:GetSetting("DoAEDamage") then return false end
+                    return self.ClassConfig.HelperFunctions.AETargetCheck()
                 end,
             },
             {
@@ -317,6 +295,10 @@ local _ClassConfig = {
                     return Config:GetSetting('DoVetAA')
                 end,
             },
+            {
+                name = "Five Point Palm",
+                type = "AA",
+            },
         },
         ['CombatBuff'] = {
             {
@@ -327,18 +309,18 @@ local _ClassConfig = {
                 end,
             },
             {
-                name = "Zan Fi's Whistle",
-                type = "AA",
-                cond = function(self, aaName)
-                    return Casting.SelfBuffAACheck(aaName)
-                end,
-            },
-            {
                 name = "FistsOfWu",
                 type = "Disc",
                 cond = function(self, discSpell)
-                    if mq.TLO.Me.Level() >= 100 then return false end
                     return Casting.SelfBuffCheck(discSpell)
+                end,
+            },
+            {
+                name = "Infusion of Thunder",
+                type = "AA",
+                cond = function(self, aaName)
+                    if mq.TLO.Me.Buff("Zan Fi's Thunderous Whistle")() then return false end
+                    return Casting.SelfBuffAACheck(aaName)
                 end,
             },
             {
@@ -351,48 +333,22 @@ local _ClassConfig = {
         },
         ['DPS'] = {
             {
-                name = "Synergy",
-                type = "Disc",
-            },
-            {
-                name = "Curse",
-                type = "Disc",
-                cond = function(self, discSpell, target)
-                    return Targeting.MobNotLowHP(target)
-                end,
-            },
-            {
-                name = "Two-Finger Wasp Touch",
+                name = "Eye Gouge",
                 type = "AA",
                 cond = function(self, aaName, target)
-                    return Targeting.MobNotLowHP(target)
+                    return Casting.DetAACheck(aaName, target)
                 end,
-            },
-            {
-                name = "Fists",
-                type = "Disc",
             },
             {
                 name = "Fang",
                 type = "Disc",
             },
             {
-                name = "Five Point Palm",
-                type = "AA",
+                name = "Tiger Claw",
+                type = "Ability",
             },
             {
                 name = "Flying Kick",
-                type = "Ability",
-            },
-            {
-                name = "Eagle Strike",
-                type = "Ability",
-                cond = function(self, abilityName, target)
-                    return mq.TLO.Me.PctEndurance() < 25
-                end,
-            },
-            {
-                name = "Tiger Claw",
                 type = "Ability",
             },
         },
