@@ -31,11 +31,9 @@ local _ClassConfig = {
             "Clawstriker's Flurry",
         },
         ['FistsOfWu'] = {
-            --- Fists of Wu - Double Attack
             "Fists Of Wu",
         },
         ['EarthDisc'] = {
-            -- EarthDisc - Melee Mitigation
             "Earthwalk Discipline",
         },
         ['FistDisc'] = {
@@ -115,6 +113,16 @@ local _ClassConfig = {
             end,
         },
         {
+            name = 'BurnDisc',
+            state = 1,
+            steps = 1,
+            doFullRotation = true,
+            targetId = function(self) return Targeting.CheckForAutoTargetID() end,
+            cond = function(self, combat_state)
+                return combat_state == "Combat" and Casting.BurnCheck() and Casting.NoDiscActive()
+            end,
+        },
+        {
             name = 'CombatBuff',
             state = 1,
             steps = 1,
@@ -154,20 +162,6 @@ local _ClassConfig = {
                 end,
             },
             {
-                name = "CombatEndRegen",
-                type = "Disc",
-                cond = function(self, discSpell)
-                    return mq.TLO.Me.PctEndurance() < 15
-                end,
-            },
-            {
-                name = "Breaths",
-                type = "Disc",
-                cond = function(self, discSpell)
-                    return mq.TLO.Me.PctEndurance() < 15
-                end,
-            },
-            {
                 name = "Mend",
                 type = "Ability",
                 cond = function(self, abilityName)
@@ -191,13 +185,6 @@ local _ClassConfig = {
                 cond = function(self, abilityName)
                     if not Config:GetSetting('AggroFeign') then return false end
                     return Targeting.IHaveAggro(80) and not Core.IAmMA
-                end,
-            },
-            {
-                name = "Defy Death",
-                type = "Disc",
-                cond = function(self, discSpell)
-                    return mq.TLO.Me.PctHPs() < 25
                 end,
             },
             {
@@ -234,22 +221,6 @@ local _ClassConfig = {
                 type = "AA",
             },
             {
-                name = "Heel",
-                type = "Disc",
-            },
-            {
-                name = "Speed",
-                type = "Disc",
-            },
-            {
-                name = "FistDisc",
-                type = "Disc",
-            },
-            {
-                name = "Palm",
-                type = "Disc",
-            },
-            {
                 name = "Fundament: Third Spire of the Sensei",
                 type = "AA",
             },
@@ -258,15 +229,6 @@ local _ClassConfig = {
                 type = "AA",
                 cond = function(self, aaName)
                     return Casting.SelfBuffAACheck(aaName)
-                end,
-            },
-
-            { --Chest Click, name function stops errors in rotation window when slot is empty
-                name_func = function() return mq.TLO.Me.Inventory("Chest").Name() or "ChestClick(Missing)" end,
-                type = "Item",
-                cond = function(self, itemName, target)
-                    if not Config:GetSetting('DoChestClick') or not Casting.ItemHasClicky(itemName) then return false end
-                    return Casting.SelfBuffItemCheck(itemName)
                 end,
             },
             {
@@ -298,6 +260,24 @@ local _ClassConfig = {
             {
                 name = "Five Point Palm",
                 type = "AA",
+            },
+        },
+        ['BurnDisc'] = {
+            {
+                name = "Heel",
+                type = "Disc",
+            },
+            {
+                name = "Palm",
+                type = "Disc",
+            },
+            {
+                name = "FistDisc",
+                type = "Disc",
+            },
+            {
+                name = "Speed",
+                type = "Disc",
             },
         },
         ['CombatBuff'] = {
