@@ -157,8 +157,7 @@ local _ClassConfig = {
                 name = "EndRegen",
                 type = "Disc",
                 cond = function(self, discSpell)
-                    if self:GetResolvedActionMapItem("CombatEndRegen") then return false end
-                    return mq.TLO.Me.PctEndurance() < 15
+                    return mq.TLO.Me.PctEndurance() < 25
                 end,
             },
             {
@@ -203,7 +202,7 @@ local _ClassConfig = {
                 end,
             },
             {
-                name = "Coating",
+                name = "Blood Drinker's Coating",
                 type = "Item",
                 cond = function(self, itemName, target)
                     if not Config:GetSetting('DoCoating') then return false end
