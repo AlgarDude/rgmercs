@@ -16,6 +16,22 @@ Module.FAQ                              = {}
 Module.ClassFAQ                         = {}
 Module.SaveRequested                    = nil
 
+Module.Constants                        = {}
+Module.Constants.RecoveryTargets        = { "Self", "Main Assist", }
+Module.Constants.RecoveryVitals         = { "Health", "Mana", "Endurance", }
+Module.Constants.RecoveryCheck          = {
+    ['Self'] = {
+        ['Health'] = { function() return mq.TLO.Me.PctHPs() end, },
+        ['Mana'] = { function() return mq.TLO.Me.PctMana() end, },
+        ['Endurance'] = { function() return mq.TLO.Me.PctEndurance() end, },
+    },
+    ['Main Assist'] = {
+        ['Health'] = { function() return Core.GetMainAssistPctHPs() end, },
+        ['Mana'] = { function() return Core.GetMainAssistPctMana() end, },
+        ['Endurance'] = { function() return Core.GetMainAssistEndurance() end, },
+    },
+}
+
 Module.TempSettings                     = {}
 Module.TempSettings.ClickyState         = {}
 Module.TempSettings.CombatClickiesTimer = 0
@@ -72,7 +88,7 @@ Module.DefaultConfig                    = {
     ['CombatClickies']                         = {
         DisplayName = "Combat Item %d",
         Category    = "Clickies",
-        Tooltip     = "Clicky Item to use During Downtime",
+        Tooltip     = "Detrimental clicky item to be used on your combat target.",
         Type        = "Array|ClickyItem",
         Default     = {},
         ConfigType  = "Normal",
@@ -80,6 +96,45 @@ Module.DefaultConfig                    = {
         FAQ         = "Why isn't my combat clicky being used?",
         Answer      = "Combat clickies only support detrimental items.\n" ..
             "Beneficial items should be used in Downtime or have a specific entry added to control proper use conditions.",
+    },
+    ['RecoveryClickies']                       = {
+        DisplayName = "Recovery Item %d",
+        Category    = "Clickies",
+        Tooltip     = "Recovery clicky item to be used during combat.",
+        Type        = "Array|ClickyItem",
+        Default     = {},
+        ConfigType  = "Normal",
+        Index       = 4,
+        FAQ         = "Why isn't my recovery clicky being used?",
+        Answer      = "Ensure that your conditions are correct and that you have the item!",
+    },
+    ['RecoveryTarget']                         = {
+        DisplayName  = "Recovery Target %d",
+        Category     = "Clickies",
+        Tooltip      = "Target of the recovery item.",
+        Type         = "Combo",
+        ComboOptions = Module.Constants.RecoveryTargets,
+        Default      = 1,
+        Min          = 1,
+        Max          = #Module.Constants.RecoveryTargets,
+        ConfigType   = "Normal",
+        Index        = 5,
+        FAQ          = "Why isn't my recovery clicky being used?",
+        Answer       = "Ensure that your conditions are correct and that you have the item!",
+    },
+    ['RecoveryVital']                          = {
+        DisplayName  = "Recovery Target %d",
+        Category     = "Clickies",
+        Tooltip      = "What vital statistic to check for this recovery item.",
+        Type         = "Combo",
+        ComboOptions = Module.Constants.RecoveryVitals,
+        Default      = 1,
+        Min          = 1,
+        Max          = #Module.Constants.RecoveryVitals,
+        ConfigType   = "Normal",
+        Index        = 6,
+        FAQ          = "Why isn't my recovery clicky being used?",
+        Answer       = "Ensure that your conditions are correct and that you have the item!",
     },
     [string.format("%s_Popped", Module._name)] = {
         DisplayName = Module._name .. " Popped",
@@ -265,6 +320,8 @@ function Module:Render()
     self:RenderClickies("Downtime Clickies", Config:GetSetting('DowntimeClickies'))
 
     self:RenderClickies("Combat Clickies", Config:GetSetting('CombatClickies'))
+
+    self:RenderClickies("Recovery Clickies", Config:GetSetting('RecoveryClickies'))
 
     if ImGui.CollapsingHeader("Config Options") then
         _, _ = Ui.RenderModuleSettings(self._name, self.DefaultConfig, self.SettingCategories)

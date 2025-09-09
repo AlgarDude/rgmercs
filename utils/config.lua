@@ -358,7 +358,7 @@ Config.DefaultConfig = {
         Min = 1,
         Max = 3,
         ConfigType = "Normal",
-        FAQ = "How do I change when I maditate?",
+        FAQ = "How do I change when I meditate?",
         Answer = "You can set the [DoMed] option to the desired Meditation Setting." ..
             "'Out of Combat' Will only Meditate Outside of Combat." ..
             "'In Combat' Will Meditate in and out of Combat." ..
