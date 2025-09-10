@@ -1643,8 +1643,7 @@ function Module:GetPullableSpawns()
             return false
         end
 
-        local surname = spawn.Surname()
-        if surname and (surname:find("'s Pet") or surname:find("'s Doppelganger")) then
+        if Targeting.TargetIsPetSurnameCheck(spawn) then
             Logger.log_verbose("\atPULL::FindTarget \awFindTarget :: Spawn \am%s\aw (\at%d\aw) \aois Temp or Swarm Pet -- Skipping", spawn.CleanName(), spawn.ID())
             return false
         end

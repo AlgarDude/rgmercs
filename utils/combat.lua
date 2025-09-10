@@ -405,6 +405,7 @@ function Combat.FindBestAutoTarget(validateFn)
                 and Targeting.GetTargetDistance(target) < Config:GetSetting('AssistRange')
                 and Targeting.GetTargetDistanceZ(target) < 20
                 and Targeting.GetTargetAggressive(target)
+                and not Targeting.TargetIsPetSurnameCheck(target)
 
             -- We need to handle manual targeting and autotargeting seperately
             if not Config:GetSetting('DoAutoTarget') then

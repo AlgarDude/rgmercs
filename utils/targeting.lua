@@ -193,6 +193,12 @@ function Targeting.TargetIsType(type, target)
     return Targeting.GetTargetType(target):lower() == type:lower()
 end
 
+-- Checks if the target is a temp pet that is evading typical pet type/master checks (largely for emu)
+function Targeting.TargetIsPetSurnameCheck(target)
+    local surname = target.Surname()
+    return surname and (surname:find("'s Pet") or surname:find("'s Doppelganger"))
+end
+
 --- @param target MQTarget|nil
 --- @return boolean
 function Targeting.GetTargetAggressive(target)
