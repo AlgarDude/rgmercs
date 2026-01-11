@@ -1093,7 +1093,7 @@ function Casting.UseSpell(spellName, targetId, bAllowMem, bAllowDead, retryCount
             mq.delay(1)
             Logger.log_verbose("\atUseSpell(): Finished waiting on cast: %s result = %s retries left = %d", spellName, Casting.GetLastCastResultName(), retryCount)
             retryCount = retryCount - 1
-        until Config.Constants.CastCompleted:contains(Casting.GetLastCastResultName()) or retryCount < 0
+        until Config.Constants.CastCompleted:contains(Casting.GetLastCastResultName()) or Config.TempSettings.StopCast or retryCount < 0
 
         Globals.LastUsedSpell = spellName
         if oldTargetId > 0 and (oldTargetId == Globals.AutoTargetID or not Config:GetSetting('DoAutoTarget')) and mq.TLO.Target.ID() ~= oldTargetId then
@@ -1237,7 +1237,7 @@ function Casting.UseSong(songName, targetId, bAllowMem, retryCount)
             end
 
             retryCount = retryCount - 1
-        until Config.Constants.CastCompleted:contains(Casting.GetLastCastResultName()) or retryCount < 0
+        until Config.Constants.CastCompleted:contains(Casting.GetLastCastResultName()) or Config.TempSettings.StopCast or retryCount < 0
 
         -- if we interrupted ourselves earlier, we don't need to do this
         if mq.TLO.Me.Casting() then
@@ -1389,7 +1389,7 @@ function Casting.UseAA(aaName, targetId, bAllowDead, retryCount)
             mq.delay(1)
             Logger.log_verbose("\atUseAA(): Finished waiting on cast: %s result = %s retries left = %d", aaName, Casting.GetLastCastResultName(), retryCount)
             retryCount = retryCount - 1
-        until Config.Constants.CastCompleted:contains(Casting.GetLastCastResultName()) or retryCount < 0
+        until Config.Constants.CastCompleted:contains(Casting.GetLastCastResultName()) or Config.TempSettings.StopCast or retryCount < 0
     else
         Core.DoCmd(cmd)
         mq.delay(5)
@@ -1513,6 +1513,10 @@ function Casting.UseItem(itemName, targetId, forceTarget)
 
         -- pick up any additonal server lag.
         while me.Casting() do
+            if Config.TempSettings.StopCast then
+                Logger.log_verbose("Cancelling item use due to /rgl stopcast command!")
+                return false
+            end
             mq.delay(10)
             mq.doevents()
             Events.DoEvents()

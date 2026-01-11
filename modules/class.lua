@@ -313,6 +313,16 @@ Module.CommandHandlers                       = {
             return true
         end,
     },
+    stopcast = {
+        usage = "/rgl stopcast",
+        about = "If casting, cancels the current spell cast and disables any further retry attempts.",
+        handler = function(self)
+            Logger.log_info("\awStopping the current cast.")
+            Config.TempSettings.StopCast = true
+            Core.DoCmd('/stopcast')
+            return true
+        end,
+    },
 }
 
 local function getConfigFileName()
@@ -1034,6 +1044,10 @@ function Module:HealById(id)
     local selectedRotation = nil
 
     for idx, rotation in ipairs(self.TempSettings.HealRotationStates or {}) do
+        if Config.TempSettings.StopCast then
+            Logger.log_verbose("Heal rotation checks cancelled due to /rgl stopcast command!")
+            break
+        end
         self.TempSettings.CurrentRotationStateType = 2
         self.TempSettings.CurrentRotationStateId = idx
 
@@ -1450,6 +1464,7 @@ end
 
 function Module:GiveTime(combat_state)
     if not self.ClassConfig or not self.ModuleLoaded then return end
+
     local enabledRotations = Config:GetSetting('EnabledRotations') or {}
 
     local me               = mq.TLO.Me
@@ -1497,13 +1512,13 @@ function Module:GiveTime(combat_state)
     end
 
     -- Healing happens first and anytime we aren't in downtime while invis and set not to break it.
-    if self:IsHealing() then
+    if self:IsHealing() and not Config.TempSettings.StopCast then
         if not (combat_state == "Downtime" and mq.TLO.Me.Invis() and not Config:GetSetting('BreakInvisForHealing')) then
             self:RunHealRotation()
         end
     end
 
-    if self:IsRezing() and Config:GetSetting('DoRez') then
+    if self:IsRezing() and Config:GetSetting('DoRez') and not Config.TempSettings.StopCast then
         -- Check Rezes
         if not (combat_state == "Downtime" and mq.TLO.Me.Invis() and not Config:GetSetting('BreakInvisForHealing')) then
             self:IGCheckAndRez(combat_state)
@@ -1525,7 +1540,7 @@ function Module:GiveTime(combat_state)
         end
     end
 
-    if self:IsCuring() then
+    if self:IsCuring() and not Config.TempSettings.StopCast then
         if not (combat_state == "Downtime" and mq.TLO.Me.Invis() and not Config:GetSetting('BreakInvisForHealing')) then
             self:RunCureRotation(combat_state)
 
@@ -1540,7 +1555,7 @@ function Module:GiveTime(combat_state)
     end
 
     --Counter TOB Debuff with AA Buff, this can be refactored/expanded if they add other similar systems
-    if Config:GetSetting('UseCounterActions') then
+    if Config:GetSetting('UseCounterActions') and not Config.TempSettings.StopCast then
         Logger.log_verbose("\ao[CounterActions] Checking for debuffs to counter...")
         self:RunCounterRotation()
     end
@@ -1573,6 +1588,10 @@ function Module:GiveTime(combat_state)
     -- Downtime rotation will just run a full rotation to completion
     for idx, r in ipairs(self.TempSettings.RotationStates) do
         Logger.log_verbose("\ay:::TEST ROTATION::: => \at%s", r.name)
+        if Config.TempSettings.StopCast then
+            Logger.log_verbose("Rotation checks cancelled due to /rgl stopcast command!")
+            break
+        end
         self.TempSettings.CurrentRotationStateType = 1
         self.TempSettings.CurrentRotationStateId = idx
         local timeCheckPassed = true
@@ -1624,6 +1643,7 @@ function Module:GiveTime(combat_state)
     end
 
     self.TempSettings.CurrentRotationStateType = 0
+    Config.TempSettings.StopCast = false
 end
 
 function Module:SetCurrentRotationState(state)
