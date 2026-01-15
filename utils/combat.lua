@@ -528,14 +528,17 @@ function Combat.FindBestAutoTarget(validateFn)
 
             local heartbeat = Comms.GetPeerHeartbeatByName(Globals.MainAssist)
 
+            -- if the MA has a force target, use it, and also force combat on this target (don't check aggressiveness on the MA's force target)
             if heartbeat and heartbeat.Data then
                 local forceTargId = tonumber(heartbeat.Data.ForceTargetID) or 0
                 if forceTargId > 0 then
-                    Globals.ForceTargetID = forceTargId
+                    Globals.ForceCombatID = forceTargId
                     assistId = forceTargId
                     assistTarget = mq.TLO.Spawn(forceTargId)
-                    Logger.log_verbose("\ayFindAutoTarget Assist's Forced Target via Actors :: %s (%s)",
+                    Logger.log_verbose("\ayFindAutoTarget Assist's Forced Target via Actors :: %s (%s). Ignoring mob aggressiveness.",
                         assistTarget.CleanName() or "None", forceTargId)
+                else -- reset force combat ID if the MA is no longer forcing that target
+                    Globals.ForceCombatID = 0
                 end
             end
 
@@ -549,9 +552,7 @@ function Combat.FindBestAutoTarget(validateFn)
                             Logger.log_verbose("\ayFindAutoTarget Assist's Target via Actors :: %s (%s)",
                                 assistTarget.CleanName() or "None", targetID)
                         end
-                    end
-
-                    if assistId == 0 and mq.TLO.DanNet(Globals.MainAssist)() then
+                    elseif mq.TLO.DanNet(Globals.MainAssist)() then
                         local queryResult = DanNet.query(Globals.MainAssist, "Target.ID", 1000)
                         if queryResult then
                             assistId = tonumber(queryResult) or 0
@@ -559,9 +560,7 @@ function Combat.FindBestAutoTarget(validateFn)
                             Logger.log_verbose("\ayFindAutoTarget Assist's Target via DanNet :: %s (%s)",
                                 assistTarget.CleanName() or "None", queryResult)
                         end
-                    end
-
-                    if assistId == 0 then
+                    else
                         local assistSpawn = Core.GetMainAssistSpawn()
                         if assistSpawn and assistSpawn() then
                             Targeting.SetTarget(assistSpawn.ID(), true)
@@ -700,15 +699,17 @@ function Combat.OkToEngagePreValidateId(targetId)
         if Core.IAmMA() then
             Logger.log_verbose("OkToEngagePrevalidate check for %s(ID: %d) - I am MA, proceeding!", targetName, targetId)
             return true
-        else
+        else -- can't check HP yet, as we haven't targeted
             local distanceCheck = Targeting.GetTargetDistance(target) < Config:GetSetting('AssistRange')
             local hostileCheck = Config:GetSetting('TargetNonAggressives') or target.Aggressive()
             local forcedTarget = Globals.ForceTargetID > 0 and target.ID() == Globals.ForceTargetID
+            local forcedCombat = Globals.ForceCombatID > 0 and targetId == Globals.ForceCombatID
 
-            Logger.log_verbose("OkToEngagePrevalidate check for %s(ID: %d) - DistanceCheck(%s), HostileCheck(%s), ForcedTarget(%s)", targetName, targetId,
-                Strings.BoolToColorString(distanceCheck), Strings.BoolToColorString(hostileCheck), Strings.BoolToColorString(forcedTarget))
+            Logger.log_verbose("OkToEngagePrevalidate check for %s(ID: %d) - DistanceCheck(%s), HostileCheck(%s), ForcedTarget(%s), ForcedCombat(%s)", targetName, targetId,
+                Strings.BoolToColorString(distanceCheck), Strings.BoolToColorString(hostileCheck), Strings.BoolToColorString(forcedTarget), Strings.BoolToColorString(forcedCombat))
 
-            return distanceCheck and (hostileCheck or forcedTarget)
+            -- in range, and the mob is aggressive, the forced target, or the MA's force target
+            return distanceCheck and (hostileCheck or forcedTarget or forcedCombat)
         end
     end
 
@@ -773,12 +774,15 @@ function Combat.OkToEngage(autoTargetId)
             local distanceCheck = Targeting.GetTargetDistance() < Config:GetSetting('AssistRange')
             local assistHPCheck = Targeting.GetTargetPctHPs() <= Config:GetSetting('AutoAssistAt')
             local hostileCheck = Config:GetSetting('TargetNonAggressives') or target.Aggressive()
-            local forcedTarget = Globals.ForceTargetID > 0 and target.ID() == Globals.ForceTargetID
+            local forcedTarget = Globals.ForceTargetID > 0 and targetId == Globals.ForceTargetID
+            local forcedCombat = Globals.ForceCombatID > 0 and targetId == Globals.ForceCombatID
 
-            Logger.log_verbose("OkToEngage check for %s(ID: %d) - DistanceCheck(%s), AssistHPCheck(%s), HostileCheck(%s), ForcedTarget(%s)", targetName, targetId,
-                Strings.BoolToColorString(distanceCheck), Strings.BoolToColorString(assistHPCheck), Strings.BoolToColorString(hostileCheck), Strings.BoolToColorString(forcedTarget))
+            Logger.log_verbose("OkToEngage check for %s(ID: %d) - DistanceCheck(%s), AssistHPCheck(%s), HostileCheck(%s), ForcedTarget(%s), ForcedCombat(%s)", targetName, targetId,
+                Strings.BoolToColorString(distanceCheck), Strings.BoolToColorString(assistHPCheck), Strings.BoolToColorString(hostileCheck), Strings.BoolToColorString(forcedTarget),
+                Strings.BoolToColorString(forcedCombat))
 
-            return distanceCheck and (forcedTarget or (assistHPCheck and hostileCheck))
+            -- in range, and forced target. if not a forced target, check for assist HP, and make sure its hostile or we have forcecombat set (don't check aggressive on the MA's force target)
+            return distanceCheck and (forcedTarget or (assistHPCheck and (hostileCheck or forcedCombat)))
         end
     end
 

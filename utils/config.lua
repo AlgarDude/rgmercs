@@ -65,12 +65,22 @@ Config.FAQ                                               = {
     },
     [3] = {
         Question = "How do I force auto combat on a target that isn't aggressive or isn't hostile?",
-        Answer = "This is accomplished with the /rgl forcetarget <id?> command:\n\n" ..
+        Answer = "This is accomplished by selecting a target in the Force Target window, or by using the /rgl forcetarget <id?> command:\n\n" ..
             "The command accepts a target ID, and will fall back to your current target's ID if one is not supplied.\n\n" ..
-            "When commanded, the PC will add the target to the first XT slot and immediately force target.\n\n" ..
-            "The force target state can be issued to any PC, but if issued by the MA, it will be broadcasted to peers via actors, and will allow the target to check as valid even when the 'Target Non-Aggressives' setting is disabled." ..
-            " Actors may need to be configured in MQ if all peers are not on the same PC. As an alternative, the setting above can be enabled temporarily.\n\n" ..
-            "Only one Force Target can be directed at a time, and the state will be cleared automatically. It can be cleared manually with the /rgl forcetargetclear command.",
+            "When commanded, the PC will add the target to the first XT slot and immediately force that target as the combat autotarget.\n\n" ..
+            "The force target state can be issued to any PC, but if issued by the MA, anyone assisting will bypass aggression checks, even when the 'Target Non-Aggressives' setting is disabled.\n\n" ..
+            "To receive target data, Actors may need to be configured in MQ if all peers are not on the same PC. As an alternative, the setting above can be enabled temporarily.\n\n" ..
+            "Only one Force Target can be directed at a time, and the state will be cleared automatically. It can be cleared manually in the Force Target window, or with the /rgl forcetargetclear command.",
+        Settings_Used = "",
+    },
+    [4] = {
+        Question = "How do I force auto combat on a particular target instead of the current target?",
+        Answer = "This is accomplished by selecting a target in the Force Target window, or by using the /rgl forcetarget <id?> command:\n\n" ..
+            "The command accepts a target ID, and will fall back to your current target's ID if one is not supplied.\n\n" ..
+            "When commanded, the PC will add the target to the first XT slot and immediately force that target as the combat autotarget.\n\n" ..
+            "The force target state can be issued to any PC, but if issued by the MA, anyone assisting will bypass aggression checks, even when the 'Target Non-Aggressives' setting is disabled.\n\n" ..
+            "To receive target data, Actors may need to be configured in MQ if all peers are not on the same PC. As an alternative, the setting above can be enabled temporarily.\n\n" ..
+            "Only one Force Target can be directed at a time, and the state will be cleared automatically. It can be cleared manually in the Force Target window, or with the /rgl forcetargetclear command.",
         Settings_Used = "",
     },
 }

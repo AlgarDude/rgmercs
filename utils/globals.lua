@@ -10,6 +10,7 @@ Globals.MainAssist                    = ""
 Globals.ScriptDir                     = ""
 Globals.AutoTargetID                  = 0
 Globals.ForceTargetID                 = 0
+Globals.ForceCombatID                 = 0
 Globals.LastPulledID                  = 0
 Globals.CurrentState                  = "None"
 Globals.IgnoredTargetIDs              = Set.new({})

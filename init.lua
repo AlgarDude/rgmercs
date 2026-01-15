@@ -337,6 +337,7 @@ local function Main()
             Modules:ExecAll("OnZone")
             notifyZoning = false
             Globals.ForceTargetID = 0
+            Globals.ForceCombatID = 0
             Globals.IgnoredTargetIDs = Set.new({})
             Globals.AutoTargetID = 0
         end
