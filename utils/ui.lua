@@ -850,11 +850,11 @@ function Ui.RenderMercsStatus(showPopout)
             end,
             render = function(peer, data)
                 if Config:GetSetting('StatusUseBars') then
-                    Ui.RenderAnimatedPercentage("MercsStatusExpBar" .. peer, math.ceil(data.Data.PctExp or 0), ImGui.GetTextLineHeight(), 0, Colors.LightRed, Colors.Orange,
-                        Colors.LightGreen, nil, 0)
+                    Ui.RenderAnimatedPercentage("MercsStatusExpBar" .. peer, math.ceil(data.Data.PctExp or 0), ImGui.GetTextLineHeight(), 0, Colors.Yellow, Colors.Yellow,
+                        Colors.Yellow, nil, 0)
                 else
                     Ui.RenderColoredText(
-                        Ui.GetPercentageColor(data.Data.PctExp or 0, { Colors.LightRed, Colors.Orange, Colors.Yellow, }),
+                        Ui.GetPercentageColor(data.Data.PctExp or 0, { Colors.LightYellow, Colors.Yellow, Colors.Orange, }),
                         data.Data.HPs and "%6.2f%%" or "", data.Data.PctExp or 0)
                 end
             end,
