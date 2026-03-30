@@ -505,12 +505,38 @@ function Module:Render()
     Base.Render(self)
 
     if self.ModuleLoaded and Globals.SubmodulesLoaded then
-        ImGui.Text("Chase Distance: %d", Config:GetSetting('ChaseDistance'))
-        ImGui.Text("Chase Stop Distance: %d", Config:GetSetting('ChaseStopDistance'))
-        ImGui.Text("Chase LOS Required: %s", Config:GetSetting('RequireLoS') == true and "On" or "Off")
-        ImGui.Text("Last Movement Command: %s", self.TempSettings.LastCmd)
-
         local chaseSpawn = mq.TLO.Spawn("pc =" .. self:GetChaseTarget())
+        local chaseDist = Config:GetSetting('ChaseDistance')
+        local chaseStopDist = Config:GetSetting('ChaseStopDistance')
+        local requireLOS = Config:GetSetting('RequireLoS')
+        local chaseSpawnDist = chaseSpawn() and (chaseSpawn.Distance() or 999) or 999
+
+        ImGui.BeginTable("##MoveInfoTable", 2, bit32.bor(ImGuiTableFlags.BordersInner, ImGuiTableFlags.SizingFixedFit))
+        ImGui.TableNextColumn()
+        ImGui.Text("Chase Distance")
+        ImGui.TableNextColumn()
+        if not chaseSpawn() or chaseSpawn.ID() == 0 then
+            Ui.RenderColoredText(Globals.Constants.BasicColors.Grey, "N/A")
+        else
+            Ui.RenderColoredText(chaseDist > chaseSpawnDist and Globals.Constants.BasicColors.Green or Globals.Constants.BasicColors.Red, "%d", chaseDist)
+        end
+        ImGui.TableNextColumn()
+        ImGui.Text("Chase Stop Distance")
+        ImGui.TableNextColumn()
+        if not chaseSpawn() or chaseSpawn.ID() == 0 then
+            Ui.RenderColoredText(Globals.Constants.BasicColors.Grey, "N/A")
+        else
+            Ui.RenderColoredText(chaseStopDist < chaseSpawnDist and Globals.Constants.BasicColors.Green or Globals.Constants.BasicColors.Red, "%d", chaseStopDist)
+        end
+        ImGui.TableNextColumn()
+        ImGui.Text("Chase LOS Required")
+        ImGui.TableNextColumn()
+        Ui.RenderColoredText(requireLOS and Globals.Constants.BasicColors.Green or Globals.Constants.BasicColors.Red, requireLOS and "Yes" or "No")
+        ImGui.TableNextColumn()
+        ImGui.Text("Last Movement Command")
+        ImGui.TableNextColumn()
+        ImGui.Text(self.TempSettings.LastCmd)
+        ImGui.EndTable()
 
         ImGui.Separator()
 
