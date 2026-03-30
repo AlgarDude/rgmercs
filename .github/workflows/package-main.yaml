@@ -27,7 +27,7 @@ jobs:
         run: |
           mkdir dist
           echo "Build from commit $GITHUB_SHA" > dist/info.txt
-          zip -r dist/package.zip dist
+          zip -r dist/rgmercs.zip .
 
       # Create release + upload asset
       - name: Create GitHub Release
