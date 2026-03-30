@@ -851,7 +851,7 @@ function Ui.RenderMercsStatus(showPopout)
             render = function(peer, data)
                 if Config:GetSetting('StatusUseBars') then
                     Ui.RenderAnimatedPercentage("MercsStatusExpBar" .. peer, math.ceil(data.Data.PctExp or 0), ImGui.GetTextLineHeight(), 0, Colors.Yellow, Colors.Yellow,
-                        Colors.Yellow, nil, 0)
+                        Colors.Yellow, nil, 0, 4)
                 else
                     Ui.RenderColoredText(
                         Ui.GetPercentageColor(data.Data.PctExp or 0, { Colors.LightYellow, Colors.Yellow, Colors.Orange, }),
@@ -870,7 +870,7 @@ function Ui.RenderMercsStatus(showPopout)
             end,
             render = function(peer, data)
                 if Config:GetSetting('StatusUseBars') then
-                    Ui.RenderFancyHPBar("MercsStatusHPBar" .. peer, math.ceil(data.Data.HPs or 0), ImGui.GetTextLineHeight(), nil, 0)
+                    Ui.RenderFancyHPBar("MercsStatusHPBar" .. peer, math.ceil(data.Data.HPs or 0), ImGui.GetTextLineHeight(), nil, 0, 4)
                 else
                     Ui.RenderColoredText(
                         Ui.GetPercentageColor(data.Data.HPs or 0, { Colors.BrightGreen, Colors.Yellow, Colors.Red, }),
@@ -890,7 +890,7 @@ function Ui.RenderMercsStatus(showPopout)
             render = function(peer, data)
                 if Globals.Constants.RGCasters:contains(data.Data.Class) then
                     if Config:GetSetting('StatusUseBars') then
-                        Ui.RenderFancyManaBar("MercsStatusManaBar" .. peer, math.ceil(data.Data.Mana or 0), ImGui.GetTextLineHeight(), 0)
+                        Ui.RenderFancyManaBar("MercsStatusManaBar" .. peer, math.ceil(data.Data.Mana or 0), ImGui.GetTextLineHeight(), 0, 4)
                     else
                         Ui.RenderColoredText(
                             Ui.GetPercentageColor(data.Data.Mana or 0, { Colors.Cyan, Colors.LightBlue, Colors.Red, }),
@@ -911,7 +911,7 @@ function Ui.RenderMercsStatus(showPopout)
             render = function(peer, data)
                 if Config:GetSetting('StatusUseBars') then
                     Ui.RenderAnimatedPercentage("MercsStatusEnduranceBar" .. peer, math.ceil(data.Data.Endurance or 0), ImGui.GetTextLineHeight(), 0, Colors.LightRed, Colors.Grey,
-                        Colors.Yellow)
+                        Colors.Yellow, nil, 0, 4)
                 else
                     Ui.RenderColoredText(
                         Ui.GetPercentageColor(data.Data.Endurance or 0, { Colors.Yellow, Colors.Grey, Colors.Red, }),
@@ -1097,7 +1097,7 @@ function Ui.RenderMercsStatus(showPopout)
             render = function(peer, data)
                 if data.Data.PetID > 0 then
                     if Config:GetSetting('StatusUseBars') then
-                        Ui.RenderFancyHPBar("MercsStatusPetHPBar" .. peer, math.ceil(data.Data.PetHPs or 0), ImGui.GetTextLineHeight())
+                        Ui.RenderFancyHPBar("MercsStatusPetHPBar" .. peer, math.ceil(data.Data.PetHPs or 0), ImGui.GetTextLineHeight(), false, nil, 4)
                     else
                         Ui.RenderColoredText(
                             Ui.GetPercentageColor(data.Data.PetHPs or 0, { Colors.BrightGreen, Colors.Yellow, Colors.Red, }),
@@ -2311,11 +2311,12 @@ function Ui.GetDeltaTime()
     return dt
 end
 
-function Ui.RenderAnimatedPercentage(id, barPct, height, width, colLow, colMid, colHigh, label, borderThickness)
+function Ui.RenderAnimatedPercentage(id, barPct, height, width, colLow, colMid, colHigh, label, borderThickness, milestoneTicks)
     local targetPct = Math.Clamp(tonumber(barPct) or 0, 0, 100) / 100.0
     local dt = Ui.GetDeltaTime()
     local drawList = ImGui.GetWindowDrawList()
     borderThickness = borderThickness or 1.0
+    milestoneTicks = milestoneTicks or 10
 
     if width == 0 then width = ImGui.GetContentRegionAvailVec().x end
     height = height or 16
@@ -2442,8 +2443,8 @@ function Ui.RenderAnimatedPercentage(id, barPct, height, width, colLow, colMid, 
     end
 
     -- Segment ticks (10% each).
-    for i = 1, 9 do
-        local tx = min.x + (width * (i / 10))
+    for i = 1, milestoneTicks - 1 do
+        local tx = min.x + (width * (i / milestoneTicks))
         local reached = tx <= (min.x + fillWidth)
 
         drawList:AddLine(
@@ -2687,7 +2688,7 @@ function Ui.RenderAnimatedPercentageOld(id, barPct, height, colLow, colMid, colH
 end
 
 -- Draw a horizontal gradient HP bar using ImDrawList:AddRectFilledMultiColor.
-function Ui.RenderFancyHPBar(id, hpPct, height, burning, borderThickness, hpLowOverride, hpMidOverride, hpHighOverride)
+function Ui.RenderFancyHPBar(id, hpPct, height, burning, borderThickness, milestoneTicks, hpLowOverride, hpMidOverride, hpHighOverride)
     local now = Globals.GetTimeSeconds()
     local drawList = ImGui.GetWindowDrawList()
 
@@ -2695,7 +2696,7 @@ function Ui.RenderFancyHPBar(id, hpPct, height, burning, borderThickness, hpLowO
     local hpMid = hpMidOverride or Globals.Constants.Colors.HPMidColor
     local hpHigh = hpHighOverride or Globals.Constants.Colors.HPHighColor
 
-    local clicked = Ui.RenderAnimatedPercentage(id, hpPct, height, 0, hpLow, hpMid, hpHigh, nil, borderThickness)
+    local clicked = Ui.RenderAnimatedPercentage(id, hpPct, height, 0, hpLow, hpMid, hpHigh, nil, borderThickness, milestoneTicks)
 
     local minX, minY = ImGui.GetItemRectMin()
     local maxX, maxY = ImGui.GetItemRectMax()
@@ -2718,15 +2719,12 @@ function Ui.RenderFancyHPBar(id, hpPct, height, burning, borderThickness, hpLowO
 end
 
 -- Draw a horizontal gradient HP bar using ImDrawList:AddRectFilledMultiColor.
-function Ui.RenderFancyManaBar(id, hpPct, height, borderThickness)
-    local now = Globals.GetTimeSeconds()
-    local drawList = ImGui.GetWindowDrawList()
-
+function Ui.RenderFancyManaBar(id, hpPct, height, borderThickness, milestoneTicks)
     local manaLow = Globals.Constants.Colors.ManaLowColor
     local manaMid = Globals.Constants.Colors.ManaMidColor
     local manaHigh = Globals.Constants.Colors.ManaHighColor
 
-    return Ui.RenderAnimatedPercentage(id, hpPct, height, 0, manaLow, manaMid, manaHigh, nil, borderThickness)
+    return Ui.RenderAnimatedPercentage(id, hpPct, height, 0, manaLow, manaMid, manaHigh, nil, borderThickness, milestoneTicks)
 end
 
 function Ui.RenderFancyProgressBar(id, pctComplete, height, label)
