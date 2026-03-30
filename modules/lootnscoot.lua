@@ -224,7 +224,7 @@ function Module:GiveTime()
 	local deadCount = mq.TLO.SpawnCount("npccorpse radius 100 zradius 50")()
 	local myCorpseCount = mq.TLO.SpawnCount(string.format("pccorpse %s radius 100 zradius 50", mq.TLO.Me.CleanName()))()
 	if myCorpseCount > 0 then deadCount = deadCount + 1 end
-
+	Logger.log_verbose("\ay[LOOT]: \agFound %d corpses within range.", deadCount)
 	if self.Actor == nil then self:LootMessageHandler() end
 	-- send actors message to loot
 	if (combat_state ~= "Combat" or Config:GetSetting('CombatLooting')) and deadCount > 0 then
