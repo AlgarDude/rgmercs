@@ -799,7 +799,7 @@ local _ClassConfig = {
             {
                 name = "AegoBuff",
                 type = "Spell",
-                load_cond = function(self) return Config:GetSetting('AegoBuff') <= 2 end,
+                load_cond = function(self) return Config:GetSetting('AegoSymbol') <= 2 end,
                 cond = function(self, spell, target)
                     return Casting.GroupBuffCheck(spell, target)
                 end,
