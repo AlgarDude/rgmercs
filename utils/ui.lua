@@ -3303,7 +3303,7 @@ function Ui.RenderLogo(textureId)
 
     ImGui.Dummy(ImVec2(60, 60))
 
-    if afConfig then
+    if afConfig or Config:GetSetting('123EyesOnMe') then
         local t = Ui.TempSettings.LogoMOTime and (Globals.GetTimeSeconds() / 100 - Ui.TempSettings.LogoMOTime) or 0
         t = t % 120
         local delta

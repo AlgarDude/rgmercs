@@ -2486,6 +2486,14 @@ Config.DefaultConfig                                     = {
         Type = "Custom",
         Default = false,
     },
+    ['123EyesOnMe']                      = {
+        DisplayName = "1,2,3 Eyes On Me",
+        Group = "General",
+        Header = "Interface",
+        Category = "Interface",
+        Tooltip = "Derple Dog Watches You While You Sleep",
+        Default = false,
+    },
 }
 
 Config.CommandHandlers                                   = {}
