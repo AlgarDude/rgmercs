@@ -1025,7 +1025,7 @@ function Module:RenderConditionTypesCombo(cond, condIdx)
         ImGui.TableSetupColumn("Key", ImGuiTableColumnFlags.WidthFixed, 50)
         ImGui.TableSetupColumn("Value", ImGuiTableColumnFlags.WidthStretch, 0)
         ImGui.TableNextColumn()
-        ImGui.Text("Type")
+        Ui.RenderText("Type")
         ImGui.TableNextColumn()
         local selectedNum, changed = ImGui.Combo("##clicky_cond_type_" .. "_" .. condIdx, self.LogicBlockTypeIDs[cond.type or "None"] or 1,
             function(idx)
@@ -1056,7 +1056,7 @@ function Module:RenderConditionTargetCombo(cond, condIdx)
         ImGui.TableSetupColumn("Key", ImGuiTableColumnFlags.WidthFixed, 50)
         ImGui.TableSetupColumn("Value", ImGuiTableColumnFlags.WidthStretch, 0)
         ImGui.TableNextColumn()
-        ImGui.Text("Target")
+        Ui.RenderText("Target")
         ImGui.TableNextColumn()
         local selectedNum, changed = ImGui.Combo("##clicky_cond_target_" .. "_" .. condIdx, tonumber(condBlock.cond_targetIDs[cond.target or "Self"]) or 1, condBlock.cond_targets,
             #condBlock.cond_targets)
@@ -1075,7 +1075,7 @@ function Module:RenderClickyTargetCombo(clicky, clickyIdx)
         ImGui.TableSetupColumn("Key", ImGuiTableColumnFlags.WidthFixed, 140)
         ImGui.TableSetupColumn("Value", ImGuiTableColumnFlags.WidthStretch, 0)
         ImGui.TableNextColumn()
-        ImGui.Text("Target")
+        Ui.RenderText("Target")
         ImGui.TableNextColumn()
         local targetTypeIDs = self.CombatTargetTypeIDs
         local targetTypes = self.CombatTargetTypes
@@ -1103,7 +1103,7 @@ function Module:RenderClickyNoTargetChangeToggle(clicky, clickyIdx)
         ImGui.TableSetupColumn("Key", ImGuiTableColumnFlags.WidthFixed, 140)
         ImGui.TableSetupColumn("Value", ImGuiTableColumnFlags.WidthStretch, 0)
         ImGui.TableNextColumn()
-        ImGui.Text("Don't Change Target")
+        Ui.RenderText("Don't Change Target")
         ImGui.TableNextColumn()
         local new_no_target_change, clicked = Ui.RenderOptionToggle("##clicky_no_target_change_" .. clickyIdx, "",
             clicky.no_target_change)
@@ -1123,7 +1123,7 @@ function Module:RenderClickyCombatStateCombo(clicky, clickyIdx)
         ImGui.TableSetupColumn("Key", ImGuiTableColumnFlags.WidthFixed, 140)
         ImGui.TableSetupColumn("Value", ImGuiTableColumnFlags.WidthStretch, 0)
         ImGui.TableNextColumn()
-        ImGui.Text("Combat State")
+        Ui.RenderText("Combat State")
         ImGui.TableNextColumn()
         local selectedNum, changed = ImGui.Combo("##clicky_cond_combat_state_" .. "_" .. clickyIdx, tonumber(self.CombatStateIDs[clicky.combat_state or "Any"]) or 1,
             self.CombatStates,
@@ -1171,7 +1171,7 @@ function Module:RenderConditionArgs(cond, condIdx, clickyIdx)
 
         for argIdx = 1, #cond.args do
             ImGui.TableNextColumn()
-            ImGui.Text(self:GetLogicBlockArgByTypeAndIndex(cond.type, argIdx).name or ("Arg " .. tostring(argIdx)))
+            Ui.RenderText(self:GetLogicBlockArgByTypeAndIndex(cond.type, argIdx).name or ("Arg " .. tostring(argIdx)))
             ImGui.TableNextColumn()
 
             if self:GetLogicBlockArgByTypeAndIndex(cond.type, argIdx).type == "setting_value" then
@@ -1290,7 +1290,7 @@ function Module:RenderClickiesWithConditions(type, clickies)
     Ui.Tooltip("Add server-specific default clickies to the end of the list.")
 
     ImGui.SameLine()
-    ImGui.Text(Icons.MD_INFO_OUTLINE .. " Special Note on Clickies " .. Icons.MD_INFO_OUTLINE)
+    Ui.RenderText(Icons.MD_INFO_OUTLINE .. " Special Note on Clickies " .. Icons.MD_INFO_OUTLINE)
     Ui.Tooltip(
         "All clickies have inherent presence and stacking checks built in; that is to say, we will only use a clicky if we detect that the effect is absent (and would stack) on its intended target.\n\nAdding conditions to check for the clicky's effect is generally not required or performant, be it buff, debuff or otherwise.")
 
@@ -1386,9 +1386,9 @@ function Module:RenderClickyData(clicky, clickyIdx)
             local lastUsed = clickyState.lastUsed or 0
 
             ImGui.TableNextColumn()
-            ImGui.Text(lastUsed > 0 and Strings.FormatTime((os.clock() - lastUsed)) or "Never")
+            Ui.RenderText(lastUsed > 0 and Strings.FormatTime((os.clock() - lastUsed)) or "Never")
             ImGui.TableNextColumn()
-            ImGui.Text(clicky.itemName)
+            Ui.RenderText(clicky.itemName)
             ImGui.TableNextColumn()
             if itemSpell and itemSpell() then
                 ImGui.PushStyleColor(ImGuiCol.Text, Globals.Constants.Colors.LightOrange)
@@ -1401,7 +1401,7 @@ function Module:RenderClickyData(clicky, clickyIdx)
                 Ui.Tooltip(string.format("Clicky Spell: %s (click to inspect)", spellName))
             else
                 ImGui.PushStyleColor(ImGuiCol.Text, Globals.Constants.Colors.Grey)
-                ImGui.Text(spellName)
+                Ui.RenderText(spellName)
                 ImGui.PopStyleColor()
             end
         end

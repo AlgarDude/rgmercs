@@ -50,7 +50,7 @@ function Module:Render()
     Base.Render(self)
 
     ImGui.SameLine()
-    ImGui.Text("Make any mob \"named\" for burns by adding it to your MQ2SpawnMaster or Alert Master list! See burn settings.")
+    Ui.RenderText("Make any mob \"named\" for burns by adding it to your MQ2SpawnMaster or Alert Master list! See burn settings.")
     ImGui.NewLine()
     Ui.RenderZoneNamed()
 end

@@ -34,13 +34,13 @@ end
 
 function StandardUI:RenderTargetInfo()
     ImGui.TableNextColumn()
-    ImGui.Text("Target")
+    Ui.RenderText("Target")
     ImGui.TableNextColumn()
 
     local assistSpawn = mq.TLO.Target
 
     if not assistSpawn or assistSpawn.ID() == 0 then
-        ImGui.Text("None")
+        Ui.RenderText("None")
         return
     end
 
@@ -51,16 +51,16 @@ function StandardUI:RenderTargetInfo()
     end
 
     ImGui.PushStyleVar(ImGuiStyleVar.ItemSpacing, ImVec2(0, 0))
-    ImGui.Text("%s (%s) [", assistSpawn.CleanName() or "", assistSpawn.ID() or 0)
+    Ui.RenderText("%s (%s) [", assistSpawn.CleanName() or "", assistSpawn.ID() or 0)
     ImGui.PushStyleColor(ImGuiCol.Text, ImVec4(Ui.GetConColorBySpawn(assistSpawn)))
 
     ImGui.SameLine()
-    ImGui.Text("%d %s", assistSpawn.Level() or 0, assistSpawn.Class.ShortName() or "N/A")
+    Ui.RenderText("%d %s", assistSpawn.Level() or 0, assistSpawn.Class.ShortName() or "N/A")
 
     ImGui.PopStyleColor(1)
 
     ImGui.SameLine()
-    ImGui.Text("] HP: %d%% Dist: %d ", assistSpawn.PctHPs() or 0, assistSpawn.Distance() or 0)
+    Ui.RenderText("] HP: %d%% Dist: %d ", assistSpawn.PctHPs() or 0, assistSpawn.Distance() or 0)
     ImGui.PopStyleVar(1)
     ImGui.PopStyleColor(1)
 
@@ -73,7 +73,7 @@ function StandardUI:RenderAutoTargetInfo(assistSpawn)
     local pctHPs = assistSpawn and (assistSpawn.PctHPs() or 0) or 0
 
     if not assistSpawn or assistSpawn.ID() == 0 then
-        ImGui.Text("No Auto Target")
+        Ui.RenderText("No Auto Target")
         return
     end
 
@@ -83,15 +83,15 @@ function StandardUI:RenderAutoTargetInfo(assistSpawn)
         ImGui.PushStyleColor(ImGuiCol.Text, Globals.Constants.Colors.BrightWhite)
     end
     ImGui.PushStyleVar(ImGuiStyleVar.ItemSpacing, ImVec2(0, 0))
-    ImGui.Text("%s (%s) [", assistSpawn.CleanName() or "", assistSpawn.ID() or 0)
+    Ui.RenderText("%s (%s) [", assistSpawn.CleanName() or "", assistSpawn.ID() or 0)
 
     ImGui.PushStyleColor(ImGuiCol.Text, ImVec4(Ui.GetConColorBySpawn(assistSpawn)))
     ImGui.SameLine()
-    ImGui.Text("%d %s", assistSpawn.Level() or 0, assistSpawn.Class.ShortName() or "N/A")
+    Ui.RenderText("%d %s", assistSpawn.Level() or 0, assistSpawn.Class.ShortName() or "N/A")
     ImGui.PopStyleColor(1)
 
     ImGui.SameLine()
-    ImGui.Text("] HP: %d%% Dist: %d ", assistSpawn.PctHPs() or 0, assistSpawn.Distance() or 0)
+    Ui.RenderText("] HP: %d%% Dist: %d ", assistSpawn.PctHPs() or 0, assistSpawn.Distance() or 0)
     ImGui.PopStyleVar(1)
     ImGui.PopStyleColor(1)
 
@@ -291,17 +291,17 @@ function StandardUI:RenderMainWindow(imgui_style, openGUI, flags)
 
                     ImGui.BeginTable("##MainInfoTable", 2, bit32.bor(ImGuiTableFlags.BordersInner, ImGuiTableFlags.SizingFixedFit))
                     ImGui.TableNextColumn()
-                    ImGui.Text("Current State")
+                    Ui.RenderText("Current State")
                     ImGui.TableNextColumn()
                     Ui.RenderColoredText(Combat.GetCachedCombatState() == "Combat" and Globals.Constants.Colors.MainCombatColor or Globals.Constants.Colors.MainDowntimeColor,
                         "%s", Combat.GetCachedCombatState() or "N/A")
                     ImGui.TableNextColumn()
-                    ImGui.Text("Hater Count")
+                    Ui.RenderText("Hater Count")
                     ImGui.TableNextColumn()
                     Ui.RenderColoredText((Targeting.GetXTHaterCount() or 0) > 0 and Globals.Constants.Colors.ConditionMidColor or Globals.Constants.Colors.ConditionPassColor, "%d",
                         Targeting.GetXTHaterCount() or 0)
                     ImGui.TableNextColumn()
-                    ImGui.Text("MA")
+                    Ui.RenderText("MA")
                     ImGui.TableNextColumn()
 
                     if Config.TempSettings.AssistWarning and Core.IAmMA() then
@@ -311,25 +311,25 @@ function StandardUI:RenderMainWindow(imgui_style, openGUI, flags)
                     end
                     self:RenderTargetInfo()
                     ImGui.TableNextColumn()
-                    ImGui.Text("Stuck To")
+                    Ui.RenderText("Stuck To")
                     ImGui.TableNextColumn()
                     Ui.RenderColoredText(mq.TLO.Stick.Active() and ImVec4(Ui.GetConColorBySpawn(mq.TLO.Spawn(mq.TLO.Stick.StickTarget()))) or ImVec4(1, 1, 1, 1),
                         "%s ", (mq.TLO.Stick.Active() and (mq.TLO.Stick.StickTargetName() or "None") or "None"))
                     ImGui.SameLine()
-                    ImGui.Text("[")
+                    Ui.RenderText("[")
                     ImGui.SameLine()
                     Ui.RenderColoredText(mq.TLO.Stick.Active() and Globals.Constants.Colors.ConditionPassColor or Globals.Constants.Colors.ConditionDisabledColor,
                         "%s", (mq.TLO.Stick.Active() and Movement:GetLastStickCmd() or "N/A"))
                     ImGui.SameLine()
-                    ImGui.Text("] ")
+                    Ui.RenderText("] ")
                     ImGui.SameLine()
-                    ImGui.Text("<")
+                    Ui.RenderText("<")
                     ImGui.SameLine()
                     Ui.RenderColoredText(Globals.Constants.Colors.LightBlue, "%s", Movement:GetTimeSinceLastStick() or "0s")
                     ImGui.SameLine()
-                    ImGui.Text(">")
+                    Ui.RenderText(">")
                     ImGui.TableNextColumn()
-                    ImGui.Text("Last Nav")
+                    Ui.RenderText("Last Nav")
                     ImGui.TableNextColumn()
                     if mq.TLO.Navigation.MeshLoaded() then
                         Ui.RenderColoredText(Globals.Constants.Colors.ConditionPassColor, "%s ", Movement:GetLastNavCmd() or "N/A")
@@ -337,11 +337,11 @@ function StandardUI:RenderMainWindow(imgui_style, openGUI, flags)
                         Ui.RenderColoredText(Globals.GetAlternatingColor(), "%s ", "Mesh Not Loaded")
                     end
                     ImGui.SameLine()
-                    ImGui.Text("<")
+                    Ui.RenderText("<")
                     ImGui.SameLine()
                     Ui.RenderColoredText(Globals.Constants.Colors.LightBlue, "%s", Movement:GetTimeSinceLastNav() or "0s")
                     ImGui.SameLine()
-                    ImGui.Text(">")
+                    Ui.RenderText(">")
                     ImGui.PopStyleVar(1)
 
                     ImGui.EndTable()

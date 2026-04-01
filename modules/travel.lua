@@ -202,7 +202,7 @@ function Module:Render()
         local selectedPorter = self.TempSettings.PorterList[self.TempSettings.SelectedPorter]
         local groupedWithPorter = mq.TLO.Group.Member(selectedPorter)() and true or false
 
-        ImGui.Text("Grouped with %s: ", selectedPorter)
+        Ui.RenderText("Grouped with %s: ", selectedPorter)
         ImGui.SameLine()
 
         if groupedWithPorter then
@@ -210,11 +210,11 @@ function Module:Render()
         else
             ImGui.PushStyleColor(ImGuiCol.Text, Globals.Constants.Colors.ConditionFailColor)
         end
-        ImGui.Text(groupedWithPorter and "Yes" or "No")
+        Ui.RenderText(groupedWithPorter and "Yes" or "No")
         ImGui.PopStyleColor()
 
         ImGui.Separator()
-        ImGui.Text("Filter Ports: ")
+        Ui.RenderText("Filter Ports: ")
         ImGui.SameLine()
         self.TempSettings.FilterText, changed = ImGui.InputText("##text_filter", self.TempSettings.FilterText)
         if changed then
@@ -258,7 +258,7 @@ function Module:Render()
             ImGui.EndTabBar();
         end
     else
-        ImGui.Text("No Porters Loaded...")
+        Ui.RenderText("No Porters Loaded...")
     end
 end
 
