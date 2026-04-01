@@ -472,7 +472,7 @@ Module.LogicBlocks                      = {
         end,
         cond_targets = { "Self", },
         args = {
-            { name = "Poision",    type = "boolean", default = true, },
+            { name = "Poison",     type = "boolean", default = true, },
             { name = "Disease",    type = "boolean", default = true, },
             { name = "Curse",      type = "boolean", default = true, },
             { name = "Corruption", type = "boolean", default = true, },
