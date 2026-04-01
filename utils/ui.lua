@@ -3383,11 +3383,13 @@ end
 
 function Ui.RenderHyperText(text, normalColor, highlightColor, callback)
     local version = Modules:ExecModule("Class", "GetVersionString")
+    local startingPos = ImGui.GetCursorPosVec()
     if ImGui.InvisibleButton("###" .. text .. "__invisbutton", ImGui.CalcTextSize(version), ImGui.GetTextLineHeight()) then
         if callback then
             callback()
         end
     end
+    ImGui.SameLine()
     local afConfig = Config:GetSetting('EnableAFUI')
     if afConfig then
         local startPos = ImGui.GetCursorPosVec()
@@ -3397,6 +3399,7 @@ function Ui.RenderHyperText(text, normalColor, highlightColor, callback)
             text = text:reverse()
         end
     end
+    ImGui.SetCursorPos(startingPos)
     ImGui.TextColored((ImGui.IsItemHovered() and highlightColor or normalColor) or IM_COL32(40, 40, 245, 255), text or "")
 end
 
