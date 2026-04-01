@@ -435,7 +435,7 @@ Module.LogicBlocks                      = {
 
     {
         name = "I Have a Curable Detrimental Effect",
-        cond = function(self, checkPoi, checkDis, checkCur, checkCor)
+        cond = function(self, target, checkPoi, checkDis, checkCur, checkCor)
             local me = mq.TLO.Me
             return (checkPoi and me.Poisoned() ~= nil) or
                 (checkDis and me.Diseased() ~= nil) or
@@ -444,7 +444,31 @@ Module.LogicBlocks                      = {
         end,
         tooltip = "Only use when you have a poison, disease, curse or corruption effect on you.",
         render_header_text = function(self, cond)
-            return string.format("You have an effect with counters (poi/dis/cur/cor).")
+            local header = "You have an effect with counters ("
+            local anyChecked = false
+            if cond.args[1] then
+                header = header .. "Poison or "
+                anyChecked = true
+            end
+            if cond.args[2] then
+                header = header .. "Disease or "
+                anyChecked = true
+            end
+            if cond.args[3] then
+                header = header .. "Curse or "
+                anyChecked = true
+            end
+            if cond.args[4] then
+                header = header .. "Corruption or "
+                anyChecked = true
+            end
+            if anyChecked then
+                header = header:sub(0, -5) -- remove the last " or "
+            else
+                header = header .. "None"
+            end
+            header = header .. ")"
+            return header
         end,
         cond_targets = { "Self", },
         args = {
