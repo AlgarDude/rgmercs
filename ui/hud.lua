@@ -142,7 +142,7 @@ function HudUI:RenderToggleHud()
                     Globals.Constants.Colors.MainButtonUnpausedColor, Globals.Constants.Colors.MainButtonPausedColor, nil, true)
 
                 if changeTog then
-                    Config:SetSetting(k, not newTog)
+                    Config:SetSetting(k, newTog)
                 end
             end
         end
