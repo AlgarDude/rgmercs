@@ -10,6 +10,7 @@ local Logger          = require("utils.logger")
 local Actors          = require("actors")
 local Events          = require("utils.events")
 local Base            = require("modules.base")
+local Ui              = require('utils.ui')
 
 -- Server name formatted for LNS to recognize
 local serverLNSFormat = mq.TLO.EverQuest.Server():gsub(" ", "_")
@@ -129,7 +130,8 @@ end
 
 function Module:Render()
 	Base.Render(self)
-	ImGui.Text("Directed LNS looting is %s.", Config:GetSetting('DoLoot') and "ENABLED" or "DISABLED")
+	local doLoot = Config:GetSetting('DoLoot')
+	Ui.RenderColoredText(doLoot and Globals.Constants.BasicColors.Green or Globals.Constants.BasicColors.LightRed, "Directed LNS looting is %s.", doLoot and "ENABLED" or "DISABLED")
 	ImGui.Text(
 		"Directed control of the LootNScoot script for looting on emu servers.\nSee the Loot category in the General options for integration settings.\nPlease refer to LNS documentation for all else.")
 end

@@ -30,7 +30,7 @@ function HudUI:LoadAllOptions()
         end
     end
 
-    if tonumber(os.date("%m%d")) == 401 then
+    if tonumber(os.date("%m%d")) == 401 and not Config:GetSetting('ForceAFUIOff') then
         self:AFPopUp(self.InitMsg, 1)
         Config:SetSetting('EnableAFUI', true)
         Globals.Minimized = true

@@ -350,7 +350,7 @@ function OptionsUI:RenderGroupPanel(groupLabel, groupName)
         self:SetSelectedGroup(groupName)
     end
     ImGui.SameLine()
-    ImGui.Text(groupLabel)
+    Ui.RenderText(groupLabel)
 end
 
 function OptionsUI:RenderGroupPanelWithImage(group)

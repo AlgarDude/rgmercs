@@ -2477,6 +2477,15 @@ Config.DefaultConfig                                     = {
         Tooltip = "???",
         Default = false,
     },
+    ['ForceAFUIOff']                     = {
+        DisplayName = "Force Very Fun UI Off",
+        Group = "General",
+        Header = "Interface",
+        Category = "Interface",
+        Tooltip = "???",
+        Type = "Custom",
+        Default = false,
+    },
 }
 
 Config.CommandHandlers                                   = {}

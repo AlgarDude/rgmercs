@@ -282,7 +282,7 @@ function Ui.RenderAssistList()
             if name == Globals.MainAssist then
                 ImGui.TableSetBgColor(ImGuiTableBgTarget.RowBg0, IM_COL32(255, 255, 0, 64))
             end
-            ImGui.Text(tostring(idx))
+            Ui.RenderText(tostring(idx))
             ImGui.TableNextColumn()
             local _, clicked = ImGui.Selectable(name, false)
             if clicked then
@@ -293,16 +293,16 @@ function Ui.RenderAssistList()
             ImGui.TableNextColumn()
             if spawn() and spawn.ID() > 0 then
                 ImGui.PushStyleColor(ImGuiCol.Text, Globals.Constants.Colors.ConditionPassColor)
-                ImGui.Text(tostring(math.ceil(spawn.Distance())))
+                Ui.RenderText(tostring(math.ceil(spawn.Distance())))
                 ImGui.PopStyleColor()
                 ImGui.TableNextColumn()
                 Ui.NavEnabledLoc(spawn.LocYXZ() or "0,0,0")
             else
                 ImGui.PushStyleColor(ImGuiCol.Text, Globals.Constants.Colors.ConditionFailColor)
-                ImGui.Text("0")
+                Ui.RenderText("0")
                 ImGui.PopStyleColor()
                 ImGui.TableNextColumn()
-                ImGui.Text("0")
+                Ui.RenderText("0")
             end
             ImGui.TableNextColumn()
             ImGui.PushID("##_small_btn_delete_oa_" .. tostring(idx))
@@ -346,7 +346,7 @@ end
 
 function Ui.RenderConfigSelector()
     if Globals.ClassConfigDirs ~= nil then
-        ImGui.Text("Config Type:")
+        Ui.RenderText("Config Type:")
         ImGui.SameLine()
         ImGui.SetNextItemWidth(200)
         local newConfigDir, changed = ImGui.Combo("##config_type", Ui.GetClassConfigIDFromName(Config:GetSetting('ClassConfigDir')), Globals.ClassConfigDirs,
@@ -390,7 +390,7 @@ function Ui.RenderAAOverlay()
             if shouldDrawGUI then
                 ImGui.BeginChild("##aa_list_child", ImVec2(0, 0), bit32.bor(ImGuiChildFlags.None), bit32.bor(ImGuiWindowFlags.HorizontalScrollbar))
 
-                ImGui.Text("%s AAs Used by RGMercs:", tabText)
+                Ui.RenderText("%s AAs Used by RGMercs:", tabText)
 
                 ImGui.Separator()
 
@@ -403,7 +403,7 @@ function Ui.RenderAAOverlay()
                             return a.TableIndex, b.TableIndex
                         end,
                         render = function(entry)
-                            ImGui.Text(entry.TableIndex)
+                            Ui.RenderText(entry.TableIndex)
                         end,
                     },
                     {
@@ -417,7 +417,7 @@ function Ui.RenderAAOverlay()
                             if entry.AA.Spell.Name() then
                                 Ui.DrawInspectableSpellIcon(entry.AA.Spell.SpellIcon() or 0, entry.AA.Spell)
                             else
-                                ImGui.Text(" " .. Icons.MD_DO_NOT_DISTURB)
+                                Ui.RenderText(" " .. Icons.MD_DO_NOT_DISTURB)
                             end
                         end,
                     },
@@ -488,7 +488,7 @@ function Ui.RenderAAOverlay()
                             return a.AA.Index() or 0, b.AA.Index() or 0
                         end,
                         render = function(entry)
-                            ImGui.Text(tostring(entry.AA.Index() or 0))
+                            Ui.RenderText(tostring(entry.AA.Index() or 0))
                         end,
                     },
                     {
@@ -499,7 +499,7 @@ function Ui.RenderAAOverlay()
                             return a.AA.ID() or 0, b.AA.ID() or 0
                         end,
                         render = function(entry)
-                            ImGui.Text(tostring(entry.AA.ID() or 0))
+                            Ui.RenderText(tostring(entry.AA.ID() or 0))
                         end,
                     },
                 }
@@ -681,7 +681,7 @@ function Ui.RenderMercsStatus(showPopout)
                     ImGui.PushStyleColor(ImGuiCol.Text, Colors.ConditionDisabledColor)
                 end
 
-                ImGui.Text(data.Data.Server or "Unknown")
+                Ui.RenderText(data.Data.Server or "Unknown")
 
                 if data.Data.Server ~= mq.TLO.EverQuest.Server() then
                     ImGui.PopStyleColor()
@@ -704,7 +704,7 @@ function Ui.RenderMercsStatus(showPopout)
                     ImGui.PushStyleColor(ImGuiCol.Text, Colors.ConditionFailColor)
                 end
 
-                ImGui.Text("%s", data.Data.Zone or "None")
+                Ui.RenderText("%s", data.Data.Zone or "None")
 
                 ImGui.PopStyleColor()
             end,
@@ -725,7 +725,7 @@ function Ui.RenderMercsStatus(showPopout)
                     ImGui.PushStyleColor(ImGuiCol.Text, Colors.ConditionFailColor)
                 end
 
-                ImGui.Text("%s", data.Data.ZoneShortName or "None")
+                Ui.RenderText("%s", data.Data.ZoneShortName or "None")
 
                 ImGui.PopStyleColor()
             end,
@@ -797,7 +797,7 @@ function Ui.RenderMercsStatus(showPopout)
                 return data_a.Data.Level or 0, data_b.Data.Level or 0
             end,
             render = function(peer, data)
-                ImGui.Text("%d", data.Data.Level or 0)
+                Ui.RenderText("%d", data.Data.Level or 0)
             end,
         },
         {
@@ -810,7 +810,7 @@ function Ui.RenderMercsStatus(showPopout)
                 return data_a.Data.UnSpentAA or 0, data_b.Data.UnSpentAA or 0
             end,
             render = function(peer, data)
-                ImGui.Text("%d", data.Data.UnSpentAA or 0)
+                Ui.RenderText("%d", data.Data.UnSpentAA or 0)
             end,
         },
         {
@@ -823,7 +823,7 @@ function Ui.RenderMercsStatus(showPopout)
                 return data_a.Data.SpentAA or 0, data_b.Data.SpentAA or 0
             end,
             render = function(peer, data)
-                ImGui.Text("%d", data.Data.SpentAA or 0)
+                Ui.RenderText("%d", data.Data.SpentAA or 0)
             end,
         },
         {
@@ -836,7 +836,7 @@ function Ui.RenderMercsStatus(showPopout)
                 return data_a.Data.TotalAA or 0, data_b.Data.TotalAA or 0
             end,
             render = function(peer, data)
-                ImGui.Text("%d", data.Data.TotalAA or 0)
+                Ui.RenderText("%d", data.Data.TotalAA or 0)
             end,
         },
         {
@@ -943,7 +943,7 @@ function Ui.RenderMercsStatus(showPopout)
                     Colors.ConditionPassColor
 
                 )
-                ImGui.Text(distString)
+                Ui.RenderText(distString)
                 ImGui.PopStyleColor()
             end,
         },
@@ -957,7 +957,7 @@ function Ui.RenderMercsStatus(showPopout)
                 return data_a.Data.Chase or "", data_b.Data.Chase or ""
             end,
             render = function(peer, data)
-                ImGui.Text("%s", data.Data.Chase or "None")
+                Ui.RenderText("%s", data.Data.Chase or "None")
             end,
         },
         {
@@ -970,7 +970,7 @@ function Ui.RenderMercsStatus(showPopout)
                 return data_a.Data.Assist or "", data_b.Data.Assist or ""
             end,
             render = function(peer, data)
-                ImGui.Text("%s", data.Data.Assist or "None")
+                Ui.RenderText("%s", data.Data.Assist or "None")
             end,
         },
         {
@@ -983,7 +983,7 @@ function Ui.RenderMercsStatus(showPopout)
                 return data_a.Data.AutoTarget or "", data_b.Data.AutoTarget or ""
             end,
             render = function(peer, data)
-                ImGui.Text("%s", data.Data.AutoTarget or "None")
+                Ui.RenderText("%s", data.Data.AutoTarget or "None")
             end,
         },
         {
@@ -997,7 +997,7 @@ function Ui.RenderMercsStatus(showPopout)
             end,
             render = function(peer, data)
                 if data.Data.Target ~= "None" then
-                    ImGui.Text("%s", data.Data.Target)
+                    Ui.RenderText("%s", data.Data.Target)
                 else
                     ImGui.PushStyleColor(ImGuiCol.Text, Colors.ConditionDisabledColor)
                     ImGui.TextDisabled("None")
@@ -1017,7 +1017,7 @@ function Ui.RenderMercsStatus(showPopout)
             end,
             render = function(peer, data)
                 if data.Data.Casting ~= "None" then
-                    ImGui.Text("%s", data.Data.Casting)
+                    Ui.RenderText("%s", data.Data.Casting)
                 else
                     ImGui.PushStyleColor(ImGuiCol.Text, Colors.ConditionDisabledColor)
                     ImGui.TextDisabled("None")
@@ -1082,7 +1082,7 @@ function Ui.RenderMercsStatus(showPopout)
                 return data_a.Data.PetID or 0, data_b.Data.PetID or 0
             end,
             render = function(peer, data)
-                ImGui.Text(data.Data.PetID > 0 and string.format("%d", data.Data.PetID) or "")
+                Ui.RenderText(data.Data.PetID > 0 and string.format("%d", data.Data.PetID) or "")
             end,
         },
         {
@@ -1116,7 +1116,7 @@ function Ui.RenderMercsStatus(showPopout)
                 return data_a.Data.PetLevel or 0, data_b.Data.PetLevel or 0
             end,
             render = function(peer, data)
-                ImGui.Text(data.Data.PetID > 0 and string.format("%d", data.Data.PetLevel) or "")
+                Ui.RenderText(data.Data.PetID > 0 and string.format("%d", data.Data.PetLevel) or "")
             end,
         },
         {
@@ -1129,7 +1129,7 @@ function Ui.RenderMercsStatus(showPopout)
                 return data_a.Data.PetName or "", data_b.Data.PetName or ""
             end,
             render = function(peer, data)
-                ImGui.Text(data.Data.PetID > 0 and string.format("%s", data.Data.PetName) or "None")
+                Ui.RenderText(data.Data.PetID > 0 and string.format("%s", data.Data.PetName) or "None")
             end,
         },
         {
@@ -1142,7 +1142,7 @@ function Ui.RenderMercsStatus(showPopout)
                 return data_a.Data.PetTarget or "", data_b.Data.PetTarget or ""
             end,
             render = function(peer, data)
-                ImGui.Text(data.Data.PetID > 0 and string.format("%s", data.Data.PetTarget or "None") or "")
+                Ui.RenderText(data.Data.PetID > 0 and string.format("%s", data.Data.PetTarget or "None") or "")
             end,
         },
         {
@@ -1155,7 +1155,7 @@ function Ui.RenderMercsStatus(showPopout)
                 return data_a.Data.LastUpdate or 0, data_b.Data.LastUpdate or 0
             end,
             render = function(peer, data)
-                ImGui.Text("%ds", Globals.GetTimeSeconds() - (data.LastHeartbeat or 0))
+                Ui.RenderText("%ds", Globals.GetTimeSeconds() - (data.LastHeartbeat or 0))
             end,
 
         },
@@ -1173,7 +1173,7 @@ function Ui.RenderMercsStatus(showPopout)
                     data.Data.FreeInventory >= 20 and Colors.ConditionPassColor or
                     data.Data.FreeInventory >= 5 and Colors.ConditionMidColor or
                     Colors.ConditionFailColor)
-                ImGui.Text("%d", data.Data.FreeInventory or 0)
+                Ui.RenderText("%d", data.Data.FreeInventory or 0)
                 ImGui.PopStyleColor()
             end,
 
@@ -1208,7 +1208,7 @@ function Ui.RenderMercsStatus(showPopout)
                 if class then
                     local displayName = data.Data.Invis and "(" .. class .. ")" or class
                     ImGui.PushStyleColor(ImGuiCol.Text, Globals.Constants.BasicColors.Mint)
-                    ImGui.Text(displayName)
+                    Ui.RenderText(displayName)
                     ImGui.PopStyleColor()
                     if class then
                         if ImGui.IsItemClicked(ImGuiMouseButton.Left) then
@@ -1252,7 +1252,7 @@ function Ui.RenderMercsStatus(showPopout)
                     data.Data.OpenBuffSlots >= math.floor(data.Data.MaxBuffSlots * .6) and Colors.ConditionPassColor or
                     data.Data.OpenBuffSlots >= math.floor(data.Data.MaxBuffSlots * .3) and Colors.ConditionMidColor or
                     Colors.ConditionFailColor)
-                ImGui.Text("%d", data.Data.OpenBuffSlots or 0)
+                Ui.RenderText("%d", data.Data.OpenBuffSlots or 0)
                 ImGui.PopStyleColor()
             end,
         },
@@ -1407,7 +1407,7 @@ function Ui.RenderForceTargetList(showPopout)
                 return a.Name() and (Ui.TempSettings.SortedXTIDToSlot[a.ID()].Slot or 0) or 0, b.Name() and (Ui.TempSettings.SortedXTIDToSlot[b.ID()].Slot or 0) or 0
             end,
             render = function(xtarg, i)
-                ImGui.Text(xtarg.Name() and (Ui.TempSettings.SortedXTIDToSlot[xtarg.ID()].Slot or "") or "")
+                Ui.RenderText(xtarg.Name() and (Ui.TempSettings.SortedXTIDToSlot[xtarg.ID()].Slot or "") or "")
             end,
         },
         {
@@ -1460,7 +1460,7 @@ function Ui.RenderForceTargetList(showPopout)
                 return math.ceil(a.Distance() or 0), math.ceil(b.Distance() or 0)
             end,
             render = function(xtarg, _)
-                ImGui.Text(tostring(math.ceil(xtarg.Distance() or 0)))
+                Ui.RenderText(tostring(math.ceil(xtarg.Distance() or 0)))
             end,
         },
         {
@@ -1471,7 +1471,7 @@ function Ui.RenderForceTargetList(showPopout)
                 return a.ID(), b.ID()
             end,
             render = function(xtarg, _)
-                ImGui.Text(tostring(math.ceil(xtarg.ID() or 0)))
+                Ui.RenderText(tostring(math.ceil(xtarg.ID() or 0)))
             end,
 
         },
@@ -1483,7 +1483,7 @@ function Ui.RenderForceTargetList(showPopout)
                 return a.Level() or 0, b.Level() or 0
             end,
             render = function(xtarg, _)
-                ImGui.Text(tostring(math.ceil(xtarg.Level() or 0)))
+                Ui.RenderText(tostring(math.ceil(xtarg.Level() or 0)))
             end,
 
         },
@@ -1533,13 +1533,13 @@ function Ui.RenderForceTargetList(showPopout)
             local windowPadding = ImGui.GetStyle().WindowPadding
             if ImGui.TableSetColumnIndex(0) then
                 ImGui.SameLine()
-                ImGui.Text("     ")
+                Ui.RenderText("     ")
                 Ui.Tooltip("Click here to set forced target.")
             end
 
             if ImGui.TableSetColumnIndex(1) then
                 ImGui.SameLine()
-                ImGui.Text("     ")
+                Ui.RenderText("     ")
                 Ui.Tooltip("Click here to ignore this target.")
                 ImGui.TableNextRow()
             end
@@ -1659,18 +1659,18 @@ function Ui.RenderZoneNamed()
                 end
                 ImGui.TableNextColumn()
                 ImGui.PushStyleColor(ImGuiCol.Text, Globals.Constants.Colors.ConditionPassColor)
-                ImGui.Text(Icons.FA_SMILE_O)
+                Ui.RenderText(Icons.FA_SMILE_O)
                 ImGui.PopStyleColor()
                 ImGui.TableNextColumn()
-                ImGui.Text(tostring(math.ceil(named.Distance)))
+                Ui.RenderText(tostring(math.ceil(named.Distance)))
                 ImGui.TableNextColumn()
                 Ui.NavEnabledLoc(named.Loc)
             elseif spawnExists or Ui.ShowDownNamed then
                 ImGui.TableNextColumn()
-                ImGui.Text(named.Name)
+                Ui.RenderText(named.Name)
                 ImGui.TableNextColumn()
                 ImGui.PushStyleColor(ImGuiCol.Text, Globals.Constants.Colors.ConditionFailColor)
-                ImGui.Text(Icons.FA_FROWN_O)
+                Ui.RenderText(Icons.FA_FROWN_O)
                 ImGui.PopStyleColor()
                 ImGui.TableNextColumn()
                 ImGui.TableNextColumn()
@@ -1721,11 +1721,11 @@ function Ui.RenderLoadoutTable(loadoutTable)
             ImGui.TableNextColumn()
             Ui.DrawInspectableSpellIcon(loadoutData.spell.SpellIcon(), loadoutData.spell)
             ImGui.TableNextColumn()
-            ImGui.Text(tostring(gem))
+            Ui.RenderText(tostring(gem))
             ImGui.TableNextColumn()
-            ImGui.Text(loadoutData.selectedSpellData.name or "")
+            Ui.RenderText(loadoutData.selectedSpellData.name or "")
             ImGui.TableNextColumn()
-            ImGui.Text(tostring(loadoutData.spell.Level()))
+            Ui.RenderText(tostring(loadoutData.spell.Level()))
             ImGui.TableNextColumn()
             local _, clicked = ImGui.Selectable(loadoutData.spell.RankName())
             if clicked then
@@ -1741,34 +1741,34 @@ end
 --- This function is responsible for displaying the key for the rotation table.
 --- It does not take any parameters and does not return any value.
 function Ui.RenderRotationTableKey()
-    ImGui.Text("On the previous check, the...")
+    Ui.RenderText("On the previous check, the...")
     if ImGui.BeginTable("Rotation_table_key", 2, ImGuiTableFlags.Borders) then
         ImGui.TableNextColumn()
-        ImGui.Text(Icons.MD_CHECK .. ": Rotation Processed (Conditions Met)")
+        Ui.RenderText(Icons.MD_CHECK .. ": Rotation Processed (Conditions Met)")
 
         ImGui.TableNextColumn()
-        ImGui.Text(Icons.MD_CLOSE .. ": Rotation was Skipped (Conditions Not Met)")
+        Ui.RenderText(Icons.MD_CLOSE .. ": Rotation was Skipped (Conditions Not Met)")
 
         ImGui.TableNextColumn()
         ImGui.PushStyleColor(ImGuiCol.Text, Globals.Constants.Colors.ConditionPassColor)
-        ImGui.Text(Icons.FA_SMILE_O .. ": Entry Effect was Active")
+        Ui.RenderText(Icons.FA_SMILE_O .. ": Entry Effect was Active")
 
         ImGui.PopStyleColor()
         ImGui.TableNextColumn()
 
         ImGui.PushStyleColor(ImGuiCol.Text, Globals.Constants.Colors.ConditionPassColor)
-        ImGui.Text(Icons.MD_CHECK .. ": Entry Conditions Passed")
+        Ui.RenderText(Icons.MD_CHECK .. ": Entry Conditions Passed")
 
         ImGui.PopStyleColor()
         ImGui.TableNextColumn()
 
         ImGui.PushStyleColor(ImGuiCol.Text, Globals.Constants.Colors.ConditionFailColor)
-        ImGui.Text(Icons.FA_EXCLAMATION .. ": Entry Conditions Failed")
+        Ui.RenderText(Icons.FA_EXCLAMATION .. ": Entry Conditions Failed")
 
         ImGui.PopStyleColor()
         ImGui.TableNextColumn()
 
-        ImGui.Text(Icons.MD_INFO_OUTLINE .. " Special Note on Conditions " .. Icons.MD_INFO_OUTLINE)
+        Ui.RenderText(Icons.MD_INFO_OUTLINE .. " Special Note on Conditions " .. Icons.MD_INFO_OUTLINE)
         Ui.Tooltip("The icons above are only updated when the checks are made, and will display the previous results until they are checked again.\n" ..
             "Note that in addition to special entry conditions, some other checks occur that could prevent an action from being used, such as movement, control effects, mana costs, etc.")
 
@@ -1808,21 +1808,21 @@ function Ui.RenderRotationTable(name, rotationTable, resolvedActionMap, rotation
         -- Manually draw header cell content for Resolved Action Column
         if ImGui.TableSetColumnIndex(5) then
             ImGui.SameLine()
-            ImGui.Text("Resolved Action ")
+            Ui.RenderText("Resolved Action ")
             ImGui.SameLine()
-            ImGui.Text(Icons.MD_INFO_OUTLINE)
+            Ui.RenderText(Icons.MD_INFO_OUTLINE)
             Ui.Tooltip("Click a resolved action to inspect the spell/item/AA effect.")
         end
 
         for idx, entry in ipairs(rotationTable or {}) do
             ImGui.TableNextRow()
             ImGui.TableNextColumn()
-            ImGui.Text(tostring(idx))
+            Ui.RenderText(tostring(idx))
             if rotationState > 0 then
                 ImGui.TableNextColumn()
                 ImGui.PushStyleColor(ImGuiCol.Text, Globals.Constants.Colors.ConditionPassColor)
                 if idx == rotationState then
-                    ImGui.Text(Icons.FA_DOT_CIRCLE_O)
+                    Ui.RenderText(Icons.FA_DOT_CIRCLE_O)
                 end
                 ImGui.PopStyleColor()
             else
@@ -1842,13 +1842,13 @@ function Ui.RenderRotationTable(name, rotationTable, resolvedActionMap, rotation
 
             if active == true then
                 ImGui.PushStyleColor(ImGuiCol.Text, Globals.Constants.Colors.ConditionPassColor)
-                ImGui.Text(Icons.FA_SMILE_O)
+                Ui.RenderText(Icons.FA_SMILE_O)
             elseif pass == true then
                 ImGui.PushStyleColor(ImGuiCol.Text, Globals.Constants.Colors.ConditionPassColor)
-                ImGui.Text(Icons.MD_CHECK)
+                Ui.RenderText(Icons.MD_CHECK)
             else
                 ImGui.PushStyleColor(ImGuiCol.Text, Globals.Constants.Colors.ConditionFailColor)
-                ImGui.Text(Icons.FA_EXCLAMATION)
+                Ui.RenderText(Icons.FA_EXCLAMATION)
             end
             ImGui.PopStyleColor()
             if entry.tooltip then
@@ -1856,7 +1856,7 @@ function Ui.RenderRotationTable(name, rotationTable, resolvedActionMap, rotation
             end
 
             ImGui.TableNextColumn()
-            if enabledRotationEntries[entry.name] == false then Ui.StrikeThroughText(entry.name) else ImGui.Text(entry.name) end
+            if enabledRotationEntries[entry.name] == false then Ui.StrikeThroughText(entry.name) else Ui.RenderText(entry.name) end
             ImGui.TableNextColumn()
             local mappedAction = resolvedActionMap[entry.name]
             if mappedAction then
@@ -1904,40 +1904,40 @@ function Ui.RenderRotationTable(name, rotationTable, resolvedActionMap, rotation
                         Ui.Tooltip(string.format("Clicky Spell: %s (click to inspect)", clickySpell.Name() or "Unknown"))
                     else
                         ImGui.PushStyleColor(ImGuiCol.Text, Globals.Constants.Colors.Grey)
-                        ImGui.Text(mappedAction)
+                        Ui.RenderText(mappedAction)
                         ImGui.PopStyleColor()
                     end
                 else
                     ImGui.PushStyleColor(ImGuiCol.Text, Globals.Constants.Colors.Grey)
-                    ImGui.Text(mappedAction.Name() or mappedAction)
+                    Ui.RenderText(mappedAction.Name() or mappedAction)
                     ImGui.PopStyleColor()
                 end
             else
                 if entry.type:lower() == "customfunc" then
                     ImGui.PushStyleColor(ImGuiCol.Text, Globals.Constants.Colors.Yellow)
-                    ImGui.Text(entry.desc or "Custom Function")
+                    Ui.RenderText(entry.desc or "Custom Function")
                     ImGui.PopStyleColor()
                 elseif entry.type:lower() == "spell" then
                     ImGui.PushStyleColor(ImGuiCol.Text, Globals.Constants.Colors.Red)
-                    ImGui.Text("No Spell Detected")
+                    Ui.RenderText("No Spell Detected")
                     ImGui.PopStyleColor()
                 elseif entry.type:lower() == "song" then
                     ImGui.PushStyleColor(ImGuiCol.Text, Globals.Constants.Colors.Red)
-                    ImGui.Text("No Song Detected")
+                    Ui.RenderText("No Song Detected")
                     ImGui.PopStyleColor()
                 elseif entry.type:lower() == "disc" then
                     ImGui.PushStyleColor(ImGuiCol.Text, Globals.Constants.Colors.Red)
-                    ImGui.Text("No Disc Detected")
+                    Ui.RenderText("No Disc Detected")
                     ImGui.PopStyleColor()
                 elseif entry.type:lower() == "ability" then
                     local abilTrained = mq.TLO.Me.Ability(entry.name)()
                     if abilTrained then
                         ImGui.PushStyleColor(ImGuiCol.Text, Globals.Constants.Colors.LightRed)
-                        ImGui.Text(entry.name)
+                        Ui.RenderText(entry.name)
                         ImGui.PopStyleColor()
                     else
                         ImGui.PushStyleColor(ImGuiCol.Text, Globals.Constants.Colors.Red)
-                        ImGui.Text("No Ability Detected")
+                        Ui.RenderText("No Ability Detected")
                         ImGui.PopStyleColor()
                     end
                 elseif entry.type:lower() == "aa" then
@@ -1954,7 +1954,7 @@ function Ui.RenderRotationTable(name, rotationTable, resolvedActionMap, rotation
                         Ui.Tooltip(string.format("AA Spell: %s (click to inspect)", aaSpell.Name() or "Unknown"))
                     else
                         ImGui.PushStyleColor(ImGuiCol.Text, Globals.Constants.Colors.Red)
-                        ImGui.Text("No AA Detected")
+                        Ui.RenderText("No AA Detected")
                         ImGui.PopStyleColor()
                     end
                 elseif entry.type:lower() == "item" then
@@ -1971,12 +1971,12 @@ function Ui.RenderRotationTable(name, rotationTable, resolvedActionMap, rotation
                         Ui.Tooltip(string.format("Clicky Spell: %s (click to inspect)", clickySpell.Name() or "Unknown"))
                     else
                         ImGui.PushStyleColor(ImGuiCol.Text, Globals.Constants.Colors.Red)
-                        ImGui.Text("No Item Detected")
+                        Ui.RenderText("No Item Detected")
                         ImGui.PopStyleColor()
                     end
                 else
                     ImGui.PushStyleColor(ImGuiCol.Text, Globals.Constants.Colors.Grey)
-                    ImGui.Text(entry.name)
+                    Ui.RenderText(entry.name)
                     ImGui.PopStyleColor()
                 end
             end
@@ -1984,7 +1984,7 @@ function Ui.RenderRotationTable(name, rotationTable, resolvedActionMap, rotation
             if Config:GetSetting('ShowDebugTiming') then
                 ImGui.TableNextColumn()
 
-                ImGui.Text("C: %s RC: %s E: %s PF: %s T: %s",
+                Ui.RenderText("C: %s RC: %s E: %s PF: %s T: %s",
                     Strings.FormatTimeMS((entry.lastCondTimeSpent or 0) * 1000),
                     Strings.FormatTimeMS((entry.lastRotationCondTimeSpent or 0) * 1000),
                     Strings.FormatTimeMS((entry.lastExecTimeSpent or 0) * 1000),
@@ -2194,7 +2194,7 @@ function Ui.RenderFancyToggleOld(id, label, value, size, on_color, off_color, kn
     knob_color = knob_color or Globals.Constants.Colors.White -- default white
 
     if not right_label and label and label:len() > 0 then
-        ImGui.Text(label)
+        Ui.RenderText(label)
         if ImGui.IsItemClicked() then
             value = not value
             clicked = true
@@ -2266,7 +2266,7 @@ function Ui.RenderFancyToggleOld(id, label, value, size, on_color, off_color, kn
     -- Label on the right side of the toggle
     if right_label and label and label ~= "" then
         ImGui.SameLine()
-        ImGui.Text(label)
+        Ui.RenderText(label)
         if ImGui.IsItemClicked() then
             value = not value
             clicked = true
@@ -2300,7 +2300,7 @@ function Ui.RenderProgressBar(pct, width, height)
     local end_x, end_y = ImGui.GetCursorPos()
     ImGui.SetCursorPos(start_x + ((ImGui.GetWindowWidth() / 2) - (style.ItemSpacing.x + math.floor(label_x / 2))),
         start_y + style.ItemSpacing.y)
-    ImGui.Text(text)
+    Ui.RenderText(text)
     ImGui.SetCursorPos(end_x, end_y)
 end
 
@@ -3023,7 +3023,7 @@ function Ui.RenderThemeConfigElement(id, themeElement)
 
         local elementType = type(themeElement.value)
         if elementType ~= 'number' and elementType ~= 'table' then
-            ImGui.Text("Unsupported Type: %s", elementType)
+            Ui.RenderText("Unsupported Type: %s", elementType)
             Logger.log_error("Unsupported theme element type '%s' for element '%s' %s", elementType, id, ImGui.GetStyle())
             return any_pressed, delete_pressed
         end
@@ -3055,7 +3055,7 @@ function Ui.RenderImportThemez()
 
     ImGui.BeginChild("##themez_importer_child", ImVec2(0, 0), bit32.bor(ImGuiChildFlags.AlwaysAutoResize, ImGuiChildFlags.AutoResizeY, ImGuiChildFlags.Borders),
         ImGuiWindowFlags.None)
-    ImGui.Text("Import from Themez: ")
+    Ui.RenderText("Import from Themez: ")
     ImGui.SameLine()
     Ui.SelectedThemezImport, _ = Ui.SearchableCombo("import_themez", Ui.SelectedThemezImport, Ui.ThemezNames)
     ImGui.SameLine()
@@ -3085,7 +3085,7 @@ end
 function Ui.RenderPopupModal()
     ImGui.SetNextWindowSize(320, 0, ImGuiCond.Appearing)
     if ImGui.BeginPopupModal(Ui.ModalTitle, nil, bit32.bor(ImGuiWindowFlags.NoTitleBar, ImGuiWindowFlags.NoDecoration, ImGuiWindowFlags.AlwaysAutoResize)) then
-        ImGui.Text("Theme Name:")
+        Ui.RenderText("Theme Name:")
         ImGui.Spacing()
 
         -- Auto-focus input on open
@@ -3123,7 +3123,7 @@ end
 function Ui.RenderImportMercThemes()
     ImGui.BeginChild("##mercs_themes_importer_child", ImVec2(0, 0), bit32.bor(ImGuiChildFlags.AlwaysAutoResize, ImGuiChildFlags.AutoResizeY, ImGuiChildFlags.Borders),
         ImGuiWindowFlags.None)
-    ImGui.Text("Import from File: ")
+    Ui.RenderText("Import from File: ")
     ImGui.SameLine()
     Ui.SelectedMercThemeImport, _ = Ui.SearchableCombo("import_merc_themes", Ui.SelectedMercThemeImport, Ui.MercThemeNames)
     ImGui.SameLine()
@@ -3347,33 +3347,41 @@ function Ui.RenderLogo(textureId)
 end
 
 function Ui.RenderText(text, ...)
-    local formattedText = string.format(text, ...)
-    local afConfig = Config:GetSetting('EnableAFUI')
-    local textSizeX, textSizeY = ImGui.CalcTextSize(formattedText)
-    local startPos = ImGui.GetCursorPosVec()
-    ImGui.Dummy(ImVec2(textSizeX, textSizeY))
-    if afConfig and not ImGui.IsItemHovered() then
-        formattedText = formattedText:reverse()
+    -- only format if we have args
+    local formattedText = tostring(text)
+    if select('#', ...) > 0 then
+        formattedText = string.format(text, ...)
     end
-    ImGui.SetCursorPos(startPos)
-    ImGui.Text(formattedText)
+    local afConfig = Config:GetSetting('EnableAFUI')
+    if afConfig then
+        local startPos = ImGui.GetCursorScreenPosVec()
+        local textSize = ImGui.CalcTextSizeVec(formattedText)
+        local mousePos = ImGui.GetMousePosVec()
+        if not (mousePos.x >= startPos.x and mousePos.x <= startPos.x + textSize.x and mousePos.y >= startPos.y and mousePos.y <= startPos.y + textSize.y) then
+            formattedText = formattedText:reverse()
+        end
+    end
+    ImGui.Text(formattedText or "")
 end
 
 function Ui.RenderColoredText(color, text, ...)
-    local formattedText = string.format(text, ...)
-    local afConfig = Config:GetSetting('EnableAFUI')
-    local textSizeX, textSizeY = ImGui.CalcTextSize(formattedText)
-    local startPos = ImGui.GetCursorPosVec()
-    ImGui.Dummy(ImVec2(textSizeX, textSizeY))
-    if afConfig and not ImGui.IsItemHovered() then
-        formattedText = formattedText:reverse()
+    local formattedText = tostring(text)
+    if select('#', ...) > 0 then
+        formattedText = string.format(text, ...)
     end
-    ImGui.SetCursorPos(startPos)
-    ImGui.TextColored(color, formattedText)
+    local afConfig = Config:GetSetting('EnableAFUI')
+    if afConfig then
+        local startPos = ImGui.GetCursorScreenPosVec()
+        local textSize = ImGui.CalcTextSizeVec(formattedText)
+        local mousePos = ImGui.GetMousePosVec()
+        if not (mousePos.x >= startPos.x and mousePos.x <= startPos.x + textSize.x and mousePos.y >= startPos.y and mousePos.y <= startPos.y + textSize.y) then
+            formattedText = formattedText:reverse()
+        end
+    end
+    ImGui.TextColored(color or IM_COL32(255, 255, 255, 255), formattedText or "")
 end
 
 function Ui.RenderHyperText(text, normalColor, highlightColor, callback)
-    local startingPos = ImGui.GetCursorPosVec()
     local version = Modules:ExecModule("Class", "GetVersionString")
     if ImGui.InvisibleButton("###" .. text .. "__invisbutton", ImGui.CalcTextSize(version), ImGui.GetTextLineHeight()) then
         if callback then
@@ -3381,11 +3389,15 @@ function Ui.RenderHyperText(text, normalColor, highlightColor, callback)
         end
     end
     local afConfig = Config:GetSetting('EnableAFUI')
-    if afConfig and not ImGui.IsItemHovered() then
-        text = text:reverse()
+    if afConfig then
+        local startPos = ImGui.GetCursorPosVec()
+        local textSize = ImGui.CalcTextSizeVec(text)
+        local mousePos = ImGui.GetMousePosVec()
+        if not (mousePos.x >= startPos.x and mousePos.x <= startPos.x + textSize.x and mousePos.y >= startPos.y and mousePos.y <= startPos.y + textSize.y) then
+            text = text:reverse()
+        end
     end
-    ImGui.SetCursorPos(startingPos)
-    ImGui.TextColored(ImGui.IsItemHovered() and highlightColor or normalColor, text)
+    ImGui.TextColored((ImGui.IsItemHovered() and highlightColor or normalColor) or IM_COL32(40, 40, 245, 255), text or "")
 end
 
 --- Generates a dynamic tooltip for a given spell action.
@@ -3554,7 +3566,7 @@ function Ui.Tooltip(desc)
 
         ImGui.BeginTooltip()
         ImGui.PushTextWrapPos(ImGui.GetFontSize() * 25.0)
-        ImGui.Text(desc)
+        Ui.RenderText(desc)
         ImGui.PopTextWrapPos()
         ImGui.EndTooltip()
     end
@@ -3773,7 +3785,7 @@ function Ui.MultilineTooltipWithColors(lines)
                 ImGui.SameLine()
             end
 
-            ImGui.Text(line.text)
+            Ui.RenderText(line.text)
             if line.color then
                 ImGui.PopStyleColor()
             end
@@ -3853,7 +3865,7 @@ function Ui.StrikeThroughText(text)
     ImGui.PushStyleColor(ImGuiCol.Text, 0.6, 0.6, 0.6, 0.9)
     cursorScreenPos.y = cursorScreenPos.y + ((ImGui.GetTextLineHeightWithSpacing() - (ImGui.GetStyle().FramePadding.y)) / 2)
     ImGui.GetWindowDrawList():AddLine(cursorScreenPos, ImVec2(cursorScreenPos.x + textSizeVec.x, cursorScreenPos.y), IM_COL32(255, 255, 255, 255), 1.0)
-    ImGui.Text(text)
+    Ui.RenderText(text)
     ImGui.PopStyleColor()
 end
 
@@ -3951,7 +3963,7 @@ function Ui.InvisibleWithButtonText(id, text, size, callbackFn)
 
     ImGui.SetCursorPos(buttonPos)
 
-    ImGui.Text(text)
+    Ui.RenderText(text)
 end
 
 function Ui.RenderModulesPopped(flags)

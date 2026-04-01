@@ -58,7 +58,7 @@ function SimpleUI:RenderMainWindow(_, openGUI, flags)
                     end
 
                     ImGui.TableNextColumn()
-                    ImGui.Text("Simple Panel: " .. self.selectedSimplePanel) -- Instead of this code this should now call to function which render each panel self:RenderGeneralPanel(), etc...
+                    Ui.RenderText("Simple Panel: " .. self.selectedSimplePanel) -- Instead of this code this should now call to function which render each panel self:RenderGeneralPanel(), etc...
                     ImGui.EndTable()
                 end
             end

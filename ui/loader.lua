@@ -28,7 +28,7 @@ function LoaderUI:RenderLoader(initPctComplete, initMsg)
     -- Display the selected image (picked only once)
     ImGui.Image(ImagesUI.imgDisplayed:GetTextureID(), ImVec2(60, 60))
     ImGui.SameLine()
-    ImGui.Text("RGMercs %s: Loading...", Config._version)
+    Ui.RenderText("RGMercs %s: Loading...", Config._version)
     ImGui.SetCursorPosY(ImGui.GetCursorPosY() - 35)
     ImGui.SetCursorPosX(ImGui.GetCursorPosX() + 70)
     Ui.RenderAnimatedPercentage("RGMercsLoadProgressBar", initPctComplete, 16, 0, Globals.Constants.Colors.LightBlue, Globals.Constants.Colors.LightGreen,

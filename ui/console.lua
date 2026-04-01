@@ -26,7 +26,7 @@ function ConsoleUI:DrawConsole(showPopout)
             ImGui.TableSetupColumn("Opt Name", bit32.bor(ImGuiTableColumnFlags.WidthFixed, ImGuiTableColumnFlags.NoResize), 150)
             ImGui.TableSetupColumn("Opt Value", ImGuiTableColumnFlags.WidthStretch)
             ImGui.TableNextColumn()
-            ImGui.Text("Log to File")
+            Ui.RenderText("Log to File")
             ImGui.TableNextColumn()
             local logToFile = Config:GetSetting('LogToFile')
             logToFile, changed = Ui.RenderOptionToggle("##log_to_file",
@@ -35,7 +35,7 @@ function ConsoleUI:DrawConsole(showPopout)
                 Config:SetSetting('LogToFile', logToFile)
             end
             ImGui.TableNextColumn()
-            ImGui.Text("Show Timestamps")
+            Ui.RenderText("Show Timestamps")
             ImGui.TableNextColumn()
             local logTimestamps = Config:GetSetting('LogTimeStampsToConsole')
             logTimestamps, changed = Ui.RenderOptionToggle("##show_timestamps",
@@ -44,7 +44,7 @@ function ConsoleUI:DrawConsole(showPopout)
                 Config:SetSetting('LogTimeStampsToConsole', logTimestamps)
             end
             ImGui.TableNextColumn()
-            ImGui.Text("Debug Level")
+            Ui.RenderText("Debug Level")
             ImGui.TableNextColumn()
             local logLevel = Config:GetSetting('LogLevel')
             logLevel, _, changed = Ui.RenderOption("Combo", logLevel, 0, false, Globals.Constants.LogLevels)
@@ -52,7 +52,7 @@ function ConsoleUI:DrawConsole(showPopout)
                 Config:SetSetting('LogLevel', logLevel)
             end
             ImGui.TableNextColumn()
-            ImGui.Text("Log Filter")
+            Ui.RenderText("Log Filter")
             ImGui.SameLine()
             if ImGui.Button(self.logFilterLocked and Icons.FA_LOCK or Icons.FA_UNLOCK, 22, 22) then
                 self.logFilterLocked = not self.logFilterLocked

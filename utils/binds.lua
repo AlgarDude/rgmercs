@@ -299,6 +299,7 @@ Binds.Handlers    = {
         about = "Let the RGMercs devs know you don't like pranks or funny business.",
         handler = function()
             Config:SetSetting('EnableAFUI', false)
+            Config:SetSetting('ForceAFUIOff', true)
         end,
     },
     ['togglepause'] = {

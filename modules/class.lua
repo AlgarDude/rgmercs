@@ -426,13 +426,13 @@ function Module:RenderQueuedAbilities()
 
                 for _, queueData in pairs(self.TempSettings.QueuedAbilities) do
                     ImGui.TableNextColumn()
-                    ImGui.Text(Strings.FormatTime((Globals.GetTimeSeconds() - queueData.queuedTime)))
+                    Ui.RenderText(Strings.FormatTime((Globals.GetTimeSeconds() - queueData.queuedTime)))
                     ImGui.TableNextColumn()
-                    ImGui.Text(queueData.type)
+                    Ui.RenderText(queueData.type)
                     ImGui.TableNextColumn()
-                    ImGui.Text(queueData.target and queueData.target.CleanName() or "None")
+                    Ui.RenderText(queueData.target and queueData.target.CleanName() or "None")
                     ImGui.TableNextColumn()
-                    ImGui.Text(queueData.name)
+                    Ui.RenderText(queueData.name)
                 end
 
                 ImGui.EndTable()
@@ -490,7 +490,7 @@ function Module:RenderRotationWithToggle(r, rotationTable)
     if Config:GetSetting('ShowDebugTiming') then
         -- Draw Timing Data
         ImGui.SetCursorPos(ImGui.GetWindowWidth() - timingOffset, cursorScreenPos.y)
-        ImGui.Text(r.lastTimeSpent and ("<" .. Strings.FormatTimeMS(r.lastTimeSpent * 1000) .. ">") or "")
+        Ui.RenderText(r.lastTimeSpent and ("<" .. Strings.FormatTimeMS(r.lastTimeSpent * 1000) .. ">") or "")
     end
     -- Now set the rendering cursor back to where we were after the Header / Tables were rendered
     ImGui.SetCursorPos(cursorScreenPosAfterRender)
@@ -501,16 +501,16 @@ function Module:Render()
 
     ImGui.BeginTable("##ClassInfoTable", 2, bit32.bor(ImGuiTableFlags.BordersInner, ImGuiTableFlags.SizingFixedFit))
     ImGui.TableNextColumn()
-    ImGui.Text("Combat State")
+    Ui.RenderText("Combat State")
     ImGui.TableNextColumn()
     Ui.RenderColoredText(Combat.GetCachedCombatState() == "Combat" and Globals.Constants.Colors.MainCombatColor or Globals.Constants.Colors.MainDowntimeColor,
         "%s", Combat.GetCachedCombatState() or "N/A")
     ImGui.TableNextColumn()
-    ImGui.Text("Rotation")
+    Ui.RenderText("Rotation")
     ImGui.TableNextColumn()
     Ui.RenderColoredText(Globals.Constants.BasicColors.Cyan, self.CurrentRotation.name)
     ImGui.TableNextColumn()
-    ImGui.Text("State")
+    Ui.RenderText("State")
     ImGui.TableNextColumn()
     Ui.RenderColoredText(Globals.Constants.BasicColors.LightYellow, self.CurrentRotation.state)
     ImGui.TableNextColumn()
@@ -520,7 +520,7 @@ function Module:Render()
     local pressed = false
 
     if self.ClassConfig and self.ModuleLoaded then
-        ImGui.Text("Active Mode:")
+        Ui.RenderText("Active Mode:")
         ImGui.SameLine()
         ImGui.SetNextItemWidth(150)
         Ui.Tooltip(self.ClassConfig.DefaultConfig.Mode.Tooltip)
@@ -535,7 +535,7 @@ function Module:Render()
         Ui.RenderConfigSelector()
 
         ImGui.SeparatorText("Config Actions")
-        --ImGui.Text("Actions:")
+        --Ui.RenderText("Actions:")
         if ImGui.SmallButton(Icons.FA_EYE .. " Rescan Loadout") then
             self:RescanLoadout()
             Logger.log_info("\awManual loadout scan initiated.")
@@ -595,8 +595,8 @@ function Module:Render()
         if not self.TempSettings.ResolvingActions then
             if ImGui.CollapsingHeader("Rotations") then
                 ImGui.Indent()
-                ImGui.Text("Combat State: %s", self.CombatState)
-                ImGui.Text("Current Rotation: %s [%d]", self.CurrentRotation.name, self.CurrentRotation.state)
+                Ui.RenderText("Combat State: %s", self.CombatState)
+                Ui.RenderText("Current Rotation: %s [%d]", self.CurrentRotation.name, self.CurrentRotation.state)
 
                 for _, r in ipairs(self.TempSettings.RotationStates) do
                     self:RenderRotationWithToggle(r, self.TempSettings.RotationTable)

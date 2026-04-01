@@ -235,7 +235,7 @@ function Module:RenderToolbar()
             Config:SetSetting('ShowTimestamps', showTimestamps)
         end
         ImGui.TableNextColumn()
-        ImGui.Text("Status: " .. self.status)
+        Ui.RenderText("Status: " .. self.status)
         ImGui.EndTable()
     end
 end
