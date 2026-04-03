@@ -9,7 +9,7 @@ local Files                                              = require("utils.files"
 local Globals                                            = require("utils.globals")
 
 local Config                                             = {
-    _version = '1.6.0',
+    _version = '2.0.0',
     _subVersion = "Shattering of Ro",
     _name = "Config",
     _AppName = "RGMercs Lua Edition",
