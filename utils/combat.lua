@@ -41,7 +41,7 @@ function Combat.SetMainAssist()
                     local assistName = listAssistSpawn.CleanName()
                     if listAssistSpawn.ID() ~= Core.GetMainAssistId() then
                         Logger.log_info("SetMainAssist: Setting new assist to %s [%d]", assistName, listAssistSpawn.ID())
-                        Globals.MainAssist = assistName
+                        Globals.MainAssist = assistName or ""
                     end
                     if assistName ~= mq.TLO.Me.CleanName() then
                         Targeting.AddXTByName(2, assistName)
@@ -56,7 +56,7 @@ function Combat.SetMainAssist()
         if raidAssistSpawn() and raidAssistSpawn.ID() > 0 and not raidAssistSpawn.Dead() then
             if raidAssistSpawn.ID() ~= Core.GetMainAssistId() then
                 Logger.log_info("SetMainAssist: Setting new assist to %s [%d]", raidAssistSpawn.CleanName(), raidAssistSpawn.ID())
-                Globals.MainAssist = raidAssistSpawn.CleanName()
+                Globals.MainAssist = raidAssistSpawn.CleanName() or ""
             end
             return
         end
@@ -66,7 +66,7 @@ function Combat.SetMainAssist()
         if groupAssistSpawn() and groupAssistSpawn.ID() > 0 and not groupAssistSpawn.Dead() then
             if groupAssistSpawn.ID() ~= Core.GetMainAssistId() then
                 Logger.log_info("SetMainAssist: Setting new assist to %s [%d]", groupAssistSpawn.CleanName(), groupAssistSpawn.ID())
-                Globals.MainAssist = groupAssistSpawn.CleanName()
+                Globals.MainAssist = groupAssistSpawn.CleanName() or ""
             end
             return
         end
@@ -90,7 +90,7 @@ function Combat.SetMAToSelf()
     if not Core.IAmMA() then -- only give the log message if we weren't already the MA
         Logger.log_info("SetMainAssist: No valid assists! Falling back to ourselves.")
     end
-    Globals.MainAssist = mq.TLO.Me.CleanName()
+    Globals.MainAssist = mq.TLO.Me.CleanName() or ""
 end
 
 --- Engages the target specified by the given autoTargetId.
