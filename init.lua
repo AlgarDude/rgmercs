@@ -90,7 +90,7 @@ local function RGMercsGUI()
 
     if openGUI and Alive() and Config:SettingsLoaded() then
         ImGui.PushFont(ImGui.GetFont(), ImGui.GetFontSize() * (1 + (Config:GetSetting('FontScale') / 100)))
-        if initPctComplete < 100 then
+        if initPctComplete < 100 or not LoaderUI:IsDone() then
             LoaderUI:RenderLoader(initPctComplete, initMsg)
         else
             if theme ~= nil then
