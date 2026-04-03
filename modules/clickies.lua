@@ -1404,9 +1404,7 @@ function Module:RenderClickyData(clicky, clickyIdx)
 
         if clicky.itemName:len() > 0 then
             local clickyState = self.TempSettings.ClickyState[clicky.itemName] or {}
-            local item = clickyState.item
-            local itemSpell = item and item.Clicky and item.Clicky.Spell
-            local spellName = itemSpell and itemSpell.Name() or (item and "No Clicky Spell or Missing Item" or "Item Not Found")
+            local spellName = clickyState.spellName or "Unknown Effect"
             local lastUsed = clickyState.lastUsed or 0
 
             ImGui.TableNextColumn()
@@ -1414,20 +1412,16 @@ function Module:RenderClickyData(clicky, clickyIdx)
             ImGui.TableNextColumn()
             Ui.RenderText(clicky.itemName)
             ImGui.TableNextColumn()
-            if itemSpell and itemSpell() then
-                ImGui.PushStyleColor(ImGuiCol.Text, Globals.Constants.Colors.LightOrange)
-                ImGui.PushStyleColor(ImGuiCol.HeaderHovered, Globals.Constants.Colors.NearBlack)
-                local _, clicked = ImGui.Selectable(spellName)
-                if clicked then
-                    itemSpell.Inspect()
-                end
-                ImGui.PopStyleColor(2)
-                Ui.Tooltip(string.format("Clicky Spell: %s (click to inspect)", spellName))
-            else
-                ImGui.PushStyleColor(ImGuiCol.Text, Globals.Constants.Colors.Grey)
-                Ui.RenderText(spellName)
-                ImGui.PopStyleColor()
+            ImGui.PushStyleColor(ImGuiCol.Text, Globals.Constants.Colors.LightOrange)
+            ImGui.PushStyleColor(ImGuiCol.HeaderHovered, Globals.Constants.Colors.NearBlack)
+            local _, clicked = ImGui.Selectable(spellName)
+            if clicked then
+                local item = mq.TLO.FindItem(clicky.itemName)
+                local itemSpell = item and item.Clicky and item.Clicky.Spell
+                if itemSpell and itemSpell() then itemSpell.Inspect() end
             end
+            ImGui.PopStyleColor(2)
+            Ui.Tooltip(string.format("Clicky Spell: %s (click to inspect)", spellName))
         end
 
         ImGui.EndTable()
@@ -1559,8 +1553,9 @@ function Module:GiveTime()
             Logger.log_super_verbose("\ayClicky: \awChecking clicky entry: \ay%s\aw[\at%d\aw]", clicky.itemName, clickyIdx)
 
             local item = mq.TLO.FindItem(clicky.itemName)
+            local itemSpell = item and item.Clicky and item.Clicky.Spell
             self.TempSettings.ClickyState[clicky.itemName] = self.TempSettings.ClickyState[clicky.itemName] or {}
-            self.TempSettings.ClickyState[clicky.itemName].item = item
+            self.TempSettings.ClickyState[clicky.itemName].spellName = itemSpell and itemSpell.Name() or (item and "No Clicky Spell or Missing Item" or "Item Not Found")
 
             Logger.log_verbose("\ayClicky: \awLooking for clicky item: \am%s \awfound: %s", clicky.itemName, Strings.BoolToColorString(item() ~= nil))
             if item and item.Clicky then
