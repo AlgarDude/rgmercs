@@ -236,24 +236,21 @@ function Core.GetMainAssistTargetID()
                 Globals.AutoTargetIsNamed = true
                 assistTargetIsNamed = true
             end
-        else -- reset force combat ID if the MA is no longer forcing that target
+        else
+            -- reset force combat ID if the MA is no longer forcing that target
             Globals.ForceCombatID = 0
-        end
-    end
-
-    -- check if the MA is an actor peer
-    if heartbeat and heartbeat.Data then
-        local paused = heartbeat.Data.State == "Paused"
-        local rawTarget = paused and heartbeat.Data.TargetID or heartbeat.Data.AutoTargetID
-        local targetID = tonumber(rawTarget) or 0
-        if targetID > 0 then
-            assistId = targetID
-            assistTarget = mq.TLO.Spawn(targetID)
-            Logger.log_verbose("\atGetMainAssistTargetID\aw() \ayFindAutoTarget Assist's Target via Actors :: %s (%s)",
-                assistTarget.CleanName() or "None", targetID)
-            if heartbeat.Data.TargetIsNamed then
-                Globals.AutoTargetIsNamed = true
-                assistTargetIsNamed = true
+            local paused = heartbeat.Data.State == "Paused"
+            local rawTarget = paused and heartbeat.Data.TargetID or heartbeat.Data.AutoTargetID
+            local targetID = tonumber(rawTarget) or 0
+            if targetID > 0 then
+                assistId = targetID
+                assistTarget = mq.TLO.Spawn(targetID)
+                Logger.log_verbose("\atGetMainAssistTargetID\aw() \ayFindAutoTarget Assist's Target via Actors :: %s (%s)",
+                    assistTarget.CleanName() or "None", targetID)
+                if heartbeat.Data.TargetIsNamed then
+                    Globals.AutoTargetIsNamed = true
+                    assistTargetIsNamed = true
+                end
             end
         end
         -- check if the MA is a dannet peer

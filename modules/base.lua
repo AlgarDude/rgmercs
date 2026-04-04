@@ -104,10 +104,10 @@ end
 function Base:OnCombatModeChanged()
 end
 
-function Base:OnForceTargetChange()
+function Base:OnForceTargetChange(forceTargetId)
 end
 
-function Base:OnTargetChange()
+function Base:OnTargetChange(targetId)
 end
 
 function Base:DoGetState()
