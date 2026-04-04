@@ -437,8 +437,6 @@ local _ClassConfig = {
             return rezAction
         end,
 
-
-
         ProcBuffChoice = function()
             local buffSpell = Core.GetResolvedActionMapItem('MeleeProcBuff')
             local buffLevel = buffSpell and buffSpell.Level() or 0
