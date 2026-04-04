@@ -909,7 +909,7 @@ local _ClassConfig = {
                 type = "Item",
                 tooltip = Tooltips.Epic,
                 cond = function(self, itemName, target)
-                    if Config:GetSettting('HoldEpicForNoDisc') and not Casting.NoDiscActive() then return false end
+                    if Config:GetSetting('HoldEpicForNoDisc') and not Casting.NoDiscActive() then return false end
                     return self.ClassConfig.HelperFunctions.LeechCheck(self) or Globals.AutoTargetIsNamed
                 end,
             },
