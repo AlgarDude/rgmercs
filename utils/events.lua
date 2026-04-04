@@ -47,9 +47,13 @@ function Events.HandleDeath()
 end
 
 function Events.DoEvents()
-    Comms.SendHeartbeat(Core.GetMainAssistSpawn().DisplayName(), Config:GetSetting('ChaseOn') and Config:GetSetting('ChaseTarget') or "Chase Off")
+    Events.SendHeartbeat(false)
 
     Modules:ExecAll("DoEvents")
+end
+
+function Events.SendHeartbeat(forceSend)
+    Comms.SendHeartbeat(Globals.MainAssist, Config:GetSetting('ChaseOn') and Config:GetSetting('ChaseTarget') or "Chase Off", forceSend)
 end
 
 return Events

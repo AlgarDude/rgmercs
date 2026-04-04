@@ -317,6 +317,8 @@ function Core.SetTarget(targetId, ignoreBuffPopulation)
         mq.delay(maxWaitBuffs, function() return (ignoreBuffPopulation or targetBuffsPopulated) end)
     end
     Logger.log_debug("SetTarget(): Set Target to: %d (buffsPopulated: %s)", targetId, Strings.BoolToColorString(mq.TLO.Target.BuffsPopulated() ~= nil))
+
+    Modules:ExecAll("OnTargetChange", targetId)
 end
 
 --- Sets the AutoTarget to that of your group or raid MA.

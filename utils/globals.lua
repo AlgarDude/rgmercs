@@ -6,6 +6,9 @@ local Set                             = require("mq.set")
 local Globals                         = {}
 Globals.__index                       = Globals
 
+Globals.Logger                        = nil
+Globals.Modules                       = nil
+
 Globals.MainAssist                    = ""
 Globals.ScriptDir                     = ""
 Globals.AutoTargetID                  = 0
@@ -270,6 +273,21 @@ function Globals.GetAlternatingColor(colorA, colorB)
     colorA = colorA or IM_COL32(200, 200, 52, 255)
     colorB = colorB or IM_COL32(200, 52, 52, 255)
     return (math.floor(Globals.GetTimeSeconds() % 2) == 1) and ImGui.GetColorU32(colorA) or ImGui.GetColorU32(colorB)
+end
+
+function Globals.SetForcedTargetId(targetId)
+    local startingId = Globals.ForceTargetID
+    if targetId and targetId > 0 then
+        Globals.ForceTargetID = targetId
+        if Globals.Logger then Globals.Logger.log_debug("SetForcedTargetId(): Force Target set to %d", targetId) end
+    else
+        if Globals.Logger then Globals.Logger.log_debug("SetForcedTargetId(): Force Target cleared from %d", Globals.ForceTargetID) end
+        Globals.ForceTargetID = 0
+    end
+
+    if startingId ~= Globals.ForceTargetID and Globals.Modules then
+        Globals.Modules:ExecAll("OnForceTargetChange", Globals.ForceTargetID)
+    end
 end
 
 return Globals

@@ -52,7 +52,7 @@ function Targeting.ClearTarget()
         Globals.AutoTargetID = 0
         Globals.AutoTargetIsNamed = false
         Globals.AggroTargetID = 0
-        if Globals.ForceTargetID > 0 and not Targeting.IsSpawnXTHater(Globals.ForceTargetID) then Globals.ForceTargetID = 0 end
+        if Globals.ForceTargetID > 0 and not Targeting.IsSpawnXTHater(Globals.ForceTargetID) then Globals.SetForcedTargetId(0) end
         Globals.ForceCombatID = 0
         if mq.TLO.Stick.Status():lower() == "on" then Movement:DoStickCmd("off") end
         if mq.TLO.Me.Combat() then Core.DoCmd("/attack off") end
