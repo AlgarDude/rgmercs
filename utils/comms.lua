@@ -101,8 +101,8 @@ function Comms.SendAllPeersDoCmd(inZoneOnly, includeSelf, cmd, ...)
     end
 end
 
-function Comms.SendHeartbeat(assist, chase)
-    if Globals.GetTimeSeconds() - Comms.LastHeartbeat < 1 then return end
+function Comms.SendHeartbeat(assist, chase, forceSend)
+    if not forceSend and Globals.GetTimeSeconds() - Comms.LastHeartbeat < 1 then return end
     local useMana = Globals.Constants.RGCasters:contains(mq.TLO.Me.Class.ShortName())
     local useEnd = Globals.Constants.RGMelee:contains(mq.TLO.Me.Class.ShortName())
     local curAutoTarget = mq.TLO.Spawn(string.format("id %d", Globals.AutoTargetID))
@@ -159,6 +159,7 @@ function Comms.SendHeartbeat(assist, chase)
         PetBlocked    = Globals.CurrentPetBlocked,
         OpenBuffSlots = mq.TLO.Me.MaxBuffSlots() - mq.TLO.Me.BuffCount(),
         MaxBuffSlots  = mq.TLO.Me.MaxBuffSlots(),
+        Forced        = forceSend and true or false,
     }
     Comms.BroadcastMessage("RGMercs", "Heartbeat", heartBeat)
     -- update our own heartbeat too

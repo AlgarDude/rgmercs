@@ -1313,7 +1313,7 @@ function Ui.RenderForceTargetList(showPopout)
 
     if Config:GetSetting('ShowFTControls') then
         if ImGui.Button("Clear Forced Target", ImGui.GetWindowWidth() * .4, 18) then
-            Globals.ForceTargetID = 0
+            Globals.SetForcedTargetId(0)
         end
         ImGui.SameLine()
 
@@ -1352,7 +1352,7 @@ function Ui.RenderForceTargetList(showPopout)
                 end
 
                 Ui.InvisibleWithButtonText("##ft_btn_" .. tostring(i), Icons.FA_ARROW_RIGHT, ImVec2(ICON_SIZE, ImGui.GetTextLineHeight()),
-                    function() if checked then Globals.ForceTargetID = 0 else Globals.ForceTargetID = xtarg.ID() end end)
+                    function() if checked then Globals.SetForcedTargetId(0) else Globals.SetForcedTargetId(xtarg.ID()) end end)
 
                 ImGui.PopStyleColor(1)
 
@@ -1423,7 +1423,7 @@ function Ui.RenderForceTargetList(showPopout)
                 local _, clicked = ImGui.Selectable(xtarg.CleanName() or "None", false)
                 if clicked then
                     local newId = Globals.ForceTargetID == xtarg.ID() and 0 or xtarg.ID()
-                    Globals.ForceTargetID = newId
+                    Globals.SetForcedTargetId(newId)
                     Logger.log_debug("Forcing Target to: %s %d", newId == 0 and "None" or xtarg.CleanName(), newId)
                 end
                 ImGui.PopID()

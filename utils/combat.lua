@@ -489,7 +489,7 @@ function Combat.FindBestAutoTarget(validateFn)
                 if mq.TLO.Me.XTarget(1).ID() == Globals.ForceTargetID then
                     Targeting.ResetXTSlot(1)
                 end
-                Globals.ForceTargetID = 0
+                Globals.SetForcedTargetId(0)
             end
         else
             local targetValid = (Targeting.TargetIsType("npc", target) or Targeting.TargetIsType("npcpet", target))
@@ -546,7 +546,7 @@ function Combat.FindBestAutoTarget(validateFn)
             assistId = Globals.ForceTargetID
             Logger.log_verbose("\ayFindAutoTarget(): Forced target detected (%s).", Globals.ForceTargetID)
         else
-            Globals.ForceTargetID = 0
+            Globals.SetForcedTargetId(0)
         end
 
         -- If we have a target and are staying on target, use it (unless we have a force target)

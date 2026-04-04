@@ -322,6 +322,17 @@ Config.DefaultConfig                                     = {
         Tooltip = "Announces when a character flag is received.",
         ConfigType = "Advanced",
     },
+    ['HeartbeatAnnounceGroup']     = {
+        DisplayName = "Heartbeat Announce to Group",
+        Group = "General",
+        Header = "Announcements",
+        Category = "Announcements",
+        Type = "Custom",
+        Index = 18,
+        Default = false,
+        Tooltip = "Announces received heartbeats in /gsay. (Warning: spammy.)",
+        ConfigType = "Advanced",
+    },
 
     --Misc
     ['InstantRelease']             = { --Algarnote: Wondering who uses this? I can't imagine a usecase that doesn't involve scripts or afk and this could be handled in those scripts

@@ -43,6 +43,10 @@ local Globals     = require("utils.globals")
 local Modules     = require("utils.modules")
 Modules:load(Globals.Constants.LootModuleTypes[Config:GetSetting('LootModuleType')])
 
+-- pass through to avoid include loop
+Globals.Modules = Modules
+Globals.Logger  = Logger
+
 require('utils.datatypes')
 
 -- ImGui Variables
@@ -343,12 +347,12 @@ local function Main()
             Modules:ExecAll("OnZone")
             notifyZoning = false
             Config.TempSettings.NoLevZone = false
-            Globals.ForceTargetID = 0
             Globals.ForceCombatID = 0
             Globals.IgnoredTargetIDs = Set.new({})
             Globals.AutoTargetID = 0
             Globals.AutoTargetIsNamed = false
             Globals.AggroTargetID = 0
+            Globals.SetForcedTargetId(0)
         end
         mq.delay(100)
         Globals.CurZoneId = mq.TLO.Zone.ID()
@@ -558,6 +562,12 @@ local script_actor = Comms.Actors.register(function(message)
     -- This is a core event so handle it here.
     if msg.Event == "Heartbeat" then
         --Logger.log_debug("Received Heartbeat from \am%s\aw: \ag%s", msg.From, Strings.TableToString(msg.Data))
+        if Config:GetSetting('HeartbeatAnnounceGroup') and msg.Data.Forced then
+            Comms.HandleAnnounce(
+                Comms.FormatChatEvent("Heartbeat", msg.From, string.format("AutoTarget: %d, ForceTarget: %d", msg.Data.AutoTargetID, msg.Data.ForceTargetID)),
+                true, false, true)
+        end
+
         Comms.UpdatePeerHeartbeat(msg.From, msg.Data)
         return
     end

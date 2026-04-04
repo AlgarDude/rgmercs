@@ -3,6 +3,7 @@ local Config      = require('utils.config')
 local Globals     = require('utils.globals')
 local Core        = require("utils.core")
 local Comms       = require("utils.comms")
+local Combat      = require("utils.combat")
 local Modules     = require("utils.modules")
 local Targeting   = require("utils.targeting")
 local Strings     = require("utils.strings")
@@ -128,7 +129,7 @@ Binds.Handlers    = {
         handler = function(targetId)
             local forcedTarget = targetId and mq.TLO.Spawn(targetId) or mq.TLO.Target
             if forcedTarget and forcedTarget() and forcedTarget.ID() > 0 and (Targeting.TargetIsType("npc", forcedTarget) or Targeting.TargetIsType("npcpet", forcedTarget) or Targeting.TargetIsType("object", forcedTarget)) then
-                Globals.ForceTargetID = forcedTarget.ID()
+                Globals.SetForcedTargetId(forcedTarget.ID())
                 Logger.log_info("\awForced Target: %s", forcedTarget.CleanName() or "None")
             end
         end,
@@ -137,7 +138,7 @@ Binds.Handlers    = {
         usage = "/rgl forcetargetclear",
         about = "Will clear the current forced target.",
         handler = function()
-            Globals.ForceTargetID = 0
+            Globals.SetForcedTargetId(0)
             Logger.log_info("\awForced target cleared.")
         end,
     },
