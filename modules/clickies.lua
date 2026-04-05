@@ -990,6 +990,16 @@ function Module:RenderClickyControls(clickies, clickyIdx, headerCursorPos, heade
                     { text = "This clicky is in use in your current class config rotation. Check for possible conflicts!", color = Globals.Constants.Colors.FAQCmdQuestionColor, },
                 })
             end
+        elseif self.TempSettings.ClickyState[clickies[clickyIdx].itemName] and not self.TempSettings.ClickyState[clickies[clickyIdx].itemName].itemFound then
+            ImGui.SameLine()
+            ImGui.TextColored(Globals.Constants.Colors.ConditionFailColor, Icons.MD_WARNING)
+            if not preRender then
+                Ui.MultilineTooltipWithColors({
+                    { text = "! WARNING !",                                      color = Globals.Constants.Colors.ConditionFailColor, },
+                    { text = "",                                                 color = Globals.Constants.Colors.ConditionFailColor, },
+                    { text = "This clicky item is no longer in your inventory!", color = Globals.Constants.Colors.FAQCmdQuestionColor, },
+                })
+            end
         end
     end
 
@@ -1561,6 +1571,7 @@ function Module:GiveTime()
             local itemSpell = item and item.Clicky and item.Clicky.Spell
             self.TempSettings.ClickyState[clicky.itemName] = self.TempSettings.ClickyState[clicky.itemName] or {}
             self.TempSettings.ClickyState[clicky.itemName].spellName = itemSpell and itemSpell.Name() or (item and "No Clicky Spell or Missing Item" or "Item Not Found")
+            self.TempSettings.ClickyState[clicky.itemName].itemFound = item() ~= nil
 
             Logger.log_verbose("\ayClicky: \awLooking for clicky item: \am%s \awfound: %s", clicky.itemName, Strings.BoolToColorString(item() ~= nil))
             if item and item.Clicky then
