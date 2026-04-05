@@ -2019,19 +2019,6 @@ Config.DefaultConfig                                     = {
             Config.CacheCustomColors()
         end,
     },
-    ['HPMidColor']                       = {
-        DisplayName = "HP Mid",
-        Group = "General",
-        Header = "Interface",
-        Category = "Default Colors",
-        Index = 14,
-        Tooltip = "Color used to display mid HP values.",
-        Default = Tables.ImVec4ToTable(Globals.Constants.DefaultColors.HPMidColor),
-        Type = "Color",
-        OnChange = function(_, _)
-            Config.CacheCustomColors()
-        end,
-    },
     ['HPLowColor']                       = {
         DisplayName = "HP Low",
         Group = "General",
@@ -2053,19 +2040,6 @@ Config.DefaultConfig                                     = {
         Index = 16,
         Tooltip = "Color used to display high Mana values.",
         Default = Tables.ImVec4ToTable(Globals.Constants.DefaultColors.ManaHighColor),
-        Type = "Color",
-        OnChange = function(_, _)
-            Config.CacheCustomColors()
-        end,
-    },
-    ['ManaMidColor']                     = {
-        DisplayName = "Mana Mid",
-        Group = "General",
-        Header = "Interface",
-        Category = "Default Colors",
-        Index = 17,
-        Tooltip = "Color used to display mid Mana values.",
-        Default = Tables.ImVec4ToTable(Globals.Constants.DefaultColors.ManaMidColor),
         Type = "Color",
         OnChange = function(_, _)
             Config.CacheCustomColors()
