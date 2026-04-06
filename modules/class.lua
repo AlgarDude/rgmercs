@@ -984,30 +984,31 @@ function Module:HealById(id)
                     rotation.name)
                 -- since these are ordered by prioirty we can assume we are the best option.
                 selectedRotation = rotation
+                if selectedRotation then
+                    self.CurrentRotation = { name = selectedRotation.name, state = selectedRotation.state or 0, }
 
-                self.CurrentRotation = { name = selectedRotation.name, state = selectedRotation.state or 0, }
+                    -- If we need to heal others we should wait on the cooldown.
+                    Casting.WaitGlobalCoolDown("Healing: ")
 
-                -- If we need to heal others we should wait on the cooldown.
-                Casting.WaitGlobalCoolDown("Healing: ")
+                    local newState, wasRun = Rotation.Run(self, self:GetHealRotationTable(selectedRotation.name), { id, },
+                        self.ResolvedActionMap, selectedRotation.steps or 0, selectedRotation.state or 0,
+                        self.CombatState == "Downtime", selectedRotation.doFullRotation or false, nil, Config:GetSetting('EnabledRotationEntries') or {})
+                    if selectedRotation.state then selectedRotation.state = newState end
 
-                local newState, wasRun = Rotation.Run(self, self:GetHealRotationTable(selectedRotation.name), { id, },
-                    self.ResolvedActionMap, selectedRotation.steps or 0, selectedRotation.state or 0,
-                    self.CombatState == "Downtime", selectedRotation.doFullRotation or false, nil, Config:GetSetting('EnabledRotationEntries') or {})
-                if selectedRotation.state then selectedRotation.state = newState end
-
-                if wasRun and Casting.GetLastCastResultName() == "CAST_SUCCESS" then
-                    Logger.log_verbose(
-                        "\awHealById(%d):: Heal Rotation: \at%s\aw \agis\aw was \agSuccessful\aw!", id,
-                        rotation.name)
-                    Comms.HandleAnnounce(Comms.FormatChatEvent("Heal", healTarget.CleanName(), Casting.GetLastUsedSpell()),
-                        Config:GetSetting('HealAnnounceGroup'),
-                        Config:GetSetting('HealAnnounce'), Config:GetSetting('AnnounceToRaidIfInRaid'))
-                    break
-                else
-                    Logger.log_verbose(
-                        "\awHealById(%d):: Heal Rotation: \at%s\aw \agis\aw was \arNOT \awSuccessful! Conditions: wasRun(%s) castResult(%s) \ayGoing to keep trying!",
-                        id,
-                        rotation.name, Strings.BoolToColorString(wasRun), Casting.GetLastCastResultName())
+                    if wasRun and Casting.GetLastCastResultName() == "CAST_SUCCESS" then
+                        Logger.log_verbose(
+                            "\awHealById(%d):: Heal Rotation: \at%s\aw \agis\aw was \agSuccessful\aw!", id,
+                            rotation.name)
+                        Comms.HandleAnnounce(Comms.FormatChatEvent("Heal", healTarget.CleanName(), Casting.GetLastUsedSpell()),
+                            Config:GetSetting('HealAnnounceGroup'),
+                            Config:GetSetting('HealAnnounce'), Config:GetSetting('AnnounceToRaidIfInRaid'))
+                        break
+                    else
+                        Logger.log_verbose(
+                            "\awHealById(%d):: Heal Rotation: \at%s\aw \agis\aw was \arNOT \awSuccessful! Conditions: wasRun(%s) castResult(%s) \ayGoing to keep trying!",
+                            id,
+                            rotation.name, Strings.BoolToColorString(wasRun), Casting.GetLastCastResultName())
+                    end
                 end
             else
                 Logger.log_verbose("\awHealById(%d):: Heal Rotation: \at%s\aw \aris NOT\aw appropriate to use.", id,
