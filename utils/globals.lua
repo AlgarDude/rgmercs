@@ -274,6 +274,8 @@ function Globals.GetAlternatingColor(colorA, colorB)
 end
 
 function Globals.SetForcedTargetId(targetId)
+    if targetId == Globals.ForceTargetID then return end
+
     local startingId = Globals.ForceTargetID
     if targetId and targetId > 0 then
         Globals.ForceTargetID = targetId
