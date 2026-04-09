@@ -548,6 +548,11 @@ function Targeting.GroupedWithTarget(target)
 end
 
 function Targeting.SetForceBurn(targetId)
+    if Targeting.ForceBurnTargetID == tonumber(targetId) then
+        Logger.log_info("Force Burn already set to %d. Ignoring request.", Targeting.ForceBurnTargetID)
+        return
+    end
+
     Targeting.ForceBurnTargetID = tonumber(targetId) or mq.TLO.Target.ID()
     local burnNowSpawn = mq.TLO.Spawn(Targeting.ForceBurnTargetID)
     local burnName = burnNowSpawn and (burnNowSpawn() and burnNowSpawn.CleanName() or "None") or "None"
