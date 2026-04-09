@@ -45,13 +45,13 @@ LoaderUI.chDropY         = ImHashStr("loader_drop_y")
 LoaderUI.chDropSize      = ImHashStr("loader_drop_size")
 
 -- `Renders the lissajous fly-then-settle animation`
--- `--- @param self LoaderUI`
--- `--- @param dl ImDrawList foreground draw list`
--- `--- @param display ImVec2 display size`
--- `--- @param finalX number target screen X of the image top-left`
--- `--- @param finalY number target screen Y of the image top-left`
--- `--- @param dt number delta time`
--- `--- @return boolean true while animation is still running`
+--- @param self LoaderUI`
+--- @param dl ImDrawList foreground draw list`
+--- @param display ImVec2 display size`
+--- @param finalX number target screen X of the image top-left`
+--- @param finalY number target screen Y of the image top-left`
+--- @param dt number delta time`
+--- @return boolean true while animation is still running`
 local function renderLissajous(self, dl, display, finalX, finalY, dt)
     if self.animState == "flying" then
         if not self.animStartTime then self.animStartTime = Globals.GetTimeSeconds() end
@@ -107,13 +107,13 @@ local function renderLissajous(self, dl, display, finalX, finalY, dt)
 end
 
 -- `Renders the big-drop-and-bounce animation`
--- `--- @param self LoaderUI`
--- `--- @param dl ImDrawList foreground draw list`
--- `--- @param display ImVec2 display size`
--- `--- @param finalX number target screen X of the image top-left`
--- `--- @param finalY number target screen Y of the image top-left`
--- `--- @param dt number delta time`
--- `--- @return boolean true while animation is still running`
+--- @param self LoaderUI`
+--- @param dl ImDrawList foreground draw list`
+--- @param display ImVec2 display size`
+--- @param finalX number target screen X of the image top-left`
+--- @param finalY number target screen Y of the image top-left`
+--- @param dt number delta time`
+--- @return boolean true while animation is still running`
 local function renderDrop(self, dl, display, finalX, finalY, dt)
     if self.animState == "dropping" then
         if self.dropBigSize == 0 then
@@ -148,11 +148,11 @@ local function renderDrop(self, dl, display, finalX, finalY, dt)
 end
 
 -- `Dispatches to the chosen animation renderer and handles the shared done states`
--- `--- @param self LoaderUI`
--- `--- @param display ImVec2 display size`
--- `--- @param finalX number target screen X of the image top-left`
--- `--- @param finalY number target screen Y of the image top-left`
--- `--- @return boolean true while animation is still running`
+--- @param self LoaderUI`
+--- @param display ImVec2 display size`
+--- @param finalX number target screen X of the image top-left`
+--- @param finalY number target screen Y of the image top-left`
+--- @return boolean true while animation is still running`
 local function renderAnimImage(self, display, finalX, finalY)
     local dl = ImGui.GetForegroundDrawList()
     local dt = Ui.GetDeltaTime()
