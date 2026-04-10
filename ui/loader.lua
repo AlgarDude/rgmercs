@@ -45,7 +45,6 @@ LoaderUI.chDropY         = ImHashStr("loader_drop_y")
 LoaderUI.chDropSize      = ImHashStr("loader_drop_size")
 
 -- `Renders the lissajous fly-then-settle animation`
---- @param self LoaderUI`
 --- @param dl ImDrawList foreground draw list`
 --- @param display ImVec2 display size`
 --- @param finalX number target screen X of the image top-left`
@@ -107,7 +106,6 @@ local function renderLissajous(self, dl, display, finalX, finalY, dt)
 end
 
 -- `Renders the big-drop-and-bounce animation`
---- @param self LoaderUI`
 --- @param dl ImDrawList foreground draw list`
 --- @param display ImVec2 display size`
 --- @param finalX number target screen X of the image top-left`
@@ -148,7 +146,6 @@ local function renderDrop(self, dl, display, finalX, finalY, dt)
 end
 
 -- `Dispatches to the chosen animation renderer and handles the shared done states`
---- @param self LoaderUI`
 --- @param display ImVec2 display size`
 --- @param finalX number target screen X of the image top-left`
 --- @param finalY number target screen Y of the image top-left`
