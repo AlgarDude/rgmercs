@@ -2018,7 +2018,16 @@ function Module:GiveTime()
                                 end
                             end
 
-                            if buffCheckPassed and Casting.ItemReady(item()) then
+                            -- distance check
+                            local distanceCheckPassed = true
+                            if target.ID() ~= mq.TLO.Target.ID() then
+                                if target and target() and target.Distance() > (itemSpell.MyRange() or 100) then
+                                    Logger.log_debug("\ayClicky: \arTried to use item on targetId %s they are too far away!!", target and target.DisplayName() or "None")
+                                    distanceCheckPassed = false
+                                end
+                            end
+
+                            if buffCheckPassed and distanceCheckPassed and Casting.ItemReady(item()) then
                                 Logger.log_verbose("\ayClicky: \awItem \am%s\aw Clicky Spell: \at%s\ag!", item.Name(), item.Clicky.Spell.RankName.Name())
                                 Casting.UseItem(item.Name(), targetId)
                                 clickiesUsedThisFrame = clickiesUsedThisFrame + 1
