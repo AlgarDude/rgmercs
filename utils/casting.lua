@@ -2095,7 +2095,7 @@ function Casting.UseItem(itemName, targetId, bAllowDead, retryCount)
         return false
     end
 
-    if targetId and targetId ~= mq.TLO.Me.ID() and itemSpell.MyRange() > 0 then
+    if targetId and targetId ~= mq.TLO.Me.ID() and (itemSpell.MyRange() or 0) > 0 then
         local targetSpawn = mq.TLO.Spawn(targetId)
         if targetSpawn and targetSpawn() and targetSpawn.Distance() > (itemSpell.MyRange() or 100) then
             Logger.log_debug("\awUseItem(\ag%s\aw): \arTried to use item on targetId %s they are too far away!!", itemName, targetSpawn and targetSpawn.DisplayName() or "None")
