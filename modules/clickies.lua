@@ -2020,7 +2020,7 @@ function Module:GiveTime()
 
                             -- distance check
                             local distanceCheckPassed = true
-                            if target.ID() ~= mq.TLO.Target.ID() then
+                            if target.ID() ~= mq.TLO.Target.ID() and itemSpell.MyRange() > 0 then
                                 if target and target() and target.Distance() > (itemSpell.MyRange() or 100) then
                                     Logger.log_debug("\ayClicky: \arTried to use item on targetId %s they are too far away!!", target and target.DisplayName() or "None")
                                     distanceCheckPassed = false
