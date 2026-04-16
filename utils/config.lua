@@ -2415,13 +2415,6 @@ Config.DefaultConfig                                     = {
         end,
     },
 
-    ['HasConvertedToDB']                 = {
-        DisplayName = "Has Converted To DB",
-        Category = "Internals",
-        Type = "Custom",
-        Default = false,
-    },
-
     --Tanking
     ['AETauntCnt']                       = {
         DisplayName = "AE Taunt Count",
@@ -3075,7 +3068,10 @@ function Config.ResolveDefaults(defaults, settings, module)
     end
 
     for k, v in pairs(defaults) do
-        if settings[k] == nil then settings[k] = v.Default end
+        if settings[k] == nil then
+            settings[k] = v.Default
+            changed = true
+        end
 
         if type(settings[k]) ~= type(v.Default) then
             Logger.log_warn("\ayData type of setting [\am%s\ay] has been deprecated -- resetting to default.", k)
@@ -3362,7 +3358,6 @@ function Config:UpdatePeerSettings(data)
     self.peerModuleSettingCategories[module] = Set.new(settingsCategories or {})
 
     for setting, _ in pairs(settings) do
-        printf("Updating caches for setting %s => %s", setting, tostring(settings[setting]))
         self.TempSettings.PeerSettingToModuleCache[setting] = module
         self.TempSettings.PeerModuleSettingsLowerToNameCache[setting:lower()] = setting
         self:PeerRegisterCategoryToSettingMapping(peer, setting)
