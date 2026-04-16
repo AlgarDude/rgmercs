@@ -1,24 +1,12 @@
-local mq                  = require('mq')
-local ImGui               = require('ImGui')
-local ImPlot              = require('ImPlot')
-local sqlite              = nil
-do
-    local deadline = mq.gettime() + 5000
-    local err
-    while not sqlite and mq.gettime() < deadline do
-        local ok, result = pcall(require, 'lsqlite3')
-        if ok then
-            sqlite = result
-        else
-            err = result
-            mq.delay(50)
-        end
-    end
-    if not sqlite then
-        error(string.format("DB: failed to load lsqlite3 after retries: %s", tostring(err)))
-    end
+local mq         = require('mq')
+local ImGui      = require('ImGui')
+local ImPlot     = require('ImPlot')
+local ok, sqlite = pcall(require, 'lsqlite3')
+if not ok then
+    error(string.format("DB: failed to load lsqlite3: %s", tostring(sqlite)))
 end
 local Logger              = require('utils.logger')
+local Files               = require('utils.files')
 local ScrollingPlotBuffer = require('utils.scrolling_plot_buffer')
 
 local DB                  = { _version = '1.0', _name = "DB", _author = 'Derple', }
@@ -60,6 +48,12 @@ local SCHEMA              = [[
 ---                                 operation is sqlite.INSERT, sqlite.UPDATE, or sqlite.DELETE
 ---@return any|nil  DB instance or nil on failure
 function DB.new(path, onUpdate)
+    local dirOk, dirErr = Files.make_p_for_file(path)
+    if not dirOk then
+        Logger.log_error("\arDB: failed to create directory for %s: %s", path, tostring(dirErr))
+        return nil
+    end
+
     local db = nil
     local deadline = mq.gettime() + 5000
     while not db and mq.gettime() < deadline do
