@@ -27,6 +27,7 @@ Config.peerModuleSettingCategories                       = {}
 Config.FAQ                                               = {}
 Config.SettingsLoadComplete                              = false
 Config.DbConsistencyCheckPass                            = true
+Config.UnitTestsPass                                     = true
 
 Config.TempSettings                                      = {}
 Config.TempSettings.lastModuleRegisteredTime             = 0
@@ -2370,6 +2371,14 @@ Config.DefaultConfig                                     = {
         Category = "Internals",
         Index = 0,
         Tooltip = "Enable the Debug Panel",
+        Default = false,
+        ConfigType = "Advanced",
+    },
+    ['RunSelfTestsOnStartup']            = {
+        DisplayName = "Run Self-Tests on Startup",
+        Category = "Internals",
+        Index = 1,
+        Tooltip = "Run a series of self-tests to check the functionality of various components of the script when it starts up. This may increase startup time.",
         Default = false,
         ConfigType = "Advanced",
     },
