@@ -1504,7 +1504,7 @@ function Ui.RenderForceTargetList(showPopout)
             .Hideable,
             ImGuiTableFlags.Reorderable),
         function(sort_specs)
-            if Targeting.CrossDiffXTHaterIDs(Ui.TempSettings.SortedXTIDs:toList(), true) or true then
+            if Targeting.CrossDiffXTHaterIDs(Ui.TempSettings.SortedXTIDs:toList(), false) or true then
                 Ui.TempSettings.SortedXT = {}
                 Ui.TempSettings.SortedXTIDToSlot = {}
                 Ui.TempSettings.SortedXTIDs = Targeting.GetXTHaterIDsSet(true)

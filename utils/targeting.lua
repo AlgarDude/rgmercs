@@ -360,7 +360,9 @@ function Targeting.DiffXTHaterIDs(t, printDebug)
     local curHaters   = Targeting.GetXTHaterIDs(printDebug)
 
     for _, xtargID in ipairs(curHaters) do
-        Logger.log_verbose("DiffXTHaterIDs(): XT(%d) Checking list for known hater. %s", xtargID, Strings.TableToString(oldHaterSet:toList()))
+        if printDebug then
+            Logger.log_verbose("DiffXTHaterIDs(): XT(%d) Checking list for known hater. %s", xtargID, Strings.TableToString(oldHaterSet:toList()))
+        end
         if not oldHaterSet:contains(xtargID) then return true end
     end
 
@@ -378,12 +380,12 @@ function Targeting.CrossDiffXTHaterIDs(t, printDebug)
 
 
     for _, xtargID in ipairs(curHaters) do
-        Logger.log_verbose("CrossDiffXTHaterIDs(): XT(%d) Checking list for known hater. %s", xtargID, Strings.TableToString(oldHaterSet:toList()))
+        if printDebug then Logger.log_verbose("CrossDiffXTHaterIDs(): XT(%d) Checking list for known hater. %s", xtargID, Strings.TableToString(oldHaterSet:toList())) end
         if not oldHaterSet:contains(xtargID) then return true end
     end
 
     for _, oldID in ipairs(t) do
-        Logger.log_verbose("CrossDiffXTHaterIDs(): Old XT(%d) Checking list for known hater. %s", oldID, Strings.TableToString(curHaters))
+        if printDebug then Logger.log_verbose("CrossDiffXTHaterIDs(): Old XT(%d) Checking list for known hater. %s", oldID, Strings.TableToString(curHaters)) end
         if not curHatersSet:contains(oldID) then return true end
     end
 

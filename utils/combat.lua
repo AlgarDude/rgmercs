@@ -18,7 +18,7 @@ Combat.__index  = Combat
 --- Returns the current live combat state based on XTarget hater count.
 --- @return string "Combat" if there are active haters, "Downtime" otherwise.
 function Combat.GetCombatState()
-    return Targeting.GetXTHaterCount(true) > 0 and "Combat" or "Downtime"
+    return Targeting.GetXTHaterCount(false) > 0 and "Combat" or "Downtime"
 end
 
 --- Returns the cached combat state from the last main loop frame.
