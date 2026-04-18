@@ -395,7 +395,7 @@ local function Main()
         return
     end
 
-    if Targeting.GetXTHaterCount(true) > 0 then
+    if Targeting.GetXTHaterCount(false) > 0 then
         if Globals.CurrentState == "Downtime" and mq.TLO.Me.Sitting() then
             -- if switching into combat state stand up.
             mq.TLO.Me.Stand()
