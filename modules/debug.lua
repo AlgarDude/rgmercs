@@ -4,6 +4,7 @@ local Globals       = require("utils.globals")
 local Core          = require("utils.core")
 local Ui            = require("utils.ui")
 local Logger        = require("utils.logger")
+local Signatures    = require('utils.signatures')
 local Icons         = require('mq.ICONS')
 local Zep           = require('Zep')
 local Base          = require("modules.base")
@@ -27,6 +28,12 @@ Module.DefaultConfig             = {
         Category = "Custom",
         Type = "Custom",
     },
+    ['EnableAutoCompletion'] = {
+        Default = true,
+        DisplayName = "Enable Auto Completion",
+        Category = "Custom",
+        Type = "Custom",
+    },
     [string.format("%s_Popped", Module._name)] = {
         DisplayName = Module._name .. " Popped",
         Type = "Custom",
@@ -44,6 +51,14 @@ Module.execRequested             = false
 Module.execCoroutine             = nil
 Module.status                    = "Idle..."
 Module.autoRun                   = false
+Module.completionItems           = {}
+Module.completionIdx             = 1
+Module.completionOpen            = false
+Module.completionSuppressed      = false
+Module.completionLastToken       = ''
+Module.completionFrameAge        = 0
+Module.editorScreenPos           = ImVec2(0, 0)
+Module.hintBarScreenPos          = ImVec2(0, 0)
 
 function Module:New()
     return Base.New(self)
@@ -53,6 +68,7 @@ function Module:LoadSettings()
     Base.LoadSettings(self)
 
     self.luaBuffer:SetText(Config:GetSetting('script') or "")
+    Signatures.Load()
 end
 
 function Module:LogTimestamp()
@@ -147,12 +163,187 @@ function Module:RenderEditor()
     local footerHeight = 35
     local editHeight = (ImGui.GetWindowHeight() * .5) - yPos - footerHeight
 
+    self.editorScreenPos = ImGui.GetCursorScreenPosVec()
     self.luaEditor:Render(ImVec2(ImGui.GetWindowWidth() * 0.98, editHeight))
 end
 
 local function RenderTooltip(text)
     if ImGui.IsItemHovered() then
         ImGui.SetTooltip(text)
+    end
+end
+
+local HINT_ACTIVE = ImVec4(0.5, 1.0, 0.5, 1.0)
+local HINT_DIM    = ImVec4(0.6, 0.6, 0.6, 1.0)
+local HINT_TYPE   = ImVec4(0.8, 0.4, 1.0, 1.0)
+local HINT_DESC   = ImVec4(0.3, 0.5, 0.8, 1.0)
+
+function Module:RenderHintBar()
+    self.hintBarScreenPos    = ImGui.GetCursorScreenPosVec()
+    local text               = self.luaBuffer:GetText()
+    local cursor             = self.luaEditor.cursor
+    local cursorIdx          = cursor and cursor.index or #text
+
+    local funcName, paramIdx = Signatures.Resolve(text, cursorIdx)
+    local sig                = funcName and Signatures.Get()[funcName]
+
+    if not sig then
+        ImGui.TextDisabled(' ')
+        return
+    end
+
+    ImGui.TextColored(HINT_DIM, funcName .. '(')
+    for i, param in ipairs(sig.params) do
+        ImGui.SameLine(0, 0)
+        local color = (i == paramIdx) and HINT_ACTIVE or HINT_DIM
+        ImGui.TextColored(color, param.name)
+        ImGui.SameLine(0, 0)
+        ImGui.TextColored(HINT_TYPE, ':' .. param.type)
+        if i < #sig.params then
+            ImGui.SameLine(0, 0)
+            ImGui.TextColored(HINT_DIM, ',  ')
+        end
+    end
+    ImGui.SameLine(0, 0)
+    ImGui.TextColored(HINT_DIM, ')')
+    ImGui.SameLine(0, 4)
+    ImGui.TextColored(HINT_DIM, '-> ')
+    ImGui.SameLine(0, 0)
+    ImGui.TextColored(HINT_TYPE, sig.ret or 'nil')
+    if sig.desc then
+        ImGui.SameLine(0, 4)
+        ImGui.TextColored(HINT_DESC, ': ' .. sig.desc)
+    end
+end
+
+local COMPLETE_ACTIVE = ImVec4(0.5, 1.0, 0.5, 1.0)
+local COMPLETE_NAME   = ImVec4(0.35, 0.7, 0.35, 1.0)
+local COMPLETE_DIM    = ImVec4(0.6, 0.6, 0.6, 1.0)
+local COMPLETE_TYPE   = ImVec4(0.8, 0.4, 1.0, 1.0)
+local COMPLETE_DESC   = ImVec4(0.3, 0.5, 0.8, 1.0)
+local COMPLETE_MAX    = 15
+
+function Module:RenderCompletion()
+    if not Config:GetSetting('EnableAutoCompletion') then return end
+    local text            = self.luaBuffer:GetText()
+    local cursor          = self.luaEditor.cursor
+    local cursorIdx       = cursor and cursor.index or #text
+
+    local prefix, partial = Signatures.ResolveCompletion(text, cursorIdx)
+    if not prefix then
+        self.completionOpen       = false
+        self.completionItems      = {}
+        self.completionSuppressed = false
+        self.completionLastToken  = ''
+        self.completionFrameAge   = 0
+        return
+    end
+
+    local currentToken = prefix .. '.' .. partial
+    if currentToken ~= self.completionLastToken then
+        self.completionSuppressed = false
+        self.completionLastToken  = currentToken
+    end
+
+    if self.completionSuppressed then return end
+
+    local items = Signatures.Complete(prefix, partial)
+    if #items == 0 then
+        self.completionOpen  = false
+        self.completionItems = {}
+        return
+    end
+
+    local wasOpen = self.completionOpen
+    if #items ~= #self.completionItems then
+        self.completionIdx = 1
+    end
+    self.completionItems = items
+    self.completionOpen  = true
+
+    if not wasOpen then
+        self.completionFrameAge = 0
+    else
+        self.completionFrameAge = self.completionFrameAge + 1
+    end
+    local dropReady = self.completionFrameAge >= 2
+
+    if dropReady and ImGui.IsKeyReleased(ImGuiKey.Escape) then
+        self.completionOpen       = false
+        self.completionItems      = {}
+        self.completionSuppressed = true
+        return
+    end
+
+    local function insertCompletion(item)
+        local insertLen    = #prefix + 1 + #partial
+        local before       = text:sub(1, cursorIdx - insertLen)
+        local after        = text:sub(cursorIdx + 1)
+        local inserted     = item.full .. '('
+        local newText      = before .. inserted .. after
+        local newCursorIdx = #before + #inserted
+        self.luaBuffer:SetText(newText)
+        self.luaEditor.cursor     = self.luaEditor.beginPos + newCursorIdx
+        self.completionOpen       = false
+        self.completionItems      = {}
+        self.completionSuppressed = true
+    end
+
+    local lineHeight  = ImGui.GetTextLineHeightWithSpacing()
+    local dropX       = self.hintBarScreenPos.x
+    local dropY       = self.hintBarScreenPos.y
+    local childH      = math.min(#items, COMPLETE_MAX) * lineHeight + 8
+    local mousePos    = ImGui.GetMousePosVec()
+
+    local dropW       = ImGui.GetWindowWidth() * 0.98
+    local mouseInDrop = mousePos.x >= dropX and mousePos.x <= dropX + dropW
+        and mousePos.y >= dropY and mousePos.y <= dropY + childH
+
+    local winPos      = ImGui.GetWindowPosVec()
+    local savedCursor = ImGui.GetCursorPosVec()
+    ImGui.SetCursorPos(ImVec2(dropX - winPos.x, dropY - winPos.y))
+    local scrollFlag = #items > COMPLETE_MAX and 0 or ImGuiWindowFlags.NoScrollbar
+    ImGui.PushStyleColor(ImGuiCol.ChildBg, IM_COL32(30, 30, 40, 245))
+    if ImGui.BeginChild('##sig_complete', ImVec2(dropW, childH), 0, bit32.bor(
+            ImGuiWindowFlags.NoNav,
+            ImGuiWindowFlags.NoFocusOnAppearing,
+            scrollFlag
+        )) then
+        for i, item in ipairs(items) do
+            local selected = (i == self.completionIdx)
+            local clicked = ImGui.Selectable('##sc_' .. i, false, ImGuiSelectableFlags.None)
+            if ImGui.IsItemHovered() then self.completionIdx = i end
+            if dropReady and clicked and ImGui.IsMouseReleased(0) then
+                insertCompletion(item)
+            end
+            ImGui.SameLine(0, 4)
+            ImGui.TextColored(selected and COMPLETE_ACTIVE or COMPLETE_NAME, item.name)
+            ImGui.SameLine(0, 4)
+            ImGui.TextColored(COMPLETE_DIM, '-> ')
+            ImGui.SameLine(0, 0)
+            ImGui.TextColored(COMPLETE_TYPE, (item.sig and item.sig.ret) or 'nil')
+            if item.sig and item.sig.desc then
+                ImGui.SameLine(0, 4)
+                ImGui.TextColored(COMPLETE_DESC, ': ' .. item.sig.desc)
+            end
+        end
+
+        local targetY = (self.completionIdx - 1) * lineHeight
+        local scrollY = ImGui.GetScrollY()
+        if targetY < scrollY then
+            ImGui.SetScrollY(targetY)
+        elseif targetY + lineHeight > scrollY + childH - 4 then
+            ImGui.SetScrollY(targetY + lineHeight - childH + 4)
+        end
+    end
+    ImGui.EndChild()
+    ImGui.PopStyleColor()
+    ImGui.SetCursorPos(savedCursor)
+
+    if dropReady and not mouseInDrop and ImGui.IsMouseClicked(0) then
+        self.completionOpen       = false
+        self.completionItems      = {}
+        self.completionSuppressed = true
     end
 end
 
@@ -182,13 +373,14 @@ function Module:CenteredButton(label)
 end
 
 function Module:RenderToolbar()
-    if ImGui.BeginTable("##LuaConsoleToolbar", 6, ImGuiTableFlags.Borders) then
+    if ImGui.BeginTable("##LuaConsoleToolbar", 7, ImGuiTableFlags.Borders) then
         ImGui.TableSetupColumn("##LuaConsoleToolbarCol1", ImGuiTableColumnFlags.WidthFixed, 30)
         ImGui.TableSetupColumn("##LuaConsoleToolbarCol2", ImGuiTableColumnFlags.WidthFixed, 30)
         ImGui.TableSetupColumn("##LuaConsoleToolbarCol3", ImGuiTableColumnFlags.WidthFixed, 30)
         ImGui.TableSetupColumn("##LuaConsoleToolbarCol4", ImGuiTableColumnFlags.WidthFixed, 30)
         ImGui.TableSetupColumn("##LuaConsoleToolbarCol5", ImGuiTableColumnFlags.WidthFixed, 180)
-        ImGui.TableSetupColumn("##LuaConsoleToolbarCol6", ImGuiTableColumnFlags.WidthStretch, 200)
+        ImGui.TableSetupColumn("##LuaConsoleToolbarCol6", ImGuiTableColumnFlags.WidthFixed, 180)
+        ImGui.TableSetupColumn("##LuaConsoleToolbarCol7", ImGuiTableColumnFlags.WidthStretch, 200)
         ImGui.TableNextColumn()
 
         if self.execCoroutine and coroutine.status(self.execCoroutine) ~= 'dead' then
@@ -234,6 +426,13 @@ function Module:RenderToolbar()
         if pressed then
             Config:SetSetting('ShowTimestamps', showTimestamps)
         end
+
+        ImGui.TableNextColumn()
+        local enableAutoComplete, pressed = ImGui.Checkbox("Auto Completion",
+            Config:GetSetting('EnableAutoCompletion'))
+        if pressed then
+            Config:SetSetting('EnableAutoCompletion', enableAutoComplete)
+        end
         ImGui.TableNextColumn()
         Ui.RenderText("Status: " .. self.status)
         ImGui.EndTable()
@@ -249,8 +448,10 @@ function Module:Render()
     ImGui.NewLine()
     if self.ModuleLoaded then
         self:RenderEditor()
+        self:RenderHintBar()
         self:RenderToolbar()
         self:RenderConsole()
+        self:RenderCompletion()
     end
 end
 
