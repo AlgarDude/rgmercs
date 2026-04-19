@@ -941,6 +941,9 @@ Config.DefaultConfig                                     = {
         Tooltip = "Periodically /face your target while in combat.",
         Default = true,
         ConfigType = "Advanced",
+        OnChange = function(oldVal, newVal)
+            Config:SetSetting('ManualMode', false, false, true)
+        end,
     },
     ['StickHow']                   = {
         DisplayName = "Stick How",
@@ -987,6 +990,9 @@ Config.DefaultConfig                                     = {
         Tooltip = "Attempt to adjust positioning if you receive a 'cannot see your target' message.",
         Default = true,
         ConfigType = "Advanced",
+        OnChange = function(oldVal, newVal)
+            Config:SetSetting('ManualMode', false, false, true)
+        end,
     },
     ['HandleTooClose']             = {
         DisplayName = "Handle Too Close",
@@ -997,6 +1003,9 @@ Config.DefaultConfig                                     = {
         Tooltip = "Attempt to adjust positioning if you receive a 'too close to use a ranged weapon' message.",
         Default = true,
         ConfigType = "Advanced",
+        OnChange = function(oldVal, newVal)
+            Config:SetSetting('ManualMode', false, false, true)
+        end,
     },
     ['HandleTooFar']               = {
         DisplayName = "Handle Too Far",
@@ -1007,6 +1016,9 @@ Config.DefaultConfig                                     = {
         Tooltip = "Attempt to adjust positioning if you receive a 'too far away' or 'cant hit them from here' message.",
         Default = true,
         ConfigType = "Advanced",
+        OnChange = function(oldVal, newVal)
+            Config:SetSetting('ManualMode', false, false, true)
+        end,
     },
     ['DoAutoNav']                  = {
         DisplayName = "Enable Auto Navigation",
@@ -1017,6 +1029,9 @@ Config.DefaultConfig                                     = {
         Tooltip = "Enables RGMercs to issue Navigation Commands in Combat. Disable if you wish to manually control movement.",
         Default = true,
         ConfigType = "Advanced",
+        OnChange = function(oldVal, newVal)
+            Config:SetSetting('ManualMode', false, false, true)
+        end,
     },
     ['DoAutoStick']                = {
         DisplayName = "Enable Auto Stick",
@@ -1027,6 +1042,30 @@ Config.DefaultConfig                                     = {
         Tooltip = "Enables RGMercs to issue Stick Commands in Combat. Disable if you wish to manually control movement.",
         Default = true,
         ConfigType = "Advanced",
+        OnChange = function(oldVal, newVal)
+            Config:SetSetting('ManualMode', false, false, true)
+        end,
+    },
+    ['ManualMode']                 = {
+        DisplayName = "Manual Mode",
+        Group = "Combat",
+        Header = "Positioning",
+        Category = "General Positioning",
+        Index = 9,
+        Tooltip =
+        "This will disable all automated movement on your character but not using abilities.",
+        Default = false,
+        ConfigType = "Advanced",
+        OnChange = function(oldVal, newVal)
+            local settings = { 'DoAutoNav', 'DoAutoStick', 'FaceTarget', 'HandleCantSeeTarget', 'HandleTooClose', 'HandleTooFar', }
+
+            for _, setting in ipairs(settings) do
+                Config:SetSetting(setting, not newVal, false, true)
+            end
+        end,
+        FAQ = "I want to control my character's movement but still have it use abilities, how can I do that?",
+        Answer =
+        "If you enable Manual Mode, it will disable all automated movement options for your character, but will still allow it to use abilities as normal. This is ideal for those who want to control their character's positioning manually, but still want to benefit from the spell and item usage of RGMercs. Please note that enabling this will also disable some features that rely on movement automation, such as handling 'cannot see target' messages or auto-facing the target in combat.",
     },
 
     -- Positioning/Tank
@@ -1061,27 +1100,6 @@ Config.DefaultConfig                                     = {
         Min = 1,
         Max = 40,
         ConfigType = "Advanced",
-    },
-    ['ManualTank']                 = {
-        DisplayName = "Manual Tank Mode",
-        Group = "Combat",
-        Header = "Positioning",
-        Category = "Tank Positioning",
-        Index = 4,
-        Tooltip =
-        "This will disable all automated movement on your tank but not using abilities.",
-        Default = false,
-        ConfigType = "Advanced",
-        OnChange = function(oldVal, newVal)
-            local settings = { 'DoAutoNav', 'DoAutoStick', 'FaceTarget', 'HandleCantSeeTarget', 'HandleTooClose', 'HandleTooFar', }
-
-            for _, setting in ipairs(settings) do
-                Config:SetSetting(setting, not newVal)
-            end
-        end,
-        FAQ = "I want to control my tank's movement but still have it use abilities, how can I do that?",
-        Answer =
-        "If you enable Manual Tank Mode, it will disable all automated movement options for your tank, but will still allow it to use abilities as normal. This is ideal for those who want to control their tank's positioning manually, but still want to benefit from the spell and item usage of RGMercs. Please note that enabling this will also disable some features that rely on movement automation, such as handling 'cannot see target' messages or auto-facing the target in combat.",
     },
 
     --Common/Rules
@@ -3000,7 +3018,8 @@ end
 --- @param setting string: The name of the setting to be updated.
 --- @param value any: The new value to assign to the setting.
 --- @param tempOnly boolean?: The new value to assign to the setting.
-function Config:SetSetting(setting, value, tempOnly)
+--- @param noCallback boolean?: If true, the setting will be updated without triggering the OnChange callback.
+function Config:SetSetting(setting, value, tempOnly, noCallback)
     local settingModuleName = "Core"
     local beforeUpdate = ""
 
@@ -3042,7 +3061,7 @@ function Config:SetSetting(setting, value, tempOnly)
     if valueChanged then
         Logger.log_debug("(%s) \ag%s\aw is now:\ax %-5s \ay[Previous:\ax %s\ay]", settingModuleName, setting, afterUpdate, beforeUpdate)
 
-        if defaultConfig[setting].OnChange then
+        if defaultConfig[setting].OnChange and noCallback ~= true then
             defaultConfig[setting].OnChange(oldValue, cleanValue)
         end
     end
