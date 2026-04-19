@@ -254,6 +254,16 @@ local function RGInit(...)
                 Globals.PauseMain = true
                 break
             end
+            if v == "reset_config_type" or v == "reset_class_config_type" or v == "reset_class_config" then
+                Config:SetSetting('ClassConfigDir', '')
+                Logger.log_info("ClassConfigDir reset to empty by startup argument.")
+                break
+            end
+            if v == "reset_to_default" then
+                Config.Db:deleteCharacter(Globals.CurServer, Globals.CurLoadedChar)
+                Logger.log_info("All settings for %s on %s wiped from DB — defaults will load on startup.", Globals.CurLoadedChar, Globals.CurServer)
+                break
+            end
         end
     end
 
