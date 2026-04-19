@@ -104,6 +104,7 @@ function Module:Exec(scriptText)
     locals.Math         = setmetatable({}, { __index = require('utils.math'), })
     locals.Modules      = setmetatable({}, { __index = require('utils.modules'), })
     locals.Movement     = setmetatable({}, { __index = require('utils.movement'), })
+    locals.Ui           = setmetatable({}, { __index = require('utils.ui'), })
     locals.NamedDefault = setmetatable({}, { __index = require('namedlist.named_default'), })
     locals.NamedEQMight = setmetatable({}, { __index = require('namedlist.named_eqmight'), })
     locals.Rotation     = setmetatable({}, { __index = require('utils.rotation'), })
@@ -113,8 +114,7 @@ function Module:Exec(scriptText)
     locals.Set          = setmetatable({}, { __index = require('mq.set'), })
     locals.DanNet       = setmetatable({}, { __index = require('lib.dannet.helpers'), })
 
-
-    locals.print   = function(...)
+    locals.print        = function(...)
         self:LogTimestamp()
         self.luaConsole:PushStyleColor(Zep.ConsoleCol.Text, CHANNEL_COLOR)
         for _, arg in ipairs({ ..., }) do
@@ -124,16 +124,16 @@ function Module:Exec(scriptText)
         self.luaConsole:PopStyleColor()
     end
 
-    locals.printf  = function(text, ...)
+    locals.printf       = function(text, ...)
         self:LogTimestamp()
         self.luaConsole:AppendText(CHANNEL_COLOR, text, ...)
     end
 
-    locals.mq.exit = function()
+    locals.mq.exit      = function()
         self.execCoroutine = nil
     end
 
-    locals.hi      = 3
+    locals.hi           = 3
 
     ---@diagnostic disable-next-line: deprecated
     setfenv(func, locals)
@@ -184,8 +184,15 @@ function Module:RenderHintBar()
     local cursor             = self.luaEditor.cursor
     local cursorIdx          = cursor and cursor.index or #text
 
-    local funcName, paramIdx = Signatures.Resolve(text, cursorIdx)
-    local sig                = funcName and Signatures.Get()[funcName]
+    local candidates = Signatures.ResolveAll(text, cursorIdx)
+    local funcName, paramIdx, sig = nil, nil, nil
+    for _, c in ipairs(candidates) do
+        local s = Signatures.Get()[c.name]
+        if s then
+            funcName, paramIdx, sig = c.name, c.paramIdx, s
+            break
+        end
+    end
 
     if not sig then
         ImGui.TextDisabled(' ')

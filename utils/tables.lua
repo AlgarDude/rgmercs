@@ -180,10 +180,15 @@ local function printTable(o, depth)
                 printf("%s  %s =", indent, key)
                 printTable(v, depth + 1)
             else
-                printf("%s  %s = %s", indent, key, tostring(v))
+                if type(v) == 'string' then
+                    v = '"' .. v .. '"'
+                else
+                    v = tostring(v)
+                end
+                printf("%s  %s = %s,", indent, key, v)
             end
         end
-        printf("%s}", indent)
+        printf("%s},", indent)
     else
         printf("%s%s", indent, tostring(o))
     end
