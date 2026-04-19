@@ -1079,6 +1079,9 @@ Config.DefaultConfig                                     = {
                 Config:SetSetting(setting, not newVal)
             end
         end,
+        FAQ = "I want to control my tank's movement but still have it use abilities, how can I do that?",
+        Answer =
+        "If you enable Manual Tank Mode, it will disable all automated movement options for your tank, but will still allow it to use abilities as normal. This is ideal for those who want to control their tank's positioning manually, but still want to benefit from the spell and item usage of RGMercs. Please note that enabling this will also disable some features that rely on movement automation, such as handling 'cannot see target' messages or auto-facing the target in combat.",
     },
 
     --Common/Rules
