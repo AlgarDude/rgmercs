@@ -1062,6 +1062,24 @@ Config.DefaultConfig                                     = {
         Max = 40,
         ConfigType = "Advanced",
     },
+    ['ManualTank']                 = {
+        DisplayName = "Manual Tank Mode",
+        Group = "Combat",
+        Header = "Positioning",
+        Category = "Tank Positioning",
+        Index = 4,
+        Tooltip =
+        "This will disable all automated movement on your tank but not using abilities.",
+        Default = false,
+        ConfigType = "Advanced",
+        OnChange = function(oldVal, newVal)
+            local settings = { 'DoAutoNav', 'DoAutoStick', 'FaceTarget', 'HandleCantSeeTarget', 'HandleTooClose', 'HandleTooFar', }
+
+            for _, setting in ipairs(settings) do
+                Config:SetSetting(setting, not newVal)
+            end
+        end,
+    },
 
     --Common/Rules
     ['MobLowHP']                   = {
