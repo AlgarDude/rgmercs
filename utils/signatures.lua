@@ -13,11 +13,13 @@ local SOURCE_FILES = {
     { prefix = 'Casting',     path = mq.luaDir .. '/rgmercs/utils/casting.lua', },
     { prefix = 'Movement',    path = mq.luaDir .. '/rgmercs/utils/movement.lua', },
     { prefix = 'Comms',       path = mq.luaDir .. '/rgmercs/utils/comms.lua', },
+    { prefix = 'Config',      path = mq.luaDir .. '/rgmercs/utils/config.lua', },
     { prefix = 'ItemManager', path = mq.luaDir .. '/rgmercs/utils/item_manager.lua', },
     { prefix = 'Math',        path = mq.luaDir .. '/rgmercs/utils/math.lua', },
     { prefix = 'Rotation',    path = mq.luaDir .. '/rgmercs/utils/rotation.lua', },
     { prefix = 'Strings',     path = mq.luaDir .. '/rgmercs/utils/strings.lua', },
     { prefix = 'Tables',      path = mq.luaDir .. '/rgmercs/utils/tables.lua', },
+    { prefix = 'Ui',          path = mq.luaDir .. '/rgmercs/utils/ui.lua', },
 }
 
 local function parseFile(path, out)
@@ -46,8 +48,13 @@ local function parseFile(path, out)
             end
         else
             if inBlock then
-                -- function Foo.Bar(...)
+                -- function Foo.Bar(...) or function Foo:Bar(...)
                 local funcName = line:match('^function%s+([A-Za-z][A-Za-z0-9_.]+)%s*%(')
+                if not funcName then
+                    -- colon method: normalize Foo:Bar -> Foo.Bar
+                    local obj, meth = line:match('^function%s+([A-Za-z][A-Za-z0-9_]*)%:([A-Za-z][A-Za-z0-9_]*)%s*%(')
+                    if obj and meth then funcName = obj .. '.' .. meth end
+                end
                 if funcName and (#pendingParams > 0 or pendingRet ~= nil) then
                     out[funcName] = {
                         desc   = pendingDesc,
@@ -162,7 +169,13 @@ local BUILTINS = {
 
 local function currentVersion()
     local Config = require('utils.config')
-    return Config._version .. '-' .. Config._subVersion
+    local base = Config._version .. '-' .. Config._subVersion
+    -- include source list so adding files or annotations busts the cache
+    local parts = {}
+    for _, entry in ipairs(SOURCE_FILES) do
+        parts[#parts + 1] = entry.prefix
+    end
+    return base .. '-' .. table.concat(parts, ',')
 end
 
 local function loadCache()
@@ -246,19 +259,21 @@ function Signatures.Complete(prefix, partial)
     return results
 end
 
---- Given the full editor text and a 0-based cursor byte offset, returns the function
---- name the cursor is inside and the 1-based active parameter index, or nil, nil.
+--- Given the full editor text and a 0-based cursor byte offset, returns all
+--- enclosing function call candidates from innermost to outermost. Each entry
+--- is { name=string, paramIdx=number }. Caller picks the first with a known sig.
 --- @param text      string
 --- @param cursorIdx number  0-based byte offset
---- @return string|nil, number|nil
-function Signatures.Resolve(text, cursorIdx)
-    -- work on the text up to the cursor
-    local sub     = text:sub(1, cursorIdx)
-    local depth   = 0
-    local commas  = 0
-    local openPos = nil
+--- @return table
+function Signatures.ResolveAll(text, cursorIdx)
+    local sub       = text:sub(1, cursorIdx)
+    local results   = {}
+    local depth     = 0
+    local commas    = 0
+    local scanEnd   = #sub
+    local scanStart = math.max(1, scanEnd - 2000)
 
-    for i = #sub, 1, -1 do
+    for i = scanEnd, scanStart, -1 do
         local ch = sub:sub(i, i)
         if ch == ')' then
             depth = depth + 1
@@ -266,23 +281,39 @@ function Signatures.Resolve(text, cursorIdx)
             if depth > 0 then
                 depth = depth - 1
             else
-                openPos = i
-                break
+                -- found an unclosed '(' — extract identifier immediately before it
+                -- normalize ':' method calls to '.' so Config:Foo -> Config.Foo
+                local before = sub:sub(1, i - 1):match('([A-Za-z][A-Za-z0-9_.:]*)%s*$')
+                if before then
+                    before = before:gsub(':', '.')
+                    results[#results + 1] = { name = before, paramIdx = commas + 1, }
+                end
+                -- reset for the next outer enclosing call
+                commas = 0
+                depth  = 0
             end
         elseif ch == ',' and depth == 0 then
             commas = commas + 1
-        elseif ch == '\n' and depth == 0 then
-            break
         end
     end
 
-    if not openPos then return nil, nil end
+    return results
+end
 
-    -- extract the identifier immediately before the '('
-    local before = sub:sub(1, openPos - 1):match('([A-Za-z][A-Za-z0-9_.]*)%s*$')
-    if not before then return nil, nil end
-
-    return before, commas + 1
+--- Given the full editor text and a 0-based cursor byte offset, returns the function
+--- name the cursor is inside and the 1-based active parameter index, or nil, nil.
+--- Checks innermost enclosing call first; falls back to outer calls if innermost
+--- has no registered signature.
+--- @param text      string
+--- @param cursorIdx number  0-based byte offset
+--- @return string|nil, number|nil
+function Signatures.Resolve(text, cursorIdx)
+    local candidates = Signatures.ResolveAll(text, cursorIdx)
+    if #candidates == 0 then return nil, nil end
+    -- Return innermost candidate unconditionally; caller decides if sig exists.
+    -- If caller wants fallback it should use ResolveAll directly.
+    local c = candidates[1]
+    return c.name, c.paramIdx
 end
 
 return Signatures

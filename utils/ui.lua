@@ -131,12 +131,15 @@ function Ui.ConvertFromThemez(themeName)
     return newUserTheme
 end
 
+--- Convert an RGMercs userTheme table to a Themez-compatible export table.
+--- @param userTheme table The RGMercs theme settings table to convert.
+--- @return table
 function Ui.ConvertToThemez(userTheme)
     local newThemezTheme = { Name = string.format("RGMercs Export - %s", os.date("%Y-%m-%d %H:%M:%S")), Color = {}, Style = {}, }
 
     for _, setting in pairs(userTheme or {}) do
         if setting.color then
-            table.insert(newThemezTheme.Color, {
+            newThemezTheme.Color[setting.element] = {
                 PropertyName = Ui.ImGuiColorVarNames[setting.element],
                 Color = {
                     setting.color.x or 0,
@@ -144,19 +147,19 @@ function Ui.ConvertToThemez(userTheme)
                     setting.color.z or 0,
                     setting.color.w or 0,
                 },
-            })
+            }
         elseif setting.value then
             if type(setting.value) == 'table' then
-                table.insert(newThemezTheme.Style, {
+                newThemezTheme.Style[setting.element] = {
                     PropertyName = Ui.ImGuiStyleVarNames[setting.element],
                     X = setting.value.x or 0,
                     Y = setting.value.y or 0,
-                })
+                }
             else
-                table.insert(newThemezTheme.Style, {
+                newThemezTheme.Style[setting.element] = {
                     PropertyName = Ui.ImGuiStyleVarNames[setting.element],
                     Size = setting.value,
-                })
+                }
             end
         end
     end
