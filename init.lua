@@ -244,7 +244,7 @@ local function RGInit(...)
     local args = { ..., }
     -- check mini argument before loading other modules so it minimizes as soon as possible.
     if args and #args > 0 then
-        Logger.log_info("Arguments passed to RGMercs: %s", table.concat(args, ", "))
+        Logger.log_debug("Arguments passed to RGMercs: %s", table.concat(args, ", "))
         for _, v in ipairs(args) do
             if v == "mini" then
                 Globals.Minimized = true

@@ -484,7 +484,7 @@ local _ClassConfig = {
                 return false
             end
 
-            Logger.log_info("Sending the %s to our bags.", mq.TLO.Cursor())
+            Logger.log_debug("Sending the %s to our bags.", mq.TLO.Cursor())
             mq.delay(Config:GetSetting("AICrystalDelay"))
             Core.DoCmd("/autoinventory")
         end,

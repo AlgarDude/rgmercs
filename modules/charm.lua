@@ -163,7 +163,7 @@ function Module:LoadSettings()
 		local loaded, err = loadfile(legacyFile)
 		if loaded and not err then
 			self.ImmuneTable = loaded() or {}
-			Logger.log_info("\agCharm: migrated ImmuneTable from file to db.")
+			Logger.log_debug("\agCharm: migrated ImmuneTable from file to db.")
 		else
 			self.ImmuneTable = {}
 		end

@@ -141,6 +141,13 @@ Globals.Constants.LogLevels           = {
     "Super-Verbose",
 }
 
+Globals.Constants.ToastLevels         = {
+    "None",
+    "Errors",
+    "Warnings",
+    "Info",
+}
+
 Globals.Constants.BasicColors         = {
     Red         = ImVec4(0.8, 0.3, 0.3, 0.8),
     LightRed    = ImVec4(0.9, 0.5, 0.5, 0.8),

@@ -549,7 +549,7 @@ end
 --- @param targetId number Spawn id to force burn on.
 function Targeting.SetForceBurn(targetId)
     if Targeting.ForceBurnTargetID == tonumber(targetId) then
-        Logger.log_info("Force Burn already set to %d. Ignoring request.", Targeting.ForceBurnTargetID)
+        Logger.log_debug("Force Burn already set to %d. Ignoring request.", Targeting.ForceBurnTargetID)
         return
     end
 

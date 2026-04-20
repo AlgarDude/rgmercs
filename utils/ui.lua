@@ -41,6 +41,7 @@ Ui.TempSettings                    = {
         tooltip_time = 0.0,
     },
     MarqueeScrollX        = {},
+    ToastNextId           = 0,
 }
 
 Ui.ModalText                       = ""
@@ -3810,6 +3811,148 @@ end
 
 function Ui.ChangeColorAlpoha(color, newAlpha)
     return ImVec4(color.x, color.y, color.z, newAlpha)
+end
+
+-- split text on \n then word-wrap any line wider than maxAllowedW
+local function toastLines(message, maxAllowedW)
+    local lines, maxW = {}, 0
+    for segment in (message .. "\n"):gmatch("([^\n]*)\n") do
+        local words = {}
+        for w in segment:gmatch("%S+") do words[#words + 1] = w end
+        if #words == 0 then
+            lines[#lines + 1] = { text = "", w = 0, }
+        else
+            local current = words[1]
+            for wi = 2, #words do
+                local candidate = current .. " " .. words[wi]
+                if ImGui.CalcTextSizeVec(candidate).x > maxAllowedW then
+                    local lw = ImGui.CalcTextSizeVec(current).x
+                    lines[#lines + 1] = { text = current, w = lw, }
+                    if lw > maxW then maxW = lw end
+                    current = words[wi]
+                else
+                    current = candidate
+                end
+            end
+            local lw = ImGui.CalcTextSizeVec(current).x
+            lines[#lines + 1] = { text = current, w = lw, }
+            if lw > maxW then maxW = lw end
+        end
+    end
+    return lines, maxW
+end
+
+function Ui.RenderToastNotifications(states, lingerTime)
+    local dt            = Ui.GetDeltaTime()
+    local holdEnd       = 2.3
+    lingerTime          = (lingerTime and lingerTime >= 2.5) and lingerTime or 2.5
+    local fadeDur       = lingerTime - holdEnd
+
+    local canvas_pos    = ImGui.GetCursorScreenPosVec()
+    local content_avail = ImGui.GetContentRegionAvailVec()
+    local canvas_size   = ImVec2(content_avail.x, 180)
+    local draw_list     = ImGui.GetForegroundDrawList()
+    local max_toast_w   = math.max(100, canvas_size.x - 32.0)
+
+    for i = #states, 1, -1 do
+        if not states[i].active then
+            table.remove(states, i)
+        end
+    end
+
+    if #states == 0 then return end
+
+    local line_h        = ImGui.GetFontSize() + 4.0
+    local toast_spacing = 8.0
+    local toast_pad_x   = 20.0
+    local toast_pad_y   = 8.0
+    local numToasts     = math.min(#states, 3)
+
+    local text_max_w    = max_toast_w - toast_pad_x * 2
+
+    -- pre-compute heights so we can stack from the bottom
+    local heights       = {}
+    for i = 1, numToasts do
+        local s = states[i]
+        local lines = s._lines
+        if not lines then
+            local lns, maxW = toastLines(s.message, text_max_w)
+            s._lines        = lns
+            s._toast_w      = maxW + toast_pad_x * 2
+            lines           = lns
+        end
+        heights[i] = #lines * line_h + toast_pad_y * 2
+    end
+
+    -- total stack height, position base_y for the bottom toast
+    local total_h = toast_pad_y
+    for i = 1, numToasts do total_h = total_h + heights[i] + toast_spacing end
+    local stack_base_y = canvas_pos.y - total_h
+
+    local cursor_y = stack_base_y
+    for i, state in ipairs(states) do
+        if i > 3 then break end
+        if state.active then
+            if not state.animId then
+                Ui.TempSettings.ToastNextId = Ui.TempSettings.ToastNextId + 1
+                local tid                   = Ui.TempSettings.ToastNextId
+                state.animId                = ImHashStr("toast_" .. tid)
+                state.chSlide               = ImHashStr("toast_slide_" .. tid)
+                state.chAlpha               = ImHashStr("toast_alpha_" .. tid)
+            end
+
+            -- only start sliding once the previous toast has fully slid in
+            local prevDone = i == 1 or (states[i - 1].slide or 0) >= 0.99
+            if not prevDone then
+                break
+            end
+
+            local slideTarget = prevDone and 1.0 or 0.0
+            local slide = ImAnim.TweenFloat(state.animId, state.chSlide, slideTarget, 0.6,
+                ImAnim.EasePreset(IamEaseType.OutBack), IamPolicy.Crossfade, dt, 0.0)
+            state.slide = slide
+
+            -- only tick the linger timer once this toast has fully slid in
+            if slide >= 0.99 then
+                state.timer = state.timer + dt
+            end
+
+            local alphaTarget = state.timer >= holdEnd and 0.0 or 1.0
+            local alpha = ImAnim.TweenFloat(state.animId, state.chAlpha, alphaTarget, fadeDur,
+                ImAnim.EasePreset(IamEaseType.InQuad), IamPolicy.Crossfade, dt, 1.0)
+
+            if state.timer >= lingerTime and alpha < 0.01 then
+                state.active = false
+            end
+
+            if state.active then
+                local toast_w = state._toast_w
+                local toast_h = heights[i]
+                local base_x  = canvas_pos.x + canvas_size.x - toast_w - 16.0
+                local base_y  = cursor_y
+                local x       = base_x + (1.0 - slide) * (toast_w + 32.0)
+                local iAlpha  = math.floor(alpha * 255)
+
+                -- background
+                draw_list:AddRectFilled(ImVec2(x, base_y), ImVec2(x + toast_w, base_y + toast_h),
+                    IM_COL32(40, 40, 50, math.floor(alpha * 230)), 6.0)
+
+                -- accent bar — fade with alpha
+                local accentCol = state.color or Ui.ImVec4ToColor(Globals.Constants.Colors.White)
+                draw_list:AddRectFilled(ImVec2(x, base_y), ImVec2(x + 4.0, base_y + toast_h),
+                    Ui.ReduceAlpha(accentCol, alpha), 6.0, ImDrawFlags.RoundCornersLeft)
+
+                -- text lines
+                local text_col = IM_COL32(255, 255, 255, iAlpha)
+                for li, line in ipairs(state._lines) do
+                    local ty = base_y + toast_pad_y + (li - 1) * line_h
+                    draw_list:AddText(ImVec2(x + toast_pad_x, ty), text_col, line.text)
+                end
+            end
+
+            cursor_y = cursor_y + heights[i] + toast_spacing
+        end
+    end
 end
 
 return Ui

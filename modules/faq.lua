@@ -291,7 +291,7 @@ function Module:FaqFind(question)
 	for cmd, data in pairs(Binds.Handlers) do
 		if cmd ~= "help" then
 			if self:MatchSearch(data.usage, data.about, cmd) then
-				Logger.log_info("\ayCommand: \ax%s \aoUsage:\ax %s\nDescription: \at%s", cmd, data.usage, data.about)
+				printf("\ayCommand: \ax%s \aoUsage:\ax %s\nDescription: \at%s", cmd, data.usage, data.about)
 				mq.delay(5) -- Delay to prevent spamming
 			end
 		end
@@ -303,7 +303,7 @@ function Module:FaqFind(question)
 			if info.FAQ then
 				for _, data in pairs(info.FAQ or {}) do
 					if self:MatchSearch(data.Question, data.Answer, data.Settings_Used, module) then
-						Logger.log_info("\ayModule:\ax %s \aoQuestion: \ax%s\nAnswer: \at%s", module, data.Question, data.Answer)
+						printf("\ayModule:\ax %s \aoQuestion: \ax%s\nAnswer: \at%s", module, data.Question, data.Answer)
 						mq.delay(5)
 					end
 				end
@@ -317,7 +317,7 @@ function Module:FaqFind(question)
 			if info.FAQ then
 				for _, data in pairs(info.FAQ or {}) do
 					if self:MatchSearch(data.Question, data.Answer, data.Settings_Used, module) then
-						Logger.log_info("\ayClass:\ax %s \aoQuestion:\ax %s\nAnswer:\at %s", module, data.Question, data.Answer)
+						printf("\ayClass:\ax %s \aoQuestion:\ax %s\nAnswer:\at %s", module, data.Question, data.Answer)
 						mq.delay(5)
 					end
 				end
