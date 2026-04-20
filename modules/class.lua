@@ -650,6 +650,9 @@ function Module:GetAllRotationNames()
 end
 
 function Module:GetRotationTable(mode)
+    if self.ClassConfig and not self.TempSettings.RotationTable[mode] then
+        printf("\ayGetRotationTable(%s) found %d entries", mode, #self.TempSettings.RotationTable[mode])
+    end
     return self.ClassConfig and self.TempSettings.RotationTable[mode] or {}
 end
 
@@ -778,6 +781,7 @@ function Module:GetRotations()
         if self:LoadConditionPass(rotation) then
             table.insert(self.TempSettings.RotationStates, rotation)
             self.TempSettings.RotationTable[rotation.name] = {}
+            self.ClassConfig.Rotations[rotation.name] = self.ClassConfig.Rotations[rotation.name] or {}
         end
     end
 
