@@ -87,16 +87,28 @@ local function getCallStack()
 end
 
 local function log(logLevel, output, ...)
+	-- if no one wants this then bail early to avoid processing costs.
+	if currentLogLevel < logLevels[logLevel].level and currentToastLevel < logLevels[logLevel].level then return end
+
+	if (... ~= nil) then output = string.format(output, ...) end
+	local plainOutput = output:gsub("\a.", "")
+
+	if currentToastLevel >= logLevels[logLevel].level then
+		table.insert(actions.ToastStates, {
+			active = true,
+			timer = 0,
+			message = plainOutput,
+			color = logLevels[logLevel].color,
+		})
+	end
+
 	if currentLogLevel < logLevels[logLevel].level then return end
 
 	local callerTracer = enableTracer and getCallStack() or ""
 
-	if (... ~= nil) then output = string.format(output, ...) end
-
 	local now = string.format("%.03f", Globals.GetTimeMS() / 1000)
 
 	-- only log out warnings and errors
-	local plainOutput = output:gsub("\a.", "")
 	if logLevels[logLevel].level <= 2 or logToFileAlways then
 		local fileHeader = logLevels[logLevel].header:gsub("\a.", "")
 		local fileTracer = callerTracer:gsub("\a.", "")
@@ -123,15 +135,6 @@ local function log(logLevel, output, ...)
 	if RGMercsConsole ~= nil then
 		local consoleText = string.format('[%s%s] %s', logLevels[logLevel].header, logTimestampsToConsole and " \aw<\at" .. now .. ">\aw" or "", output)
 		RGMercsConsole:AppendText(consoleText)
-	end
-
-	if currentToastLevel >= logLevels[logLevel].level then
-		table.insert(actions.ToastStates, {
-			active = true,
-			timer = 0,
-			message = plainOutput,
-			color = logLevels[logLevel].color,
-		})
 	end
 
 	printf('%s\aw:%s \aw<\at%s\aw>%s%s \ax%s', logLeaderStart, logLevels[logLevel].header, now, callerTracer, logLeaderEnd, output)
