@@ -152,6 +152,18 @@ OptionsUI.Groups                = { --- Add a default of the same name for any k
         end,
     },
     {
+        Name = "DB Management",
+        Description = "Copy settings between characters",
+        Icon = Icons.MD_STORAGE,
+        IconImage = OptionsUI.LoadIcon("databaseicon"),
+        HiddenOnSearch = function(self) return true end,
+        Headers = {
+        },
+        HeaderRender = function(self)
+            return OptionsUI:RenderDBManagement()
+        end,
+    },
+    {
         Name = "Contributors",
         Description = "Credits to those who helped",
         Icon = Icons.MD_RESTAURANT_MENU,
@@ -178,6 +190,15 @@ OptionsUI.settings       = {}
 OptionsUI.SettingNames   = {}
 OptionsUI.DefaultConfigs = {}
 OptionsUI.FirstRender    = true
+
+OptionsUI.dbChars        = nil
+OptionsUI.dbFromIdx      = 1
+OptionsUI.dbToIdx        = 1
+OptionsUI.dbModuleIdx    = 1
+OptionsUI.dbFromClass    = nil -- selected from-class (string), nil until loaded
+OptionsUI.dbFromClasses  = nil -- cached class list for current from-char
+OptionsUI.dbFromClassIdx = 1
+OptionsUI.dbToClassIdx   = 1
 
 local function shallow_copy(orig)
     local copy = {}
@@ -611,6 +632,169 @@ function OptionsUI:RenderCategorySettings(category)
         end
     end
     ImGui.EndChild()
+end
+
+function OptionsUI:RenderDBManagement()
+    -- lazy-load character list from DB
+    if not self.dbChars then
+        local raw = Config.Db:getCharacters()
+        self.dbChars = {}
+        local curLabel = string.format("%s (%s)", Globals.CurLoadedChar, Globals.CurServer)
+        for _, c in ipairs(raw) do
+            self.dbChars[#self.dbChars + 1] = string.format("%s (%s)", c.name, c.server_name)
+        end
+        if #self.dbChars == 0 then
+            self.dbChars = { "(no characters in DB)", }
+        end
+        self.dbFromIdx = 1
+        for i, label in ipairs(self.dbChars) do
+            if label == curLabel then
+                self.dbFromIdx = i; break
+            end
+        end
+    end
+
+    -- build module list: "All Modules" + registered module names
+    local moduleNames = { "All Modules", }
+    for modName in pairs(Config.moduleDefaultSettings) do
+        moduleNames[#moduleNames + 1] = modName
+    end
+    table.sort(moduleNames, function(a, b)
+        if a == "All Modules" then return true end
+        if b == "All Modules" then return false end
+        return a < b
+    end)
+
+    local charCount = #self.dbChars
+
+    -- initial load of from-classes
+    if not self.dbFromClasses then
+        local fromName, fromServer = self.dbChars[self.dbFromIdx]:match('^(.+) %((.+)%)$')
+        self.dbFromClasses = (fromName and Config.Db:getClassesForCharacter(fromServer, fromName)) or {}
+        if #self.dbFromClasses == 0 then self.dbFromClasses = { Globals.CurLoadedClass, } end
+        self.dbFromClassIdx = 1
+        for i, c in ipairs(self.dbFromClasses) do
+            if c == Globals.CurLoadedClass then
+                self.dbFromClassIdx = i; break
+            end
+        end
+    end
+
+    ImGui.PushStyleVar(ImGuiStyleVar.SeparatorTextPadding, ImVec2(15, 15))
+    ImGui.PushStyleVar(ImGuiStyleVar.SeparatorTextAlign, ImVec2(0.05, 0.5))
+    ImGui.SeparatorText("DB Management")
+    ImGui.PopStyleVar(2)
+
+    ImGui.Spacing()
+
+    -- Module selector
+    ImGui.SetNextItemWidth(220)
+    local newModIdx, modChanged = Ui.SearchableCombo("dbmod", self.dbModuleIdx, moduleNames)
+    if modChanged then self.dbModuleIdx = newModIdx end
+    ImGui.SameLine(0, 8)
+    ImGui.TextDisabled("Module")
+
+    ImGui.Spacing()
+
+    local tableW = ImGui.GetContentRegionAvail()
+    local colW   = (tableW - 130) / 2
+
+    if ImGui.BeginTable("##dbmgmt", 3, bit32.bor(ImGuiTableFlags.BordersOuter, ImGuiTableFlags.SizingFixedFit)) then
+        ImGui.TableSetupColumn("From", ImGuiTableColumnFlags.WidthFixed, colW)
+        ImGui.TableSetupColumn("Action", ImGuiTableColumnFlags.WidthFixed, 130)
+        ImGui.TableSetupColumn("To", ImGuiTableColumnFlags.WidthFixed, colW)
+        ImGui.TableHeadersRow()
+        ImGui.TableNextRow()
+
+        -- From column: character + class (only classes with existing DB data)
+        ImGui.TableNextColumn()
+        local newFrom, fromChanged = Ui.SearchableCombo("dbfrom", self.dbFromIdx, self.dbChars)
+        if fromChanged then
+            self.dbFromIdx = newFrom
+            local fromName, fromServer = self.dbChars[newFrom]:match('^(.+) %((.+)%)$')
+            self.dbFromClasses = (fromName and Config.Db:getClassesForCharacter(fromServer, fromName)) or {}
+            if #self.dbFromClasses == 0 then self.dbFromClasses = { Globals.CurLoadedClass, } end
+            self.dbFromClassIdx = 1
+        end
+        local newFromClass, fromClassChanged = Ui.SearchableCombo("dbfromclass", self.dbFromClassIdx, self.dbFromClasses)
+        if fromClassChanged then self.dbFromClassIdx = newFromClass end
+
+        -- Action column
+        ImGui.TableNextColumn()
+        ImGui.Spacing()
+        local sameChar  = self.dbFromIdx == self.dbToIdx
+        local sameClass = sameChar and self.dbFromClasses[self.dbFromClassIdx] == Globals.Constants.AllClasses[self.dbToClassIdx]
+        local canCopy   = charCount > 0 and not (sameChar and sameClass)
+        if not canCopy then ImGui.BeginDisabled() end
+        if ImGui.Button(Icons.FA_ARROW_RIGHT .. " Copy##dbcopy", ImVec2(120, 0)) then
+            self:DBCopySettings(self.dbChars, self.dbFromIdx, self.dbFromClasses[self.dbFromClassIdx],
+                self.dbToIdx, Globals.Constants.AllClasses[self.dbToClassIdx], moduleNames[self.dbModuleIdx])
+        end
+        if not canCopy then ImGui.EndDisabled() end
+        if sameChar and sameClass then
+            ImGui.TextDisabled("(same char+class)")
+        end
+
+        -- To column: character + class (any valid EQ class)
+        ImGui.TableNextColumn()
+        local newTo, toChanged = Ui.SearchableCombo("dbto", self.dbToIdx, self.dbChars)
+        if toChanged then self.dbToIdx = newTo end
+        local newToClass, toClassChanged = Ui.SearchableCombo("dbtoclass", self.dbToClassIdx, Globals.Constants.AllClasses)
+        if toClassChanged then self.dbToClassIdx = newToClass end
+
+        ImGui.EndTable()
+    end
+
+    ImGui.Spacing()
+    if ImGui.Button(Icons.MD_REFRESH .. " Refresh Character List##dbrefresh") then
+        self.dbChars       = nil
+        self.dbFromClasses = nil
+    end
+
+    ImGui.Spacing()
+    ImGui.PushStyleVar(ImGuiStyleVar.SeparatorTextPadding, ImVec2(15, 15))
+    ImGui.PushStyleVar(ImGuiStyleVar.SeparatorTextAlign, ImVec2(0.05, 0.5))
+    ImGui.SeparatorText("DB Metrics")
+    ImGui.PopStyleVar(2)
+    ImGui.Spacing()
+    Config.Db:renderTelemetry()
+    ImGui.Spacing()
+    Config.Db:renderTelemetryGraph()
+end
+
+function OptionsUI:DBCopySettings(charLabels, fromIdx, fromClass, toIdx, toClass, moduleName)
+    local function parseLabel(label)
+        local name, server = label:match('^(.+) %((.+)%)$')
+        return name, server
+    end
+
+    local fromName, fromServer = parseLabel(charLabels[fromIdx])
+    local toName, toServer     = parseLabel(charLabels[toIdx])
+    if not fromName or not toName then return end
+
+    local toCopy = {}
+    if moduleName == "All Modules" then
+        for modName in pairs(Config.moduleDefaultSettings) do
+            toCopy[#toCopy + 1] = modName
+        end
+    else
+        toCopy[1] = moduleName
+    end
+
+    for _, modName in ipairs(toCopy) do
+        local values = Config.Db:getAll(fromServer, fromName, fromClass, modName)
+        if values and next(values) then
+            Config.Db:setAll(toServer, toName, toClass, modName, values)
+        end
+    end
+
+    Logger.log_info("DB Management: copied %s [%s] settings from %s to %s [%s]", moduleName, fromClass, charLabels[fromIdx], charLabels[toIdx], toClass)
+    table.insert(self.ToastStates, {
+        active  = true,
+        timer   = 0,
+        message = string.format("Copied %s [%s] from %s\nto %s [%s]", moduleName, fromClass, charLabels[fromIdx], charLabels[toIdx], toClass),
+        color   = Ui.ImVec4ToColor(Globals.Constants.Colors.Green),
+    })
 end
 
 function OptionsUI:RenderCurrentTab()

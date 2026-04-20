@@ -56,6 +56,7 @@ Globals.Constants.RGCasters           = Set.new({ "BRD", "BST", "CLR", "DRU", "E
 Globals.Constants.RGMelee             = Set.new({ "BRD", "SHD", "PAL", "WAR", "ROG", "BER", "MNK", "RNG", "BST", })
 Globals.Constants.RGHybrid            = Set.new({ "SHD", "PAL", "RNG", "BST", "BRD", })
 Globals.Constants.RGTank              = Set.new({ "WAR", "PAL", "SHD", })
+Globals.Constants.AllClasses          = { "BER", "BRD", "BST", "CLR", "DRU", "ENC", "MAG", "MNK", "NEC", "PAL", "RNG", "ROG", "SHD", "SHM", "WAR", "WIZ", }
 Globals.Constants.RGPetClass          = Set.new({ "BST", "NEC", "MAG", "SHM", "ENC", "SHD", })
 Globals.Constants.RGNotMezzedAnims    = Set.new({ 1, 5, 6, 27, 43, 44, 45, 80, 82, 112, 134, 135, })
 Globals.Constants.ModRods             = { "Modulation Shard", "Transvergence", "Modulation", "Modulating", "Azure Mind Crystal", }

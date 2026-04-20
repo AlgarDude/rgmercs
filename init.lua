@@ -361,6 +361,7 @@ local function Main()
 
     -- always do this and do it first
     Config:FlushDB()
+    Config.Db:updateTelemetryGraphs()
 
     if mq.TLO.Zone.ID() ~= Globals.CurZoneId or mq.TLO.Me.Instance() ~= Globals.CurInstance then
         if notifyZoning then
