@@ -362,6 +362,29 @@ end
 
 ---@param serverName string
 ---@param charName   string
+---@return table  Array of class ShortName strings that have config data in the DB
+function DB:getClassesForCharacter(serverName, charName)
+    local stmt = self:_prepare([[
+        SELECT DISTINCT cv.class
+        FROM config_value cv
+        JOIN character c ON c.id = cv.character_id
+        JOIN server s    ON s.id = c.server_id
+        WHERE s.name = ? AND c.name = ?
+        ORDER BY cv.class;
+    ]])
+    if not stmt then return {} end
+    stmt:bind(1, serverName)
+    stmt:bind(2, charName)
+    local rows = collectRows(stmt)
+    local classes = {}
+    for _, row in ipairs(rows) do
+        classes[#classes + 1] = row.class
+    end
+    return classes
+end
+
+---@param serverName string
+---@param charName   string
 ---@param charClass  string
 ---@param module     string
 ---@param key        string

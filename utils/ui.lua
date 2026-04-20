@@ -47,7 +47,7 @@ Ui.ModalText                       = ""
 Ui.ModalTitle                      = "##UI Modal"
 Ui.ModalPrompt                     = ""
 Ui.ModalCallbackFn                 = nil
-Ui.ComboFilterText                 = ""
+Ui.ComboFilterText                 = {}
 
 -- Themze support.
 Ui.Themez                          = nil
@@ -2567,19 +2567,19 @@ function Ui.SearchableCombo(id, curIdx, options, hideText)
             ImGui.SetKeyboardFocusHere()
         end
 
-        Ui.ComboFilterText = ImGui.InputTextWithHint("##combo_search", "Search...", Ui.ComboFilterText)
+        Ui.ComboFilterText[id] = ImGui.InputTextWithHint("##combo_search", "Search...", Ui.ComboFilterText[id])
 
         ImGui.Separator()
 
         -- List
         for i, item in ipairs(options) do
-            local filterMatch = (Ui.ComboFilterText == "" or (item:lower():find(Ui.ComboFilterText:lower(), 1, true)) ~= nil)
+            local filterMatch = (Ui.ComboFilterText[id] == "" or (item:lower():find(Ui.ComboFilterText[id]:lower(), 1, true)) ~= nil)
             if (hideText == nil or (item:find(hideText) == nil)) and filterMatch then
                 if ImGui.Selectable(i .. ": " .. item, i == curIdx) then
                     if curIdx ~= i then
                         curIdx = i
                         pressed = true
-                        Ui.ComboFilterText = ""
+                        Ui.ComboFilterText[id] = ""
                         ImGui.CloseCurrentPopup()
                     end
                 end

@@ -70,7 +70,6 @@ end
 
 function Module:Init()
     Base.Init(self)
-    Config.Db:setCollectStats(Config:GetSetting('EnablePerfMonitoring'))
 end
 
 function Module:ShouldRender()

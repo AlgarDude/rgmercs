@@ -17,6 +17,7 @@ local Config                                             = {
 }
 Config.__index                                           = Config
 Config.Db                                                = require("utils.config_db").new(mq.configDir .. '/rgmercs/rgmercs_config.db')
+Config.Db:setCollectStats(true)
 Config.moduleDefaultSettings                             = {}
 Config.moduleTempSettings                                = {}
 Config.moduleSettingCategories                           = {}
