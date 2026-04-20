@@ -12,11 +12,14 @@ local logLeaderEnd           = '\ar]\ax\aw >>>'
 
 --- @type number
 local currentLogLevel        = 3
+local currentToastLevel      = 3
 local logToFileAlways        = false
 local filters                = {}
 local logTimestampsToConsole = false
 local enableTracer           = true
 local logFileHandle          = nil
+
+actions.ToastStates          = {}
 
 function actions.get_log_level() return currentLogLevel end
 
@@ -25,6 +28,8 @@ function actions.set_log_level(level) currentLogLevel = level end
 function actions.set_log_timestamps_to_console(value) logTimestampsToConsole = value end
 
 function actions.set_debug_tracer_enabled(value) enableTracer = value end
+
+function actions.set_toast_level(level) currentToastLevel = level end
 
 function actions.set_log_to_file(logToFile)
 	if logToFileAlways ~= logToFile then
@@ -47,10 +52,10 @@ local logLevels = {
 	['super_verbose'] = { level = 6, header = "\atSUPER\aw-\apVERBOSE\ax", },
 	['verbose']       = { level = 5, header = "\apVERBOSE\ax", },
 	['debug']         = { level = 4, header = "\amDEBUG  \ax", },
-	['info']          = { level = 3, header = "\aoINFO   \ax", },
-	['warn']          = { level = 2, header = "\ayWARN   \ax", },
-	['warning']       = { level = 2, header = "\ayWARN   \ax", },
-	['error']         = { level = 1, header = "\arERROR  \ax", },
+	['info']          = { level = 3, header = "\aoINFO   \ax", color = ImVec4(0.2, 0.8, 0.2, 1.0):ToImU32(), },
+	['warn']          = { level = 2, header = "\ayWARN   \ax", color = ImVec4(1.0, 1.0, 0.2, 1.0):ToImU32(), },
+	['warning']       = { level = 2, header = "\ayWARN   \ax", color = ImVec4(1.0, 1.0, 0.2, 1.0):ToImU32(), },
+	['error']         = { level = 1, header = "\arERROR  \ax", color = ImVec4(1.0, 0.2, 0.2, 1.0):ToImU32(), },
 }
 
 local function openLogFile()
@@ -91,14 +96,14 @@ local function log(logLevel, output, ...)
 	local now = string.format("%.03f", Globals.GetTimeMS() / 1000)
 
 	-- only log out warnings and errors
+	local plainOutput = output:gsub("\a.", "")
 	if logLevels[logLevel].level <= 2 or logToFileAlways then
-		local fileOutput = output:gsub("\a.", "")
 		local fileHeader = logLevels[logLevel].header:gsub("\a.", "")
 		local fileTracer = callerTracer:gsub("\a.", "")
 
 		openLogFile()
 		if logFileHandle then
-			logFileHandle:write(string.format("[%s:%s%s] <%s> %s\n", mq.TLO.Me.Name(), fileHeader, fileTracer, now, fileOutput))
+			logFileHandle:write(string.format("[%s:%s%s] <%s> %s\n", mq.TLO.Me.Name(), fileHeader, fileTracer, now, plainOutput))
 			logFileHandle:flush() -- Ensure the output is immediately written to the file
 		end
 	end
@@ -120,8 +125,18 @@ local function log(logLevel, output, ...)
 		RGMercsConsole:AppendText(consoleText)
 	end
 
+	if currentToastLevel >= logLevels[logLevel].level then
+		table.insert(actions.ToastStates, {
+			active = true,
+			timer = 0,
+			message = plainOutput,
+			color = logLevels[logLevel].color,
+		})
+	end
+
 	printf('%s\aw:%s \aw<\at%s\aw>%s%s \ax%s', logLeaderStart, logLevels[logLevel].header, now, callerTracer, logLeaderEnd, output)
 end
+
 
 function actions.GenerateShortcuts()
 	for level, _ in pairs(logLevels) do

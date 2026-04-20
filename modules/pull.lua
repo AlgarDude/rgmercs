@@ -2285,18 +2285,18 @@ function Module:GiveTime()
         Logger.log_super_verbose("Pathing to pull id...")
         if self:IsPullMode("Chain") then
             if Targeting.GetXTHaterCount() >= Config:GetSetting('ChainCount') then
-                Logger.log_info("\awNOTICE:\ax Gained aggro -- aborting chain pull!")
+                Logger.log_debug("\awNOTICE:\ax Gained aggro -- aborting chain pull!")
                 abortPull = true
                 break
             end
             if Targeting.DiffXTHaterIDs(startingXTargs) then
-                Logger.log_info("\awNOTICE:\ax XTarget List Changed -- aborting chain pull!")
+                Logger.log_debug("\awNOTICE:\ax XTarget List Changed -- aborting chain pull!")
                 abortPull = true
                 break
             end
         else
             if Targeting.GetXTHaterCount() > 0 then
-                Logger.log_info("\awNOTICE:\ax Gained aggro -- aborting pull!")
+                Logger.log_debug("\awNOTICE:\ax Gained aggro -- aborting pull!")
                 abortPull = true
                 break
             end

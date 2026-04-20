@@ -47,7 +47,7 @@ Binds.Handlers    = {
             configTable = Config:GetModuleSettings((not module or module:len() <= 0) and "Core" or module)
 
             local encodedConfig = ConfigShare.ExportConfig(configTable)
-            Logger.log_info("[RGConfigShare] :: %s", encodedConfig)
+            printf("%s", encodedConfig)
         end,
     },
     ['set'] = {

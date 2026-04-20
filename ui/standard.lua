@@ -10,7 +10,7 @@ local Icons         = require('mq.ICONS')
 local ImageUI       = require('ui.images')
 local Core          = require('utils.core')
 local Targeting     = require('utils.targeting')
-local Casting       = require('utils.casting')
+local Logger        = require('utils.logger')
 local Combat        = require('utils.combat')
 local Modules       = require('utils.modules')
 local Movement      = require('utils.movement')
@@ -403,6 +403,8 @@ function StandardUI:RenderMainWindow(imgui_style, openGUI, flags)
 
             ImGui.EndChild()
         end
+
+        Ui.RenderToastNotifications(Logger.ToastStates, 6.0)
 
         ImGui.PopID()
 

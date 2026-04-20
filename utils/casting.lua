@@ -900,7 +900,7 @@ function Casting.OkayToRez(corpseId)
 
             maxWait = maxWait - 50
             if maxWait <= 0 then
-                Logger.log_info(
+                Logger.log_warn(
                     "\atEmuOkayToRez(): \arWarning! \atChecked corpse ID %d, but did not receive a con message. Allowing the check to proceed, but this may rez a corpse that has previously received one.",
                     corpseId or 0)
             end
@@ -1253,7 +1253,7 @@ function Casting.MemorizeSpell(gem, spell, waitSpellReady, maxWait)
         Events.DoEvents()
     end
 
-    Logger.log_info("\atMemorizeSpell\aw():\aw Finished waiting for '\at%s\aw' to load in slot \am%d\aw. Time taken: \ay%d\aws, maxWait(\ao%d\aws)",
+    Logger.log_debug("\atMemorizeSpell\aw():\aw Finished waiting for '\at%s\aw' to load in slot \am%d\aw. Time taken: \ay%d\aws, maxWait(\ao%d\aws)",
         spell, gem, (Globals.GetTimeMS() - startMem) / 1000, maxWait / 1000)
 
     Casting.Memorizing = false

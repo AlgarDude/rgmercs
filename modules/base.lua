@@ -20,7 +20,7 @@ function Base:New()
 end
 
 function Base:LoadSettings(preLoadFn, postLoadFn)
-    Logger.log_info("\aw[\atLoading Settings\aw] Character: \am%s \awModule: \ay%s", Globals.CurLoadedChar, self._name)
+    Logger.log_debug("\aw[\atLoading Settings\aw] Character: \am%s \awModule: \ay%s", Globals.CurLoadedChar, self._name)
     local firstSaveRequired = false
 
     if preLoadFn then
@@ -34,7 +34,7 @@ function Base:LoadSettings(preLoadFn, postLoadFn)
         Logger.log_info("\ayNo settings found in DB for %s, loading defaults.", self._name)
         firstSaveRequired = true
     else
-        Logger.log_info("\agLoaded \at%d\ag settings from DB for \ay%s\aw", settingsCount, self._name)
+        Logger.log_debug("\agLoaded \at%d\ag settings from DB for \ay%s\aw", settingsCount, self._name)
     end
 
     Config:RegisterModuleSettings(self._name, settings, self.ClassConfig and self.ClassConfig.DefaultConfig or self.DefaultConfig, self.FAQ, firstSaveRequired)

@@ -775,10 +775,10 @@ function OptionsUI:DBCopySettings(charLabels, fromIdx, fromClass, toIdx, toClass
     local toCopy = {}
     if moduleName == "All Modules" then
         for modName in pairs(Config.moduleDefaultSettings) do
-            toCopy[#toCopy + 1] = modName
+            table.insert(toCopy, modName)
         end
     else
-        toCopy[1] = moduleName
+        table.insert(toCopy, moduleName)
     end
 
     for _, modName in ipairs(toCopy) do
@@ -788,11 +788,11 @@ function OptionsUI:DBCopySettings(charLabels, fromIdx, fromClass, toIdx, toClass
         end
     end
 
-    Logger.log_info("DB Management: copied %s [%s] settings from %s to %s [%s]", moduleName, fromClass, charLabels[fromIdx], charLabels[toIdx], toClass)
+    Logger.log_info("DB Management: copied %s settings from %s [%s] to %s [%s]", moduleName, charLabels[fromIdx], fromClass, charLabels[toIdx], toClass)
     table.insert(self.ToastStates, {
         active  = true,
         timer   = 0,
-        message = string.format("Copied %s [%s] from %s\nto %s [%s]", moduleName, fromClass, charLabels[fromIdx], charLabels[toIdx], toClass),
+        message = string.format("Copied %s from %s [%s] to %s [%s]", moduleName, charLabels[fromIdx], fromClass, charLabels[toIdx], toClass),
         color   = Ui.ImVec4ToColor(Globals.Constants.Colors.Green),
     })
 end
@@ -958,78 +958,10 @@ function OptionsUI:RenderMainWindow(_, openGUI, flags)
         ImGui.EndChild()
         ImGui.PopID()
     end
-    self:RenderToastNotifications()
+    Ui.RenderToastNotifications(self.ToastStates)
     ImGui.End()
 
     return openGUI
-end
-
-function OptionsUI:RenderToastNotifications()
-    local states = self.ToastStates
-    local dt = Ui.GetDeltaTime()
-
-    local canvas_pos = ImGui.GetCursorScreenPosVec()
-    local content_avail = ImGui.GetContentRegionAvailVec()
-    local canvas_size = ImVec2(content_avail.x, 180)
-    local draw_list = ImGui.GetForegroundDrawList()
-
-    -- cleanup defunct states
-    for i = #states, 1, -1 do
-        if not states[i].active then
-            table.remove(states, i)
-        end
-    end
-
-    local toast_height = 50.0
-    local toast_spacing = 8.0
-    local toast_padding = 32.0
-
-    local numToasts = #states
-    canvas_pos.y = (canvas_pos.y - ((toast_height * numToasts) + (toast_spacing * (numToasts))) - 16.0)
-
-    for i, state in ipairs(states) do
-        if state.active then
-            state.timer = state.timer + dt
-            local t = state.timer
-
-            local slide_progress = 0.0
-            local alpha = 1.0
-
-            if t < 0.3 then
-                slide_progress = ImAnim.EvalPreset(IamEaseType.OutBack, t / 0.3)
-            elseif t < 2.3 then
-                slide_progress = 1.0
-            elseif t < 2.6 then
-                local fade_t = (t - 2.3) / 0.3
-                slide_progress = 1.0
-                alpha = 1.0 - ImAnim.EvalPreset(IamEaseType.InQuad, fade_t)
-            else
-                state.active = false
-            end
-
-            if state.active then
-                local text_size = ImGui.CalcTextSizeVec(state.message)
-                local toast_width = text_size.x + toast_padding
-
-                local base_x = canvas_pos.x + canvas_size.x - toast_width - 16.0
-                local base_y = canvas_pos.y + 16.0 + (i - 1) * (toast_height + toast_spacing)
-
-                local x = base_x + (1.0 - slide_progress) * (toast_width + 32.0)
-                local y = base_y
-
-                -- Draw toast
-                local bg_color = IM_COL32(40, 40, 50, math.floor(alpha * 230))
-
-                draw_list:AddRectFilled(ImVec2(x, y), ImVec2(x + toast_width, y + toast_height), bg_color, 6.0)
-                draw_list:AddRectFilled(ImVec2(x, y), ImVec2(x + 4.0, y + toast_height), state.color or Ui.ImVec4ToColor(Globals.Constants.Colors.White), 6.0,
-                    ImDrawFlags.RoundCornersLeft)
-
-                -- Text
-                local text_color = IM_COL32(255, 255, 255, math.floor(alpha * 255))
-                draw_list:AddText(ImVec2(x + 16.0, y + (toast_height - ImGui.GetFontSize()) * 0.5), text_color, state.message)
-            end
-        end
-    end
 end
 
 return OptionsUI

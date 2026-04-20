@@ -1,22 +1,22 @@
-local mq                                                 = require('mq')
-local Modules                                            = require("utils.modules")
-local Tables                                             = require("utils.tables")
-local Strings                                            = require("utils.strings")
-local Logger                                             = require("utils.logger")
-local Comms                                              = require("utils.comms")
-local Set                                                = require("mq.Set")
-local Files                                              = require("utils.files")
-local Globals                                            = require("utils.globals")
+local mq       = require('mq')
+local Modules  = require("utils.modules")
+local Tables   = require("utils.tables")
+local Strings  = require("utils.strings")
+local Logger   = require("utils.logger")
+local Comms    = require("utils.comms")
+local Set      = require("mq.Set")
+local Files    = require("utils.files")
+local Globals  = require("utils.globals")
 
-local Config                                             = {
+local Config   = {
     _version = '2.1.0',
     _subVersion = "Shattering of Ro",
     _name = "Config",
     _AppName = "RGMercs Lua Edition",
     _author = 'Lead Devs: Derple, Algar',
 }
-Config.__index                                           = Config
-Config.Db                                                = require("utils.config_db").new(mq.configDir .. '/rgmercs/rgmercs_config.db')
+Config.__index = Config
+Config.Db      = require("utils.config_db").new(mq.configDir .. '/rgmercs/rgmercs_config.db')
 Config.Db:setCollectStats(true)
 Config.moduleDefaultSettings                             = {}
 Config.moduleTempSettings                                = {}
@@ -1063,6 +1063,8 @@ Config.DefaultConfig                                     = {
             for _, setting in ipairs(settings) do
                 Config:SetSetting(setting, not newVal, false, true)
             end
+
+            Logger.log_info("Manual Mode has been " .. (newVal and "enabled" or "disabled"))
         end,
         FAQ = "I want to control my character's movement but still have it use abilities, how can I do that?",
         Answer =
@@ -2382,6 +2384,18 @@ Config.DefaultConfig                                     = {
             end
         end,
     },
+    ['ToastLevel']                       = {
+        DisplayName = "Toast Level",
+        Category = "Internals",
+        Type = "Combo",
+        ComboOptions = Globals.Constants.ToastLevels,
+        Default = 4,
+        Min = 1,
+        Max = #Globals.Constants.ToastLevels,
+        OnChange = function(_, newValue)
+            Logger.set_toast_level(newValue - 1)
+        end,
+    },
     ['EnableLogTracer']                  = {
         DisplayName = "Enable Debug Tracer",
         Category = "Internals",
@@ -2614,7 +2628,7 @@ function Config:LoadSettings()
         Logger.log_info("\ayNo settings found in DB for %s, loading defaults.", coreModuleName)
         firstSaveRequired = true
     else
-        Logger.log_info("\agSettings loaded \at%d\ag settings from DB for \ay%s\aw,\ag loading into module.", settingsCount, coreModuleName)
+        Logger.log_debug("\agSettings loaded \at%d\ag settings from DB for \ay%s\aw,\ag loading into module.", settingsCount, coreModuleName)
     end
 
     Config:RegisterModuleSettings(coreModuleName, settings, Config.DefaultConfig, Config.FAQ, firstSaveRequired)
@@ -2960,9 +2974,9 @@ function Config:MakeValidSetting(module, setting, value)
     elseif type(defaultConfig[setting].Default) == 'number' then
         value = tonumber(value)
         if not value or value > (defaultConfig[setting].Max or 999) or value < (defaultConfig[setting].Min or 0) then
-            Logger.log_info("\ayError: Invalid or out-of-range value supplied for %s, falling back to previous value.", setting)
+            Logger.log_error("\ayError: Invalid or out-of-range value supplied for %s, falling back to previous value.", setting)
             local _, update = Config:GetUsageText(setting, true, defaultConfig)
-            Logger.log_info(update)
+            Logger.log_error(update)
             return nil
         end
 
