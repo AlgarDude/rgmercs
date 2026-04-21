@@ -107,6 +107,7 @@ local function log(logLevel, output, ...)
 				timer = 0,
 				from = mq.TLO.Me.DisplayName(),
 				message = plainOutput,
+				logLevel = logLevels[logLevel].level,
 				color = logLevels[logLevel].color,
 			})
 		end
