@@ -219,11 +219,19 @@ function Comms.UpdatePeerHeartbeat(peer, data)
 
     Comms.PeersHeartbeats[peer]      = { LastHeartbeat = Globals.GetTimeSeconds(), Data = data or {}, }
 
-    if peer ~= Comms.GetPeerName() and Globals.Config and Globals.Config:GetSetting("DisplayPeerToasts") then
+    if peer ~= Comms.GetPeerName() and Globals.Config then
+        local peerToastLevel = Globals.Config:GetSetting("PeerToastLevel") or 1
         for _, toast in ipairs(data.Toasts or {}) do
-            if toast.active then
+            -- PeerToastLevel is 2..n so it is 1 larger than the logLevel
+            if toast.active and (tonumber(toast.logLevel) or 0) < peerToastLevel then
                 Logger.log_super_verbose("Received toast from peer %s: %s", peer, toast.message)
-                table.insert(Logger.ToastStates, toast)
+                table.insert(Logger.ToastStates, {
+                    active = true,
+                    timer = 0,
+                    from = toast.from,
+                    message = toast.message,
+                    color = toast.color,
+                })
             end
         end
     end

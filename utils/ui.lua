@@ -3882,7 +3882,8 @@ function Ui.RenderToastNotifications(states, lingerTime)
         if not lines then
             local lns, maxW = toastLines(s.message, text_max_w)
             s._lines        = lns
-            s._toast_w      = maxW + toast_pad_x * 2
+            local fromW = s.from and ImGui.CalcTextSize(s.from) or 0
+            s._toast_w      = math.max(maxW, fromW) + toast_pad_x * 2
             lines           = lns
         end
         local fromH = s.from and from_extra_h or 0
