@@ -30,7 +30,7 @@ function Base:LoadSettings(preLoadFn, postLoadFn)
     -- load all module settings from db.
     local settings = Config:GetAllModuleSettingsFromDb(self._name)
     local settingsCount = Tables.GetTableSize(settings)
-    if settingsCount == 0 then
+    if settingsCount == 0 and (self.ClassConfig and #self.ClassConfig.DefaultConfig or #self.DefaultConfig) > 0 then
         Logger.log_info("\ayNo settings found in DB for %s, loading defaults.", self._name)
         firstSaveRequired = true
     else

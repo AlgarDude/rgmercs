@@ -46,6 +46,8 @@ Modules:load(Globals.Constants.LootModuleTypes[Config:GetSetting('LootModuleType
 -- pass through to avoid include loop
 Globals.Modules = Modules
 Globals.Logger  = Logger
+Globals.Comms   = Comms
+Globals.Config  = Config
 
 require('utils.datatypes')
 

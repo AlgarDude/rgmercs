@@ -8,6 +8,8 @@ Globals.__index                       = Globals
 
 Globals.Logger                        = nil
 Globals.Modules                       = nil
+Globals.Comms                         = nil
+Globals.Config                        = nil
 
 Globals.MainAssist                    = ""
 Globals.ScriptDir                     = ""

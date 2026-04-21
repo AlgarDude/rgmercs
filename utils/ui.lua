@@ -3870,6 +3870,10 @@ function Ui.RenderToastNotifications(states, lingerTime)
 
     local text_max_w    = max_toast_w - toast_pad_x * 2
 
+    local sep_h = 1.0
+    local sep_gap = 4.0
+    local from_extra_h = line_h + sep_h + sep_gap * 2
+
     -- pre-compute heights so we can stack from the bottom
     local heights       = {}
     for i = 1, numToasts do
@@ -3881,7 +3885,8 @@ function Ui.RenderToastNotifications(states, lingerTime)
             s._toast_w      = maxW + toast_pad_x * 2
             lines           = lns
         end
-        heights[i] = #lines * line_h + toast_pad_y * 2
+        local fromH = s.from and from_extra_h or 0
+        heights[i] = #lines * line_h + toast_pad_y * 2 + fromH
     end
 
     -- total stack height, position base_y for the bottom toast
@@ -3942,11 +3947,22 @@ function Ui.RenderToastNotifications(states, lingerTime)
                 draw_list:AddRectFilled(ImVec2(x, base_y), ImVec2(x + 4.0, base_y + toast_h),
                     Ui.ReduceAlpha(accentCol, alpha), 6.0, ImDrawFlags.RoundCornersLeft)
 
+                -- from header + separator
+                local text_col  = IM_COL32(255, 255, 255, iAlpha)
+                local text_y    = base_y + toast_pad_y
+                if state.from then
+                    local from_col = IM_COL32(220, 180, 100, iAlpha)
+                    draw_list:AddText(ImVec2(x + toast_pad_x, text_y), from_col, state.from)
+                    text_y = text_y + line_h + sep_gap
+                    local sep_col = IM_COL32(180, 180, 180, math.floor(alpha * 80))
+                    draw_list:AddLine(ImVec2(x + toast_pad_x, text_y),
+                        ImVec2(x + toast_w - toast_pad_x, text_y), sep_col, sep_h)
+                    text_y = text_y + sep_h + sep_gap
+                end
+
                 -- text lines
-                local text_col = IM_COL32(255, 255, 255, iAlpha)
                 for li, line in ipairs(state._lines) do
-                    local ty = base_y + toast_pad_y + (li - 1) * line_h
-                    draw_list:AddText(ImVec2(x + toast_pad_x, ty), text_col, line.text)
+                    draw_list:AddText(ImVec2(x + toast_pad_x, text_y + (li - 1) * line_h), text_col, line.text)
                 end
             end
 
