@@ -100,6 +100,16 @@ local function log(logLevel, output, ...)
 			message = plainOutput,
 			color = logLevels[logLevel].color,
 		})
+
+		if Globals.Comms then
+			table.insert(Globals.Comms.OutgoingToasts, {
+				active = true,
+				timer = 0,
+				from = mq.TLO.Me.DisplayName(),
+				message = plainOutput,
+				color = logLevels[logLevel].color,
+			})
+		end
 	end
 
 	if currentLogLevel < logLevels[logLevel].level then return end
