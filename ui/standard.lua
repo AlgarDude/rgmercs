@@ -126,7 +126,7 @@ end
 function StandardUI:RenderForceBurnButton()
     local assistSpawn = Targeting.GetAutoTarget()
     if not assistSpawn() or assistSpawn.ID() == 0 then
-        ImGui.InvisibleButton("###fakeburn", ImVec2(0, ImGui.GetTextLineHeight()))
+        ImGui.InvisibleButton("###fakeburn", ImVec2(0.1, ImGui.GetTextLineHeight()))
         return
     end
     ImGui.PushStyleColor(ImGuiCol.Button, Globals.Constants.Colors.BurnFlashColorOne)

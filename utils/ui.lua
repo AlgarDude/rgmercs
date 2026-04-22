@@ -3761,7 +3761,7 @@ end
 
 function Ui.InvisibleWithButtonText(id, text, size, callbackFn)
     local buttonPos = ImGui.GetCursorPosVec()
-    if ImGui.InvisibleButton(id, size or ImVec2(0, 0)) then
+    if ImGui.InvisibleButton(id, size or ImVec2(1, 1)) then
         if callbackFn then
             callbackFn()
         end
@@ -3882,7 +3882,7 @@ function Ui.RenderToastNotifications(states, lingerTime)
         if not lines then
             local lns, maxW = toastLines(s.message, text_max_w)
             s._lines        = lns
-            local fromW = s.from and ImGui.CalcTextSize(s.from) or 0
+            local fromW     = s.from and ImGui.CalcTextSize(s.from) or 0
             s._toast_w      = math.max(maxW, fromW) + toast_pad_x * 2
             lines           = lns
         end
