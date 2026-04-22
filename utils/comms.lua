@@ -229,6 +229,7 @@ function Comms.UpdatePeerHeartbeat(peer, data)
                     active = true,
                     timer = 0,
                     from = toast.from,
+                    peer = peer,
                     message = toast.message,
                     color = toast.color,
                 })
