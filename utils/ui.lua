@@ -3939,9 +3939,19 @@ function Ui.RenderToastNotifications(states, lingerTime)
                 local x       = base_x + (1.0 - slide) * (toast_w + 32.0)
                 local iAlpha  = math.floor(alpha * 255)
 
-                -- background
+                -- click detection for toasts with a from field
+                if state.from and ImGui.IsMouseClicked(0) then
+                    local mx, my = ImGui.GetMousePos()
+                    if mx >= x and mx <= x + toast_w and my >= base_y and my <= base_y + toast_h then
+                        state.clicked = true
+                        state.active  = false
+                    end
+                end
+
+                -- background (brighten on hover if clickable)
+                local bgAlpha = math.floor(alpha * 230)
                 draw_list:AddRectFilled(ImVec2(x, base_y), ImVec2(x + toast_w, base_y + toast_h),
-                    IM_COL32(40, 40, 50, math.floor(alpha * 230)), 6.0)
+                    IM_COL32(40, 40, 50, bgAlpha), 6.0)
 
                 -- accent bar — fade with alpha
                 local accentCol = state.color or Ui.ImVec4ToColor(Globals.Constants.Colors.White)
@@ -3959,6 +3969,13 @@ function Ui.RenderToastNotifications(states, lingerTime)
                     draw_list:AddLine(ImVec2(x + toast_pad_x, text_y),
                         ImVec2(x + toast_w - toast_pad_x, text_y), sep_col, sep_h)
                     text_y = text_y + sep_h + sep_gap
+
+                    local mx, my = ImGui.GetMousePos()
+                    if mx >= x and mx <= x + toast_w and my >= base_y and my <= base_y + toast_h then
+                        if ImGui.IsMouseClicked(0) then
+                            Comms.SendPeerDoCmd(state.peer, "/foreground")
+                        end
+                    end
                 end
 
                 -- text lines
