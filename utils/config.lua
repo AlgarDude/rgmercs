@@ -2022,6 +2022,33 @@ Config.DefaultConfig                                     = {
         Min = 0,
         Max = 100,
     },
+    ['ShowTargetWindow']                 = {
+        DisplayName = "Show Target Window",
+        Group = "General",
+        Header = "Interface",
+        Category = "Mercs Target Window",
+        Index = 1,
+        Tooltip = "Display an RGMercs-style fancy target window with information about your current target.",
+        Default = false,
+    },
+    ['TargetBuffNameTooltip']            = {
+        DisplayName = "Show Target Buff Name Tooltips",
+        Group = "General",
+        Header = "Interface",
+        Category = "Mercs Target Window",
+        Index = 2,
+        Tooltip = "Display tooltips with the names of buffs on your target.",
+        Default = true,
+    },
+    ['TargetBuffDescriptionTooltip']     = {
+        DisplayName = "Show Target Buff Description Tooltips",
+        Group = "General",
+        Header = "Interface",
+        Category = "Mercs Target Window",
+        Index = 3,
+        Tooltip = "Display tooltips with the descriptions of buffs on your target.",
+        Default = true,
+    },
 
     -- [ UI Colors ] --
     ['MainButtonUnpausedColor']          = {
