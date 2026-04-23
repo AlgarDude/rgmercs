@@ -78,19 +78,29 @@ function TargetUI:RenderContent()
 
     -- buffs
     if target.BuffsPopulated() then
+        local iconSize = Config:GetSetting('TargetBuffIconSize')
+        local blinkAtTime = Config:GetSetting('TargetBuffBlinkAtTime')
         ImGui.PushStyleVar(ImGuiStyleVar.ItemSpacing, ImVec2(2, 2))
         local buffCount = target.BuffCount() or 0
-        local buffsPerRow = math.floor((ImGui.GetContentRegionAvailVec().x - ImGui.GetStyle().ItemSpacing.x) / 20) - 1
+        local buffsPerRow = math.floor((ImGui.GetContentRegionAvailVec().x) / (iconSize + ImGui.GetStyle().ItemSpacing.x))
         local showBuffName = Config:GetSetting('TargetBuffNameTooltip')
         local showBuffDescription = Config:GetSetting('TargetBuffDescriptionTooltip')
+        local showBuffCaster = Config:GetSetting('TargetBuffCasterTooltip')
         for i = 1, buffCount do
             local buff = target.Buff(i)
             if buff and buff() and buff.ID() ~= 0 then
-                Ui.DrawInspectableSpellIcon(buff.SpellIcon(), buff)
-                if showBuffName or showBuffDescription then
-                    Ui.Tooltip(string.format("%s%s%s", showBuffName and (buff.RankName() or "Unknown") or "", showBuffName and showBuffDescription and "\n\n" or "",
-                        showBuffDescription and (buff.Description() or "No description available.") or ""))
+                Ui.DrawInspectableSpellIcon(buff.SpellIcon(), buff, iconSize, math.floor((buff.Duration.TotalSeconds() or 0)) < blinkAtTime)
+                local toolTip = showBuffName and string.format("%s (%s)", buff.RankName() or "Unknown", buff.Duration.TimeHMS()) or ""
+                if showBuffCaster then
+                    toolTip = toolTip .. (toolTip ~= "" and "\n\n" or "") .. "Caster: " .. (buff.CasterName() or "Unknown Caster")
                 end
+                if showBuffDescription then
+                    toolTip = toolTip .. (toolTip ~= "" and "\n\n" or "") .. (buff.Description() or "No description available.")
+                end
+                if showBuffName or showBuffDescription or showBuffCaster then
+                    Ui.Tooltip(toolTip, "##BuffID_" .. tostring(mq.TLO.Target.ID()) .. "_" .. tostring(buff.ID()))
+                end
+
                 if i == 1 or i % buffsPerRow ~= 0 then
                     ImGui.SameLine()
                 end

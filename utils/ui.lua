@@ -17,6 +17,10 @@ local ImGui                        = require('ImGui')
 local ImAnim                       = require('ImAnim')
 
 local animSpellGems                = mq.FindTextureAnimation('A_SpellGems')
+local yellowSpellBG                = mq.FindTextureAnimation("YellowIconBackground")
+local redSpellBG                   = mq.FindTextureAnimation("RedIconBackground")
+local blueSpellBG                  = mq.FindTextureAnimation("BlueIconBackground")
+
 local ICON_SIZE                    = 20
 
 local Ui                           = { _version = '1.0', _name = "Ui", _author = 'Derple', }
@@ -35,10 +39,14 @@ Ui.TempSettings                    = {
     SmoothPctId           = ImHashStr("smooth_pct"),
     ThumbId               = ImHashStr("thumb"),
     BgId                  = ImHashStr("bg"),
+    IconBlinkId           = ImHashStr("blink_ch"),
     LastAnimCleanupTime   = Globals.GetTimeSeconds(),
     TooltipAnimationState = {
         was_hovered = -1,
         tooltip_time = 0.0,
+    },
+    BuffBlinkState        = {
+
     },
     MarqueeScrollX        = {},
     ToastNextId           = 0,
@@ -1695,21 +1703,51 @@ function Ui.RenderZoneNamed()
     end
 end
 
+function Ui.GetBGForSpell(spell)
+    if spell and spell() then
+        if spell.SpellType() == "Detrimental" then
+            if spell.PreventsRegen and spell.PreventsRegen() then
+                return yellowSpellBG
+            end
+            return redSpellBG
+        elseif spell.SpellType() == "Beneficial" then
+            return blueSpellBG
+        end
+    end
+    return blueSpellBG
+end
+
 --- Draws an inspectable spell icon.
 ---
 --- @param iconID number The ID of the icon to be drawn.
 --- @param spell MQSpell The spell data to be used for the icon.
-function Ui.DrawInspectableSpellIcon(iconID, spell)
-    local cursor_x, cursor_y = ImGui.GetCursorPos()
+--- @param iconSize number? The size of the icon to be drawn.
+--- @param doBlink boolean? Whether the icon should blink.
+function Ui.DrawInspectableSpellIcon(iconID, spell, iconSize, doBlink)
+    if not iconSize then iconSize = ICON_SIZE end
+
+    local alpha = 1.0
+    if doBlink then
+        local animId = ImHashStr(tostring(iconID) .. (spell.Name() or "?") .. "_blink")
+        local dt = Ui.GetDeltaTime()
+        alpha = 0.5 - ImAnim.Oscillate(animId, 0.5, 1.0, IamWaveType.Sawtooth, 0.0, dt)
+    end
+
+    local sp = ImGui.GetCursorScreenPosVec()
+    local dl = ImGui.GetWindowDrawList()
 
     animSpellGems:SetTextureCell(iconID or 0)
 
-    ImGui.DrawTextureAnimation(animSpellGems, ICON_SIZE, ICON_SIZE)
+    dl:AddTextureAnimation(Ui.GetBGForSpell(spell), sp, ImVec2(iconSize, iconSize))
+    dl:AddTextureAnimation(animSpellGems, ImVec2(sp.x + 2, sp.y + 2), ImVec2(iconSize - 4, iconSize - 4))
 
-    ImGui.SetCursorPos(cursor_x, cursor_y)
+    if doBlink then
+        dl:AddRectFilled(sp, ImVec2(sp.x + iconSize, sp.y + iconSize),
+            IM_COL32(0, 0, 0, math.floor((1.0 - alpha) * 255)))
+    end
 
     ImGui.PushID(tostring(iconID) .. (spell.Name() or "?") .. "_invis_btn")
-    ImGui.InvisibleButton(spell.Name() or "?", ImVec2(ICON_SIZE, ICON_SIZE),
+    ImGui.InvisibleButton(spell.Name() or "?", ImVec2(iconSize, iconSize),
         bit32.bor(ImGuiButtonFlags.MouseButtonLeft))
     if ImGui.IsItemHovered() and ImGui.IsMouseReleased(ImGuiMouseButton.Left) then
         spell.RankName.Inspect()
@@ -3360,14 +3398,14 @@ end
 
 --- Generates a tooltip with the given description.
 --- @param desc string: The description to be displayed in the tooltip.
-function Ui.Tooltip(desc)
+function Ui.Tooltip(desc, idoverride)
     if ImGui.IsItemHovered() then
         if type(desc) == "function" then
             desc = desc()
         end
 
         if Config:GetSetting('EnableAnimatedTooltips') then
-            return Ui.AnimatedTooltip(desc, desc)
+            return Ui.AnimatedTooltip(idoverride or desc, desc)
         end
 
         ImGui.BeginTooltip()
