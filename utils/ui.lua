@@ -3468,22 +3468,66 @@ function Ui.AnimatedTooltip(id, desc)
             local padding = ImVec2(12, 8)
             local text_size = ImVec2(0, 0)
 
+            local MAX_TOOLTIP_WIDTH = ImGui.GetFontSize() * 20.0
+            local wrappedLines = {}
+
+            local function wrapText(text)
+                local lh = ImGui.GetTextLineHeight()
+                local lines = {}
+                for rawLine in (text .. "\n"):gmatch("([^\n]*)\n") do
+                    local line = ""
+                    for word in rawLine:gmatch("%S+") do
+                        local candidate = line == "" and word or (line .. " " .. word)
+                        if ImGui.CalcTextSize(candidate) > MAX_TOOLTIP_WIDTH and line ~= "" then
+                            lines[#lines + 1] = line
+                            line = word
+                        else
+                            line = candidate
+                        end
+                    end
+                    lines[#lines + 1] = line
+                end
+                local maxW = 0
+                for _, l in ipairs(lines) do maxW = math.max(maxW, ImGui.CalcTextSize(l)) end
+                return lines, maxW, #lines * lh
+            end
+
             if type(desc) == "table" then
-                local xTotalLength = 0
                 local numLines = #desc
                 for i, line in ipairs(desc) do
                     local render_width, render_height = 0, 0
                     if line.render then
                         render_width, render_height = line.render(nil, ImVec2(0, 0))
                     end
-                    local size = ImGui.CalcTextSizeVec(tostring(line.text or "")) + ImVec2(render_width, render_height)
-                    xTotalLength = line.sameLine and (xTotalLength + size.x) or size.x
-                    xTotalLength = xTotalLength + (line.padAfter or 0)
-                    text_size.x = math.max(text_size.x, xTotalLength)
+                    local txt = tostring(line.text or "")
+                    local _, wrapW, wrapH = wrapText(txt)
+                    local size = ImVec2(wrapW + render_width, math.max(ImGui.CalcTextSizeVec(txt).y, wrapH) + render_height)
+                    local xLen = line.sameLine and (text_size.x + size.x) or size.x
+                    xLen = xLen + (line.padAfter or 0)
+                    text_size.x = math.max(text_size.x, xLen)
                     text_size.y = text_size.y + (line.sameLine and 0 or (size.y + (i == numLines and 0 or padding.y / 2)))
                 end
+                text_size.x = math.min(text_size.x, MAX_TOOLTIP_WIDTH)
             else
-                text_size = ImGui.CalcTextSizeVec(desc)
+                local lineHeight = ImGui.GetTextLineHeight()
+                for rawLine in (desc .. "\n"):gmatch("([^\n]*)\n") do
+                    local line = ""
+                    for word in rawLine:gmatch("%S+") do
+                        local candidate = line == "" and word or (line .. " " .. word)
+                        if ImGui.CalcTextSize(candidate) > MAX_TOOLTIP_WIDTH and line ~= "" then
+                            table.insert(wrappedLines, line)
+                            line = word
+                        else
+                            line = candidate
+                        end
+                    end
+                    table.insert(wrappedLines, line)
+                end
+                local maxW = 0
+                for _, l in ipairs(wrappedLines) do
+                    maxW = math.max(maxW, ImGui.CalcTextSize(l))
+                end
+                text_size = ImVec2(maxW, #wrappedLines * lineHeight)
             end
 
             local tip_size = ImVec2(text_size.x + padding.x * 2, text_size.y + padding.y * 2)
@@ -3575,26 +3619,27 @@ function Ui.AnimatedTooltip(id, desc)
                     end
 
                     if line.text then
-                        draw_list:AddText(
-                            ImVec2(
-                                tip_pos.x + nextXOffset,
-                                tip_pos.y + lineHeight
-                            ),
-                            line.color and Ui.ImVec4ToColor(line.color) or IM_COL32(220, 220, 230, alpha),
-                            tostring(line.text))
-
-                        local newLines = select(2, (tostring(line.text)):gsub("\n", ""))
-
-                        nextXOffset = nextXOffset + ImGui.CalcTextSizeVec(tostring(line.text)).x + (line.padAfter or 0)
+                        local col = line.color and Ui.ImVec4ToColor(line.color) or IM_COL32(220, 220, 230, alpha)
+                        local txtLines, txtW, txtH = wrapText(tostring(line.text))
+                        local ty = tip_pos.y + lineHeight
+                        for _, tl in ipairs(txtLines) do
+                            draw_list:AddText(ImVec2(tip_pos.x + nextXOffset, ty), col, tl)
+                            ty = ty + ImGui.GetTextLineHeight()
+                        end
+                        nextXOffset = nextXOffset + txtW + (line.padAfter or 0)
                         if i + 1 <= #desc and desc[i + 1].sameLine ~= true then
-                            lineHeight = lineHeight + ImGui.GetTextLineHeight() + padding.y / 2 + (newLines * ImGui.GetTextLineHeight())
+                            lineHeight = lineHeight + txtH + padding.y / 2
                             nextXOffset = padding.x
                         end
                     end
                 end
             else
-                draw_list:AddText(ImVec2(tip_pos.x + padding.x, tip_pos.y + padding.y),
-                    IM_COL32(220, 220, 230, alpha), desc)
+                local lineHeight = ImGui.GetTextLineHeight()
+                local ty = tip_pos.y + padding.y
+                for _, l in ipairs(wrappedLines) do
+                    draw_list:AddText(ImVec2(tip_pos.x + padding.x, ty), IM_COL32(220, 220, 230, alpha), l)
+                    ty = ty + lineHeight
+                end
             end
         end
     else
