@@ -66,6 +66,7 @@ local OptionsUI       = require("ui.options")
 local ConsoleUI       = require("ui.console")
 local LoaderUI        = require("ui.loader")
 local HudUI           = require("ui.hud")
+local TargetUI        = require("ui.target")
 
 local function Alive()
     return mq.TLO.NearestSpawn('pc')() ~= nil
@@ -174,6 +175,10 @@ local function RGMercsGUI()
                     Config:SetSetting('PopOutConsole', false)
                     showConsole = false
                 end
+            end
+
+            if Config:GetSetting('ShowTargetWindow') then
+                TargetUI:RenderWindow(flags)
             end
 
             Ui.RenderModulesPopped(flags)
