@@ -90,15 +90,34 @@ function TargetUI:RenderContent()
             local buff = target.Buff(i)
             if buff and buff() and buff.ID() ~= 0 then
                 Ui.DrawInspectableSpellIcon(buff.SpellIcon(), buff, iconSize, math.floor((buff.Duration.TotalSeconds() or 0)) < blinkAtTime)
-                local toolTip = showBuffName and string.format("%s (%s)", buff.RankName() or "Unknown", buff.Duration.TimeHMS()) or ""
+                local toolTip = {}
+                if showBuffName then
+                    local duractionPerceent = (buff.Duration.TotalSeconds() or 0) / (buff.Spell.Duration.TotalSeconds() or 1)
+                    table.insert(toolTip,
+                        { text = string.format("%s (", buff.RankName() or "Unknown"), color = Globals.Constants.BasicColors.White, })
+                    table.insert(toolTip,
+                        {
+                            text = buff.Duration.TimeHMS(),
+                            color = duractionPerceent > 0.6 and Globals.Constants.BasicColors.LightGreen or
+                                duractionPerceent > 0.2 and Globals.Constants.BasicColors.LightYellow or Globals.Constants.BasicColors.LightRed,
+                            sameLine = true,
+                        })
+                    table.insert(toolTip,
+                        { text = ")", color = Globals.Constants.BasicColors.White, sameLine = true, })
+                end
+
                 if showBuffCaster then
-                    toolTip = toolTip .. (toolTip ~= "" and "\n\n" or "") .. "Caster: " .. (buff.CasterName() or "Unknown Caster")
+                    table.insert(toolTip, { text = "Caster:", color = Globals.Constants.BasicColors.White, padAfter = 4, })
+                    table.insert(toolTip, { text = buff.CasterName() or "Unknown Caster", color = Globals.Constants.BasicColors.LightOrange, sameLine = true, })
                 end
+
                 if showBuffDescription then
-                    toolTip = toolTip .. (toolTip ~= "" and "\n\n" or "") .. (buff.Description() or "No description available.")
+                    table.insert(toolTip, { text = buff.Description() or "No description available.", color = Globals.Constants.BasicColors.LightBlue, })
                 end
-                if showBuffName or showBuffDescription or showBuffCaster then
-                    Ui.Tooltip(toolTip, "##BuffID_" .. tostring(mq.TLO.Target.ID()) .. "_" .. tostring(buff.ID()))
+
+                if #toolTip > 0 then
+                    --Ui.Tooltip(toolTip, )
+                    Ui.AnimatedTooltip("##BuffID_" .. tostring(mq.TLO.Target.ID()) .. "_" .. tostring(buff.ID()), toolTip)
                 end
 
                 if i == 1 or i % buffsPerRow ~= 0 then
