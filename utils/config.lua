@@ -2049,6 +2049,15 @@ Config.DefaultConfig                                     = {
         Tooltip = "Display tooltips with the descriptions of buffs on your target.",
         Default = true,
     },
+    ['LockTargetWindow']                 = {
+        DisplayName = "Lock Target Window",
+        Group = "General",
+        Header = "Interface",
+        Category = "Mercs Target Window",
+        Index = 4,
+        Tooltip = "Lock the position of the target window.",
+        Default = false,
+    },
 
     -- [ UI Colors ] --
     ['MainButtonUnpausedColor']          = {
