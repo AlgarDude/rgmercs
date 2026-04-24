@@ -89,7 +89,7 @@ function TargetUI:RenderContent()
         for i = 1, buffCount do
             local buff = target.Buff(i)
             if buff and buff() and buff.ID() ~= 0 then
-                Ui.DrawInspectableSpellIcon(buff.SpellIcon(), buff, iconSize, math.floor((buff.Duration.TotalSeconds() or 0)) < blinkAtTime)
+                Ui.DrawInspectableSpellIcon(buff.SpellIcon(), buff, iconSize, (math.floor((buff.Duration.TotalSeconds() or 0)) < blinkAtTime))
                 local toolTip = {}
                 if showBuffName then
                     local duractionPercent = buff.Spell.Duration.TotalSeconds() > 0 and (buff.Duration.TotalSeconds() or 0) / (buff.Spell.Duration.TotalSeconds() or 1.0) or 1.0
