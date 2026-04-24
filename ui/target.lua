@@ -35,7 +35,7 @@ function TargetUI:RenderContent()
     ImGui.PopStyleColor(1)
 
     ImGui.SameLine()
-    Ui.RenderText("] HP: %d%% Dist: %d ", pctHPs, target.Distance() or 0)
+    Ui.RenderText("] Dist: %d ", target.Distance() or 0)
     ImGui.PopStyleVar(1)
     ImGui.PopStyleColor(1)
 
@@ -92,14 +92,14 @@ function TargetUI:RenderContent()
                 Ui.DrawInspectableSpellIcon(buff.SpellIcon(), buff, iconSize, math.floor((buff.Duration.TotalSeconds() or 0)) < blinkAtTime)
                 local toolTip = {}
                 if showBuffName then
-                    local duractionPerceent = (buff.Duration.TotalSeconds() or 0) / (buff.Spell.Duration.TotalSeconds() or 1)
+                    local duractionPercent = buff.Spell.Duration() > 0 and (buff.Duration.TotalSeconds() or 0) / (buff.Spell.Duration.TotalSeconds() or 1.0) or 1.0
                     table.insert(toolTip,
                         { text = string.format("%s (", buff.RankName() or "Unknown"), color = Globals.Constants.BasicColors.White, })
                     table.insert(toolTip,
                         {
                             text = buff.Duration.TimeHMS(),
-                            color = duractionPerceent > 0.6 and Globals.Constants.BasicColors.LightGreen or
-                                duractionPerceent > 0.2 and Globals.Constants.BasicColors.LightYellow or Globals.Constants.BasicColors.LightRed,
+                            color = duractionPercent > 0.6 and Globals.Constants.BasicColors.LightGreen or
+                                duractionPercent > 0.2 and Globals.Constants.BasicColors.LightYellow or Globals.Constants.BasicColors.LightRed,
                             sameLine = true,
                         })
                     table.insert(toolTip,
@@ -117,7 +117,7 @@ function TargetUI:RenderContent()
 
                 if #toolTip > 0 then
                     --Ui.Tooltip(toolTip, )
-                    Ui.AnimatedTooltip("##BuffID_" .. tostring(mq.TLO.Target.ID()) .. "_" .. tostring(buff.ID()), toolTip)
+                    Ui.AnimatedTooltip("##BuffID_" .. tostring(target.ID()) .. "_" .. tostring(buff.ID()), toolTip)
                 end
 
                 if i == 1 or i % buffsPerRow ~= 0 then
