@@ -92,7 +92,7 @@ function TargetUI:RenderContent()
                 Ui.DrawInspectableSpellIcon(buff.SpellIcon(), buff, iconSize, math.floor((buff.Duration.TotalSeconds() or 0)) < blinkAtTime)
                 local toolTip = {}
                 if showBuffName then
-                    local duractionPercent = buff.Spell.Duration() > 0 and (buff.Duration.TotalSeconds() or 0) / (buff.Spell.Duration.TotalSeconds() or 1.0) or 1.0
+                    local duractionPercent = buff.Spell.Duration.TotalSeconds() > 0 and (buff.Duration.TotalSeconds() or 0) / (buff.Spell.Duration.TotalSeconds() or 1.0) or 1.0
                     table.insert(toolTip,
                         { text = string.format("%s (", buff.RankName() or "Unknown"), color = Globals.Constants.BasicColors.White, })
                     table.insert(toolTip,
