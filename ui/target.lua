@@ -127,6 +127,40 @@ function TargetUI:RenderContent()
         end
         ImGui.PopStyleVar(1)
     end
+
+    -- ToT (lower-left, half width) and Secondary Aggro (lower-right, right-aligned)
+    local tot = mq.TLO.Me.TargetOfTarget
+    local totValid = tot and (tot.ID() or 0) > 0
+    local totName = totValid and (tot.CleanName() or tot.Name() or "") or ""
+    local totLabel = totValid and string.format("ToT: %s", totName) or "ToT: None"
+
+    local aggroName = target.SecondaryAggroPlayer.CleanName() or ""
+    local aggroPct = target.SecondaryPctAggro() or 0
+    local aggroText = (aggroName ~= "" and aggroPct > 0) and string.format("2nd: %s %d%%", aggroName, aggroPct) or ""
+
+    ImGui.NewLine()
+    local halfWidth = ImGui.GetContentRegionAvailVec().x * 0.5
+    if ImGui.BeginChild("##TargetToTBlock", ImVec2(halfWidth, 0), ImGuiChildFlags.AutoResizeY, ImGuiWindowFlags.NoBackground) then
+        Ui.RenderText(totLabel)
+        if totValid then
+            local totPctHPs = tot.PctHPs() or 0
+            Ui.RenderFancyHPBar("##TargetOfTargetHPBar" .. tostring(tot.ID()), totPctHPs, 15, false, 1.0)
+        else
+            Ui.RenderFancyHPBar("##TargetOfTargetHPBar0", 0, 15, false, 1.0)
+        end
+    end
+    ImGui.EndChild()
+
+    if aggroText ~= "" then
+        ImGui.SameLine()
+        local textWidth = ImGui.CalcTextSize(aggroText)
+        local avail = ImGui.GetContentRegionAvailVec().x
+        local offset = avail - textWidth
+        if offset > 0 then
+            ImGui.SetCursorPosX(ImGui.GetCursorPosX() + offset)
+        end
+        Ui.RenderText(aggroText)
+    end
 end
 
 function TargetUI:RenderWindow(flags)
