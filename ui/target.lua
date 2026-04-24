@@ -21,24 +21,14 @@ function TargetUI:RenderContent()
         return
     end
 
-    if math.floor(target.Distance() or 0) >= 350 then
-        ImGui.PushStyleColor(ImGuiCol.Text, Globals.Constants.Colors.AssistSpawnFarColor)
-    else
-        ImGui.PushStyleColor(ImGuiCol.Text, Globals.Constants.Colors.BrightWhite)
-    end
-    ImGui.PushStyleVar(ImGuiStyleVar.ItemSpacing, ImVec2(0, 0))
-    Ui.RenderText("%s (%s) [", target.CleanName() or "", target.ID() or 0)
+    local lineStartX = ImGui.GetCursorPosX()
 
+    -- Level Class (left, con-colored)
     ImGui.PushStyleColor(ImGuiCol.Text, ImVec4(Ui.GetConColorBySpawn(target)))
-    ImGui.SameLine()
     Ui.RenderText("%d %s", target.Level() or 0, target.Class.ShortName() or "N/A")
     ImGui.PopStyleColor(1)
 
-    ImGui.SameLine()
-    Ui.RenderText("] Dist: %d ", target.Distance() or 0)
-    ImGui.PopStyleVar(1)
-    ImGui.PopStyleColor(1)
-
+    -- Icons after level/class
     ImGui.SameLine()
     local los = target.LineOfSight()
     ImGui.TextColored(los and Globals.Constants.Colors.ConditionPassColor or Globals.Constants.Colors.ConditionFailColor, los and Icons.FA_EYE or Icons.FA_EYE_SLASH)
@@ -64,6 +54,45 @@ function TargetUI:RenderContent()
         Ui.Tooltip("Burning")
     end
 
+    local distance = target.Distance() or 0
+    local distText = string.format("%.1f", distance)
+    local distWidth = ImGui.CalcTextSize(distText)
+    local nameText = string.format("%s (%s)", target.CleanName() or "", target.ID() or 0)
+    local nameWidth = ImGui.CalcTextSize(nameText)
+
+    -- Centered Name (ID) on the same line, fall back to left-aligned if cramped
+    ImGui.SameLine()
+    local curX = ImGui.GetCursorPosX()
+    local rightEdge = curX + ImGui.GetContentRegionAvailVec().x
+    local centerX = lineStartX + ((rightEdge - lineStartX) - nameWidth) * 0.5
+    local spacing = ImGui.GetStyle().ItemSpacing.x
+    if centerX > curX and (centerX + nameWidth + spacing) < (rightEdge - distWidth) then
+        ImGui.SetCursorPosX(centerX)
+    end
+
+    if math.floor(distance) >= 350 then
+        ImGui.PushStyleColor(ImGuiCol.Text, Globals.Constants.Colors.AssistSpawnFarColor)
+    else
+        ImGui.PushStyleColor(ImGuiCol.Text, Globals.Constants.Colors.BrightWhite)
+    end
+    Ui.RenderText(nameText)
+    ImGui.PopStyleColor(1)
+
+    -- Right-aligned distance, colored using MercsStatus thresholds (AssistRange)
+    local assistRange = Config:GetSetting('AssistRange')
+    local distColor = distance > assistRange and Globals.Constants.Colors.ConditionFailColor
+        or distance > assistRange / 2 and Globals.Constants.Colors.ConditionMidColor
+        or Globals.Constants.Colors.ConditionPassColor
+
+    ImGui.SameLine()
+    local offset = ImGui.GetContentRegionAvailVec().x - distWidth
+    if offset > 0 then
+        ImGui.SetCursorPosX(ImGui.GetCursorPosX() + offset)
+    end
+    ImGui.PushStyleColor(ImGuiCol.Text, distColor)
+    Ui.RenderText(distText)
+    ImGui.PopStyleColor(1)
+
     if Config:GetSetting('OverrideHP') > 0 then
         pctHPs = Config:GetSetting('OverrideHP')
     end
@@ -76,17 +105,20 @@ function TargetUI:RenderContent()
 
     Ui.RenderFancyHPBar("##TargetHPBar" .. tostring(target.ID()), pctHPs, 25, burning, 1.0, nil, hpLowOverride, hpHighOverride)
 
-    -- buffs
+    -- buffs (fixed 2-row area so ToT/aggro below don't shift)
+    local iconSize = Config:GetSetting('TargetBuffIconSize')
+    ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, ImVec2(0, 0))
+    if ImGui.BeginChild("##TargetBuffsArea", ImVec2(0, iconSize * 2 + 2), ImGuiChildFlags.None, bit32.bor(ImGuiWindowFlags.NoBackground, ImGuiWindowFlags.NoScrollbar, ImGuiWindowFlags.NoScrollWithMouse)) then
     if target.BuffsPopulated() then
-        local iconSize = Config:GetSetting('TargetBuffIconSize')
         local blinkAtTime = Config:GetSetting('TargetBuffBlinkAtTime')
         ImGui.PushStyleVar(ImGuiStyleVar.ItemSpacing, ImVec2(2, 2))
         local buffCount = target.BuffCount() or 0
         local buffsPerRow = math.floor((ImGui.GetContentRegionAvailVec().x) / (iconSize + ImGui.GetStyle().ItemSpacing.x))
+        local maxBuffs = math.min(buffCount, buffsPerRow * 2)
         local showBuffName = Config:GetSetting('TargetBuffNameTooltip')
         local showBuffDescription = Config:GetSetting('TargetBuffDescriptionTooltip')
         local showBuffCaster = Config:GetSetting('TargetBuffCasterTooltip')
-        for i = 1, buffCount do
+        for i = 1, maxBuffs do
             local buff = target.Buff(i)
             if buff and buff() and buff.ID() ~= 0 then
                 Ui.DrawInspectableSpellIcon(buff.SpellIcon(), buff, iconSize, (math.floor((buff.Duration.TotalSeconds() or 0)) < blinkAtTime))
@@ -126,6 +158,40 @@ function TargetUI:RenderContent()
             end
         end
         ImGui.PopStyleVar(1)
+    end
+    end
+    ImGui.EndChild()
+    ImGui.PopStyleVar(1)
+
+    -- ToT (lower-left, half width) and Secondary Aggro (lower-right, right-aligned)
+    local tot = mq.TLO.Me.TargetOfTarget
+    local totValid = tot and (tot.ID() or 0) > 0
+    local totName = totValid and (tot.CleanName() or tot.Name() or "") or ""
+    local totPctHPs = totValid and (tot.PctHPs() or 0) or 0
+    local totBarLabel = totValid and string.format("%s: %d%%", totName, totPctHPs) or "No ToT"
+    local totBarId = totValid and ("##TargetOfTargetHPBar" .. tostring(tot.ID())) or "##TargetOfTargetHPBar0"
+
+    local aggroName = target.SecondaryAggroPlayer.CleanName() or ""
+    local aggroPct = target.SecondaryPctAggro() or 0
+    local aggroText = (aggroName ~= "" and aggroPct > 0) and string.format("%s %d%%", aggroName, aggroPct) or ""
+
+    local halfWidth = ImGui.GetContentRegionAvailVec().x * 0.5
+    if ImGui.BeginChild("##TargetToTBlock", ImVec2(halfWidth, 0), ImGuiChildFlags.AutoResizeY, ImGuiWindowFlags.NoBackground) then
+        Ui.RenderAnimatedPercentage(totBarId, totPctHPs, 20, 0, Globals.Constants.Colors.HPLowColor, Globals.Constants.Colors.HPHighColor, totBarLabel, 1.0)
+    end
+    ImGui.EndChild()
+
+    if aggroText ~= "" then
+        ImGui.SameLine()
+        ImGui.PushFont(ImGui.GetFont(), ImGui.GetFontSize() * 1.25)
+        local textWidth = ImGui.CalcTextSize(aggroText)
+        local avail = ImGui.GetContentRegionAvailVec().x
+        local offset = avail - textWidth
+        if offset > 0 then
+            ImGui.SetCursorPosX(ImGui.GetCursorPosX() + offset)
+        end
+        Ui.RenderText(aggroText)
+        ImGui.PopFont()
     end
 end
 
