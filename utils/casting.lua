@@ -439,7 +439,9 @@ function Casting.PeerBuffCheck(spellId, target, skipBlockCheck, skipTriggerCheck
     if not spellName then return false end
 
     if not mq.TLO.DanNet(mq.TLO.Spawn(targetId).CleanName())() then
-        Logger.log_error("PeerBuffCheck: Tried to check a peer's buff, but that peer isn't found! If this behavior continues, please report this. Spell:%s(ID:%d), Target:%s(ID:%d)",
+        Logger.log_error(
+            "PeerBuffCheck: Tried to check a peer's buff, but that peer isn't found! " ..
+            "If this behavior continues, please report this. Spell:%s(ID:%d), Target:%s(ID:%d)",
             spellName, spellId, targetName, targetId)
         return false
     end
@@ -540,8 +542,9 @@ function Casting.ActorBuffCheck(spellId, target, skipBlockCheck, skipTriggerChec
 
     if not heartbeat or not heartbeat.Data then
         Logger.log_error(
-            "ActorBuffCheck: Tried to check a peer's buff, but that peer isn't found! If this behavior continues, please report this. Spell:%s(ID:%d), Target:%s(ID:%d)", spellName,
-            spellId, targetName, targetId)
+            "ActorBuffCheck: Tried to check a peer's buff, but that peer isn't found! " ..
+            "If this behavior continues, please report this. Spell:%s(ID:%d), Target:%s(ID:%d)",
+            spellName, spellId, targetName, targetId)
         return false
     end
 
@@ -689,7 +692,8 @@ function Casting.ActorPetBuffCheck(spellId, target, skipBlockCheck, skipTriggerC
 
     if not heartbeat or not heartbeat.Data then
         Logger.log_error(
-            "ActorBuffCheck: Tried to check a peer's pet buff, but that peer isn't found! If this behavior continues, please report this. Spell:%s(ID:%d), Target:%s(ID:%d)",
+            "ActorBuffCheck: Tried to check a peer's pet buff, but that peer isn't found! " ..
+            "If this behavior continues, please report this. Spell:%s(ID:%d), Target:%s(ID:%d)",
             spellName, spellId, targetName, targetId)
         return false
     end
