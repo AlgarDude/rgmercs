@@ -16,10 +16,10 @@ local Set                          = require('mq.set')
 local ImGui                        = require('ImGui')
 local ImAnim                       = require('ImAnim')
 
-local animSpellGems                = mq.FindTextureAnimation('A_SpellGems')
-local yellowSpellBG                = mq.FindTextureAnimation("YellowIconBackground")
-local redSpellBG                   = mq.FindTextureAnimation("RedIconBackground")
-local blueSpellBG                  = mq.FindTextureAnimation("BlueIconBackground")
+local animspellIcons               = mq.FindTextureAnimation('A_SpellIcons')
+local yellowspellBg                = mq.FindTextureAnimation("YellowIconBackground")
+local redspellBg                   = mq.FindTextureAnimation("RedIconBackground")
+local bluespellBg                  = mq.FindTextureAnimation("BlueIconBackground")
 
 local ICON_SIZE                    = 20
 
@@ -1706,15 +1706,15 @@ end
 function Ui.GetBGForSpell(spell)
     if spell and spell() then
         if spell.SpellType() == "Detrimental" then
-            if spell.PreventsRegen and spell.PreventsRegen() then
-                return yellowSpellBG
+            if spell.PreventsRegen and not spell.PreventsRegen() then
+                return yellowspellBg
             end
-            return redSpellBG
+            return redspellBg
         elseif spell.SpellType() == "Beneficial" then
-            return blueSpellBG
+            return bluespellBg
         end
     end
-    return blueSpellBG
+    return bluespellBg
 end
 
 --- Draws an inspectable spell icon.
@@ -1723,7 +1723,8 @@ end
 --- @param spell MQSpell The spell data to be used for the icon.
 --- @param iconSize number? The size of the icon to be drawn.
 --- @param doBlink boolean? Whether the icon should blink.
-function Ui.DrawInspectableSpellIcon(iconID, spell, iconSize, doBlink)
+--- @param borderCol number? Color of an optional border to draw around the icon rect
+function Ui.DrawInspectableSpellIcon(iconID, spell, iconSize, doBlink, borderCol)
     if not iconSize then iconSize = ICON_SIZE end
 
     local alpha = 1.0
@@ -1736,10 +1737,15 @@ function Ui.DrawInspectableSpellIcon(iconID, spell, iconSize, doBlink)
     local sp = ImGui.GetCursorScreenPosVec()
     local dl = ImGui.GetWindowDrawList()
 
-    animSpellGems:SetTextureCell(iconID or 0)
+    animspellIcons:SetTextureCell(iconID or 0)
 
+    ImGui.SameLine()
     dl:AddTextureAnimation(Ui.GetBGForSpell(spell), sp, ImVec2(iconSize, iconSize))
-    dl:AddTextureAnimation(animSpellGems, ImVec2(sp.x + 2, sp.y + 2), ImVec2(iconSize - 4, iconSize - 4))
+    dl:AddTextureAnimation(animspellIcons, ImVec2(sp.x + 2, sp.y + 2), ImVec2(iconSize - 4, iconSize - 4))
+
+    if borderCol then
+        dl:AddRect(sp, sp + ImVec2(iconSize, iconSize), borderCol, 0, ImDrawFlags.None, 0.5)
+    end
 
     if doBlink then
         dl:AddRectFilled(sp, ImVec2(sp.x + iconSize, sp.y + iconSize),
