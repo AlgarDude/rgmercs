@@ -2110,6 +2110,33 @@ Config.DefaultConfig                                     = {
         Tooltip = "Lock the position of the target window.",
         Default = false,
     },
+    ['ShowTargetBuffs']                  = {
+        DisplayName = "Show Target Buffs",
+        Group = "General",
+        Header = "Interface",
+        Category = "Mercs Target Window",
+        Index = 6,
+        Tooltip = "Display buffs on the target.",
+        Default = true,
+    },
+    ['ShowTargetOfTarget']               = {
+        DisplayName = "Show Target of Target",
+        Group = "General",
+        Header = "Interface",
+        Category = "Mercs Target Window",
+        Index = 7,
+        Tooltip = "Display the target's current target.",
+        Default = true,
+    },
+    ['ShowTargetSecondaryAggro']         = {
+        DisplayName = "Show Secondary Aggro",
+        Group = "General",
+        Header = "Interface",
+        Category = "Mercs Target Window",
+        Index = 8,
+        Tooltip = "Display the secondary aggro player and percentage.",
+        Default = true,
+    },
 
     -- [ UI Colors ] --
     ['MainButtonUnpausedColor']          = {

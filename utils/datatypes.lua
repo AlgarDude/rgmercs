@@ -5,8 +5,6 @@ local Globals           = require("utils.globals")
 local mq                = require 'mq'
 
 ---@class RGMercsModuleType
----@field Name string
----@field State string
 ---@type DataType
 local rgMercsModuleType = mq.DataType.new('RGMercsModule', {
     Members = {
@@ -28,9 +26,6 @@ local rgMercsModuleType = mq.DataType.new('RGMercsModule', {
 })
 
 ---@class RGMercsMainType
----@field State string
----@field Config string
----@field Paused boolean
 ---@type DataType
 local rgMercsMainType   = mq.DataType.new('RGMercsMain', {
     Members = {
