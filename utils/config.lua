@@ -2468,7 +2468,7 @@ Config.DefaultConfig                                     = {
             if newValue:len() == 0 then
                 Logger.clear_log_filter()
             else
-                Logger.set_log_filter(newValue)
+                Logger.set_log_filter(newValue - 1)
             end
         end,
     },
@@ -2481,7 +2481,7 @@ Config.DefaultConfig                                     = {
         Min = 1,
         Max = #Globals.Constants.ToastLevels,
         OnChange = function(_, newValue)
-            Logger.set_toast_level(newValue - 1)
+            Logger.set_toast_level(newValue)
         end,
     },
     ['PeerToastLevel']                   = {
@@ -2714,7 +2714,7 @@ function Config:LoadSettings()
         Logger.log_info("\agCharacter DB migration complete!")
     end
 
-    Logger.log_info(
+    Logger.log_debug(
         "\ayLoading Main Settings for %s!",
         Globals.CurLoadedChar)
 
