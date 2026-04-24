@@ -465,8 +465,8 @@ function Casting.PeerBuffCheck(spellId, target, skipBlockCheck, skipTriggerCheck
         return false
     elseif spellResult:lower() ~= "null" then
         Logger.log_error(
-            "PeerBuffCheck: Tried to check buff presence, but something seems to have gone wrong! Your character may not be responding. If this persists, please report it. Spell:%s(ID:%d), Target:%s(ID:%d)",
-            spellName, spellId, targetName, targetId)
+            "PeerBuffCheck: Tried to check buff presence, but something seems to have gone wrong! Your character may not be responding. If this persists, please report it. Spell:%s(ID:%d), Target:%s(ID:%d) Result:%s",
+            spellName, spellId, targetName, targetId, spellResult)
         return false
     end
 
