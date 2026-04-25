@@ -108,57 +108,57 @@ function TargetUI:RenderContent()
     -- buffs (fixed 2-row area so ToT/aggro below don't shift)
     local iconSize = Config:GetSetting('TargetBuffIconSize')
     ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, ImVec2(0, 0))
-    if ImGui.BeginChild("##TargetBuffsArea", ImVec2(0, iconSize * 2 + 2), ImGuiChildFlags.None, bit32.bor(ImGuiWindowFlags.NoBackground, ImGuiWindowFlags.NoScrollbar, ImGuiWindowFlags.NoScrollWithMouse)) then
-    if target.BuffsPopulated() then
-        local blinkAtTime = Config:GetSetting('TargetBuffBlinkAtTime')
-        ImGui.PushStyleVar(ImGuiStyleVar.ItemSpacing, ImVec2(2, 2))
-        local buffCount = target.BuffCount() or 0
-        local buffsPerRow = math.floor((ImGui.GetContentRegionAvailVec().x) / (iconSize + ImGui.GetStyle().ItemSpacing.x))
-        local maxBuffs = math.min(buffCount, buffsPerRow * 2)
-        local showBuffName = Config:GetSetting('TargetBuffNameTooltip')
-        local showBuffDescription = Config:GetSetting('TargetBuffDescriptionTooltip')
-        local showBuffCaster = Config:GetSetting('TargetBuffCasterTooltip')
-        for i = 1, maxBuffs do
-            local buff = target.Buff(i)
-            if buff and buff() and buff.ID() ~= 0 then
-                Ui.DrawInspectableSpellIcon(buff.SpellIcon(), buff, iconSize, (math.floor((buff.Duration.TotalSeconds() or 0)) < blinkAtTime))
-                local toolTip = {}
-                if showBuffName then
-                    local duractionPercent = buff.Spell.Duration.TotalSeconds() > 0 and (buff.Duration.TotalSeconds() or 0) / (buff.Spell.Duration.TotalSeconds() or 1.0) or 1.0
-                    table.insert(toolTip,
-                        { text = string.format("%s (", buff.RankName() or "Unknown"), color = Globals.Constants.BasicColors.White, })
-                    table.insert(toolTip,
-                        {
-                            text = buff.Duration.TimeHMS(),
-                            color = duractionPercent > 0.6 and Globals.Constants.BasicColors.LightGreen or
-                                duractionPercent > 0.2 and Globals.Constants.BasicColors.LightYellow or Globals.Constants.BasicColors.LightRed,
-                            sameLine = true,
-                        })
-                    table.insert(toolTip,
-                        { text = ")", color = Globals.Constants.BasicColors.White, sameLine = true, })
-                end
+    if ImGui.BeginChild("##TargetBuffsArea", ImVec2(0, 24 * 2 + 2), ImGuiChildFlags.None, bit32.bor(ImGuiWindowFlags.NoBackground)) then
+        if target.BuffsPopulated() then
+            local blinkAtTime = Config:GetSetting('TargetBuffBlinkAtTime')
+            ImGui.PushStyleVar(ImGuiStyleVar.ItemSpacing, ImVec2(2, 2))
+            local buffCount = target.BuffCount() or 0
+            local buffsPerRow = math.floor((ImGui.GetContentRegionAvailVec().x) / (iconSize + ImGui.GetStyle().ItemSpacing.x))
+            local maxBuffs = math.min(buffCount, buffsPerRow * 2)
+            local showBuffName = Config:GetSetting('TargetBuffNameTooltip')
+            local showBuffDescription = Config:GetSetting('TargetBuffDescriptionTooltip')
+            local showBuffCaster = Config:GetSetting('TargetBuffCasterTooltip')
+            for i = 1, maxBuffs do
+                local buff = target.Buff(i)
+                if buff and buff() and buff.ID() ~= 0 then
+                    Ui.DrawInspectableSpellIcon(buff.SpellIcon(), buff, iconSize, (math.floor((buff.Duration.TotalSeconds() or 0)) < blinkAtTime))
+                    local toolTip = {}
+                    if showBuffName then
+                        local duractionPercent = buff.Spell.Duration.TotalSeconds() > 0 and (buff.Duration.TotalSeconds() or 0) / (buff.Spell.Duration.TotalSeconds() or 1.0) or 1.0
+                        table.insert(toolTip,
+                            { text = string.format("%s (", buff.RankName() or "Unknown"), color = Globals.Constants.BasicColors.White, })
+                        table.insert(toolTip,
+                            {
+                                text = buff.Duration.TimeHMS(),
+                                color = duractionPercent > 0.6 and Globals.Constants.BasicColors.LightGreen or
+                                    duractionPercent > 0.2 and Globals.Constants.BasicColors.LightYellow or Globals.Constants.BasicColors.LightRed,
+                                sameLine = true,
+                            })
+                        table.insert(toolTip,
+                            { text = ")", color = Globals.Constants.BasicColors.White, sameLine = true, })
+                    end
 
-                if showBuffCaster then
-                    table.insert(toolTip, { text = "Caster:", color = Globals.Constants.BasicColors.White, padAfter = 4, })
-                    table.insert(toolTip, { text = buff.CasterName() or "Unknown Caster", color = Globals.Constants.BasicColors.LightOrange, sameLine = true, })
-                end
+                    if showBuffCaster then
+                        table.insert(toolTip, { text = "Caster:", color = Globals.Constants.BasicColors.White, padAfter = 4, })
+                        table.insert(toolTip, { text = buff.CasterName() or "Unknown Caster", color = Globals.Constants.BasicColors.LightOrange, sameLine = true, })
+                    end
 
-                if showBuffDescription then
-                    table.insert(toolTip, { text = buff.Description() or "No description available.", color = Globals.Constants.BasicColors.LightBlue, })
-                end
+                    if showBuffDescription then
+                        table.insert(toolTip, { text = buff.Description() or "No description available.", color = Globals.Constants.BasicColors.LightBlue, })
+                    end
 
-                if #toolTip > 0 then
-                    --Ui.Tooltip(toolTip, )
-                    Ui.AnimatedTooltip("##BuffID_" .. tostring(target.ID()) .. "_" .. tostring(buff.ID()), toolTip)
-                end
+                    if #toolTip > 0 then
+                        --Ui.Tooltip(toolTip, )
+                        Ui.AnimatedTooltip("##BuffID_" .. tostring(target.ID()) .. "_" .. tostring(buff.ID()), toolTip)
+                    end
 
-                if i == 1 or i % buffsPerRow ~= 0 then
-                    ImGui.SameLine()
+                    if i == 1 or i % buffsPerRow ~= 0 then
+                        ImGui.SameLine()
+                    end
                 end
             end
+            ImGui.PopStyleVar(1)
         end
-        ImGui.PopStyleVar(1)
-    end
     end
     ImGui.EndChild()
     ImGui.PopStyleVar(1)
@@ -172,7 +172,7 @@ function TargetUI:RenderContent()
     local totBarId = totValid and ("##TargetOfTargetHPBar" .. tostring(tot.ID())) or "##TargetOfTargetHPBar0"
 
     local aggroName = target.SecondaryAggroPlayer.CleanName() or ""
-    local aggroPct = target.SecondaryPctAggro() or 0
+    local aggroPct = os.clock() % 100 --target.SecondaryPctAggro() or 0
     local aggroText = (aggroName ~= "" and aggroPct > 0) and string.format("%s %d%%", aggroName, aggroPct) or ""
 
     local halfWidth = ImGui.GetContentRegionAvailVec().x * 0.5
@@ -180,18 +180,21 @@ function TargetUI:RenderContent()
         Ui.RenderAnimatedPercentage(totBarId, totPctHPs, 20, 0, Globals.Constants.Colors.HPLowColor, Globals.Constants.Colors.HPHighColor, totBarLabel, 1.0)
     end
     ImGui.EndChild()
-
+    local Colors = Globals.Constants.BasicColors
     if aggroText ~= "" then
         ImGui.SameLine()
+        local aggroCol = Ui.GetPercentageColor(aggroPct, { Colors.LightRed, Colors.Orange, Colors.Yellow, Colors.LightGreen, })
+        ImGui.PushStyleColor(ImGuiCol.Text, aggroCol)
         ImGui.PushFont(ImGui.GetFont(), ImGui.GetFontSize() * 1.25)
         local textWidth = ImGui.CalcTextSize(aggroText)
         local avail = ImGui.GetContentRegionAvailVec().x
-        local offset = avail - textWidth
+        local offset = avail / 2 - textWidth / 2
         if offset > 0 then
             ImGui.SetCursorPosX(ImGui.GetCursorPosX() + offset)
         end
         Ui.RenderText(aggroText)
         ImGui.PopFont()
+        ImGui.PopStyleColor()
     end
 end
 
