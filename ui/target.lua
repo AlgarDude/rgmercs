@@ -163,7 +163,7 @@ function TargetUI:RenderContent()
     ImGui.EndChild()
     ImGui.PopStyleVar(1)
 
-    -- ToT (lower-left, half width) and Secondary Aggro (lower-right, right-aligned)
+    -- ToT (lower-left, 65% width) and Secondary Aggro (centered in remaining 35%)
     local tot = mq.TLO.Me.TargetOfTarget
     local totValid = tot and (tot.ID() or 0) > 0
     local totName = totValid and (tot.CleanName() or tot.Name() or "") or ""
@@ -172,11 +172,11 @@ function TargetUI:RenderContent()
     local totBarId = totValid and ("##TargetOfTargetHPBar" .. tostring(tot.ID())) or "##TargetOfTargetHPBar0"
 
     local aggroName = target.SecondaryAggroPlayer.CleanName() or ""
-    local aggroPct = os.clock() % 100 --target.SecondaryPctAggro() or 0
-    local aggroText = (aggroName ~= "" and aggroPct > 0) and string.format("%s %d%%", aggroName, aggroPct) or ""
+    local aggroPct = target.SecondaryPctAggro() or 0
+    local aggroText = (aggroName ~= "" and aggroPct > 0) and string.format("%s: %d%%", aggroName, aggroPct) or ""
 
-    local halfWidth = ImGui.GetContentRegionAvailVec().x * 0.5
-    if ImGui.BeginChild("##TargetToTBlock", ImVec2(halfWidth, 0), ImGuiChildFlags.AutoResizeY, ImGuiWindowFlags.NoBackground) then
+    local totWidth = ImGui.GetContentRegionAvailVec().x * 0.65
+    if ImGui.BeginChild("##TargetToTBlock", ImVec2(totWidth, 0), ImGuiChildFlags.AutoResizeY, ImGuiWindowFlags.NoBackground) then
         Ui.RenderAnimatedPercentage(totBarId, totPctHPs, 20, 0, Globals.Constants.Colors.HPLowColor, Globals.Constants.Colors.HPHighColor, totBarLabel, 1.0)
     end
     ImGui.EndChild()
@@ -184,17 +184,19 @@ function TargetUI:RenderContent()
     if aggroText ~= "" then
         ImGui.SameLine()
         local aggroCol = Ui.GetPercentageColor(aggroPct, { Colors.LightRed, Colors.Orange, Colors.Yellow, Colors.LightGreen, })
-        ImGui.PushStyleColor(ImGuiCol.Text, aggroCol)
-        ImGui.PushFont(ImGui.GetFont(), ImGui.GetFontSize() * 1.25)
+        ImGui.PushFont(ImGui.GetFont(), ImGui.GetFontSize() * 1.15)
         local textWidth = ImGui.CalcTextSize(aggroText)
         local avail = ImGui.GetContentRegionAvailVec().x
         local offset = avail / 2 - textWidth / 2
         if offset > 0 then
             ImGui.SetCursorPosX(ImGui.GetCursorPosX() + offset)
         end
+        local screenPos = ImGui.GetCursorScreenPosVec()
+        ImGui.GetWindowDrawList():AddText(ImVec2(screenPos.x + 1, screenPos.y + 1), IM_COL32(0, 0, 0, 230), aggroText)
+        ImGui.PushStyleColor(ImGuiCol.Text, aggroCol)
         Ui.RenderText(aggroText)
-        ImGui.PopFont()
         ImGui.PopStyleColor()
+        ImGui.PopFont()
     end
 end
 
