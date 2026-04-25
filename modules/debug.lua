@@ -84,11 +84,6 @@ function Module:LogToConsole(...)
 end
 
 function Module:Exec(scriptText)
-    local func, err = load(scriptText, "LuaConsoleScript", "t")
-    if not func then
-        return false, err
-    end
-
     local locals        = setmetatable({}, { __index = _G, })
     locals.mq           = setmetatable({}, { __index = mq, })
     locals.Config       = setmetatable({}, { __index = Config, })
@@ -133,10 +128,10 @@ function Module:Exec(scriptText)
         self.execCoroutine = nil
     end
 
-    locals.hi           = 3
-
-    ---@diagnostic disable-next-line: deprecated
-    setfenv(func, locals)
+    local func, err     = load(scriptText, "LuaConsoleScript", "t", locals)
+    if not func then
+        return false, err
+    end
 
     local success, msg = pcall(func)
     return success, msg or ""
@@ -179,12 +174,12 @@ local HINT_TYPE   = ImVec4(0.8, 0.4, 1.0, 1.0)
 local HINT_DESC   = ImVec4(0.3, 0.5, 0.8, 1.0)
 
 function Module:RenderHintBar()
-    self.hintBarScreenPos    = ImGui.GetCursorScreenPosVec()
-    local text               = self.luaBuffer:GetText()
-    local cursor             = self.luaEditor.cursor
-    local cursorIdx          = cursor and cursor.index or #text
+    self.hintBarScreenPos         = ImGui.GetCursorScreenPosVec()
+    local text                    = self.luaBuffer:GetText()
+    local cursor                  = self.luaEditor.cursor
+    local cursorIdx               = cursor and cursor.index or #text
 
-    local candidates = Signatures.ResolveAll(text, cursorIdx)
+    local candidates              = Signatures.ResolveAll(text, cursorIdx)
     local funcName, paramIdx, sig = nil, nil, nil
     for _, c in ipairs(candidates) do
         local s = Signatures.Get()[c.name]
