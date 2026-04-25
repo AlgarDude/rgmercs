@@ -3926,7 +3926,7 @@ local function toastLines(message, maxAllowedW)
 end
 
 function Ui.RenderToastNotifications(states, lingerTime)
-    local dt            = Ui.GetDeltaTime()
+    local dt            = math.max(Ui.GetDeltaTime(), 0.01)
     local holdEnd       = 2.3
     lingerTime          = (lingerTime and lingerTime >= 2.5) and lingerTime or 2.5
     local fadeDur       = lingerTime - holdEnd
