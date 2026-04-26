@@ -126,35 +126,37 @@ function TargetUI:RenderContent()
                         local borderCol = (buff.CasterName() == mq.TLO.Me.Name()) and Colors.Yellow:ToImU32() or nil
                         local doBlink = (math.floor((buff.Duration.TotalSeconds() or 0)) < blinkAtTime)
                         Ui.DrawInspectableSpellIcon(buff.SpellIcon(), buff, iconSize, doBlink, borderCol)
-                        local toolTip = {}
-                        if showBuffName then
-                            local durationPercent = (buff.Spell.Duration.TotalSeconds() or 0) > 0 and
-                                (buff.Duration.TotalSeconds() or 0) / (buff.Spell.Duration.TotalSeconds() or 1.0) or
-                                1.0
-                            table.insert(toolTip,
-                                { text = string.format("%s (", buff.RankName() or "Unknown"), color = Globals.Constants.BasicColors.White, })
-                            table.insert(toolTip,
-                                {
-                                    text = buff.Duration.TimeHMS(),
-                                    color = durationPercent > 0.6 and Globals.Constants.BasicColors.LightGreen or
-                                        durationPercent > 0.2 and Globals.Constants.BasicColors.LightYellow or Globals.Constants.BasicColors.LightRed,
-                                    sameLine = true,
-                                })
-                            table.insert(toolTip,
-                                { text = ")", color = Globals.Constants.BasicColors.White, sameLine = true, })
-                        end
+                        if ImGui.IsItemHovered() then
+                            local toolTip = {}
+                            if showBuffName then
+                                local durationPercent = (buff.Spell.Duration.TotalSeconds() or 0) > 0 and
+                                    (buff.Duration.TotalSeconds() or 0) / (buff.Spell.Duration.TotalSeconds() or 1.0) or
+                                    1.0
+                                table.insert(toolTip,
+                                    { text = string.format("%s (", buff.RankName() or "Unknown"), color = Colors.White, })
+                                table.insert(toolTip,
+                                    {
+                                        text = buff.Duration.TimeHMS(),
+                                        color = durationPercent > 0.6 and Colors.LightGreen or
+                                            durationPercent > 0.2 and Colors.LightYellow or Colors.LightRed,
+                                        sameLine = true,
+                                    })
+                                table.insert(toolTip,
+                                    { text = ")", color = Colors.White, sameLine = true, })
+                            end
 
-                        if showBuffCaster then
-                            table.insert(toolTip, { text = "Caster:", color = Globals.Constants.BasicColors.White, padAfter = 4, })
-                            table.insert(toolTip, { text = buff.CasterName() or "Unknown Caster", color = Globals.Constants.BasicColors.LightOrange, sameLine = true, })
-                        end
+                            if showBuffCaster then
+                                table.insert(toolTip, { text = "Caster:", color = Colors.White, padAfter = 4, })
+                                table.insert(toolTip, { text = buff.CasterName() or "Unknown Caster", color = Colors.LightOrange, sameLine = true, })
+                            end
 
-                        if showBuffDescription then
-                            table.insert(toolTip, { text = buff.Description() or "No description available.", color = Globals.Constants.BasicColors.LightBlue, })
-                        end
+                            if showBuffDescription then
+                                table.insert(toolTip, { text = buff.Description() or "No description available.", color = Colors.LightBlue, })
+                            end
 
-                        if #toolTip > 0 then
-                            Ui.AnimatedTooltip("##BuffID_" .. tostring(target.ID()) .. "_" .. tostring(buff.ID()), toolTip)
+                            if #toolTip > 0 then
+                                Ui.AnimatedTooltip("##BuffID_" .. tostring(target.ID()) .. "_" .. tostring(buff.ID()), toolTip)
+                            end
                         end
 
                         if i == 1 or i % buffsPerRow ~= 0 then
