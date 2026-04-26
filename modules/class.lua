@@ -1406,7 +1406,7 @@ function Module:ProcessQueuedEvents()
         success = Casting.UseDisc(queueData.name, queueData.targetId)
     end
 
-    if not success then
+    if not success and self.TempSettings.QueuedAbilities[1] ~= nil then
         Logger.log_debug("\arFailed to cast queued %s: %s on %s", queueData.type, queueData.name, queueData.targetId)
         self.TempSettings.QueuedAbilities[1].retries = (self.TempSettings.QueuedAbilities[1].retries or 0) + 1
 

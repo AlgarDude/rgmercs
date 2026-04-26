@@ -3946,6 +3946,9 @@ function Ui.RenderToastNotifications(states, lingerTime)
     for i = #states, 1, -1 do
         if not states[i].active then
             table.remove(states, i)
+        elseif states[i].from and (Globals.GetTimeSeconds() - states[i].receivedTime) > (lingerTime * 10) then
+            Logger.log_debug("Auto-dismissing toast from %s after %.1f seconds. Msg: %s", states[i].from, Globals.GetTimeSeconds() - states[i].receivedTime, states[i].message)
+            table.remove(states, i)
         end
     end
 
@@ -3962,6 +3965,7 @@ function Ui.RenderToastNotifications(states, lingerTime)
     local sep_h         = 1.0
     local sep_gap       = 4.0
     local from_extra_h  = line_h + sep_h + sep_gap * 2
+    local fromLabel     = string.format("[%s] %s", os.date("%Y-%m-%d %H:%M:%S", (states[1].receivedTime or 0)), states[1].from or "")
 
     -- pre-compute heights so we can stack from the bottom
     local heights       = {}
@@ -3971,7 +3975,7 @@ function Ui.RenderToastNotifications(states, lingerTime)
         if not lines then
             local lns, maxW = toastLines(s.message, text_max_w)
             s._lines        = lns
-            local fromW     = s.from and ImGui.CalcTextSize(s.from) or 0
+            local fromW     = s.from and ImGui.CalcTextSize(fromLabel) or 0
             s._toast_w      = math.max(maxW, fromW) + toast_pad_x * 2
             lines           = lns
         end
@@ -4052,7 +4056,7 @@ function Ui.RenderToastNotifications(states, lingerTime)
                 local text_y   = base_y + toast_pad_y
                 if state.from then
                     local from_col = IM_COL32(220, 180, 100, iAlpha)
-                    draw_list:AddText(ImVec2(x + toast_pad_x, text_y), from_col, state.from)
+                    draw_list:AddText(ImVec2(x + toast_pad_x, text_y), from_col, fromLabel)
                     text_y = text_y + line_h + sep_gap
                     local sep_col = IM_COL32(180, 180, 180, math.floor(alpha * 80))
                     draw_list:AddLine(ImVec2(x + toast_pad_x, text_y),
