@@ -232,6 +232,7 @@ function Comms.UpdatePeerHeartbeat(peer, data)
                     peer = peer,
                     message = toast.message,
                     color = toast.color,
+                    receivedTime = os.time(),
                 })
             end
         end
