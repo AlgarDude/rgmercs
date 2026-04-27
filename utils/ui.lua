@@ -593,6 +593,56 @@ function Ui.RenderAAOverlay()
     end
 end
 
+function Ui.RenderColorWaveText(text, conColor, clickedAction, dontUseWave)
+    local draw_list = ImGui.GetWindowDrawList()
+    ---@diagnostic disable-next-line: undefined-field
+    if draw_list.CreateCoverageMaskLayer and not dontUseWave then
+        local textPos = ImGui.GetCursorScreenPosVec()
+        local textW, textH = ImGui.CalcTextSize(text)
+        local time = ImGui.GetTime() * 2.5
+        local function flowColor(phase)
+            local wave = 0.5 + 0.5 * math.sin(time + phase)
+            local lo, hi = 0.6, 1.0
+            local t = lo + (hi - lo) * wave
+            return IM_COL32(
+                math.floor(conColor.x * 255 * t),
+                math.floor(conColor.y * 255 * t),
+                math.floor(conColor.z * 255 * t),
+                255)
+        end
+        local gradStart = flowColor(0)
+        local gradEnd   = flowColor(math.pi)
+        ---@diagnostic disable-next-line: undefined-field
+        draw_list:CreateCoverageMaskLayer(textPos, ImVec2(textPos.x + textW, textPos.y + textH))
+        draw_list:AddText(nil, ImGui.GetFontSize(), textPos, IM_COL32(255, 255, 255, 255), text)
+        ---@diagnostic disable-next-line: undefined-field
+        draw_list:BeginCoverageMaskedDraw()
+        draw_list:AddRectFilledMultiColor(
+            textPos,
+            ImVec2(textPos.x + textW, textPos.y + textH),
+            gradStart,
+            gradEnd,
+            gradEnd,
+            gradStart
+        )
+        ---@diagnostic disable-next-line: undefined-field
+        draw_list:EndCoverageMaskedDraw()
+        -- Click detection: invisible button over the text area
+        ImGui.SetCursorScreenPos(textPos)
+        ImGui.InvisibleButton(text .. "##wave_click", ImVec2(textW, textH))
+        if ImGui.IsItemHovered() and ImGui.IsMouseReleased(ImGuiMouseButton.Left) and clickedAction then
+            clickedAction()
+        end
+    else
+        ImGui.PushStyleColor(ImGuiCol.Text, conColor)
+        local _, clicked = ImGui.Selectable(text, false)
+        if clicked and clickedAction then
+            clickedAction()
+        end
+        ImGui.PopStyleColor(1)
+    end
+end
+
 function Ui.HandleStatusClickAction(peer, action)
     local name = Comms.GetNameFromPeer(peer)
     if name then
@@ -1441,16 +1491,15 @@ function Ui.RenderForceTargetList(showPopout)
                 return a.CleanName() or "None", b.CleanName() or "None"
             end,
             render = function(xtarg, i)
-                ImGui.PushStyleColor(ImGuiCol.Text, Ui.GetConColorBySpawn(xtarg))
+                local conColor = ImVec4(Ui.GetConColorBySpawn(xtarg))
+                local name = xtarg.CleanName() or "None"
                 ImGui.PushID(string.format("##select_forcetarget_%d", i))
-                local _, clicked = ImGui.Selectable(xtarg.CleanName() or "None", false)
-                if clicked then
+                Ui.RenderColorWaveText(name, conColor, function()
                     local newId = Globals.ForceTargetID == xtarg.ID() and 0 or xtarg.ID()
                     Globals.SetForcedTargetId(newId)
                     Logger.log_debug("Forcing Target to: %s %d", newId == 0 and "None" or xtarg.CleanName(), newId)
-                end
+                end, (not Config:GetSetting('FTRollTargetName') or xtarg.ID() ~= mq.TLO.Target.ID()))
                 ImGui.PopID()
-                ImGui.PopStyleColor(1)
             end,
         },
         {

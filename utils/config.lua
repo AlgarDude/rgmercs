@@ -1943,6 +1943,15 @@ Config.DefaultConfig                                     = {
         Tooltip = "Use bars to display HP and other info in the Force Target Window instead of text.",
         Default = false,
     },
+    ['FTRollTargetName']                 = {
+        DisplayName = "Roll Target Name Color",
+        Group = "General",
+        Header = "Interface",
+        Category = "ForceTarget Window",
+        Index = 13,
+        Tooltip = "Roll colors for target names in the Force Target Window based on Con.",
+        Default = true,
+    },
     ['StatusUseBars']                    = {
         DisplayName = "Progress Bars in MercsStatus Window",
         Group = "General",
