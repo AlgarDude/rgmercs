@@ -871,13 +871,13 @@ function Ui.RenderMercsStatus(showPopout)
                 return data_a.Data.PctExp or 0, data_b.Data.PctExp or 0
             end,
             render = function(peer, data)
+                local pctExp = math.ceil(data.Data.PctExp or 0)
                 if Config:GetSetting('StatusUseBars') then
-                    Ui.RenderAnimatedPercentage("MercsStatusExpBar" .. peer, math.ceil(data.Data.PctExp or 0), ImGui.GetTextLineHeight(), 0, Colors.Yellow,
+                    Ui.RenderAnimatedPercentage("MercsStatusExpBar" .. peer, pctExp, ImGui.GetTextLineHeight(), 0, Colors.Yellow,
                         Colors.Yellow, nil, 0, 4)
                 else
                     Ui.RenderColoredText(
-                        Ui.GetPercentageColor(data.Data.PctExp or 0, { Colors.LightYellow, Colors.Yellow, Colors.Orange, }),
-                        data.Data.HPs and "%6.2f%%" or "", data.Data.PctExp or 0)
+                        Ui.GetPercentageColor(pctExp, { Colors.LightYellow, Colors.Yellow, Colors.Orange, }), "%6.2f%%", pctExp)
                 end
             end,
         },
@@ -891,12 +891,12 @@ function Ui.RenderMercsStatus(showPopout)
                 return data_a.Data.HPs or 0, data_b.Data.HPs or 0
             end,
             render = function(peer, data)
+                local pctHp = math.ceil(data.Data.HPs or 0)
                 if Config:GetSetting('StatusUseBars') then
-                    Ui.RenderFancyHPBar("MercsStatusHPBar" .. peer, math.ceil(data.Data.HPs or 0), ImGui.GetTextLineHeight(), nil, 0, 4)
+                    Ui.RenderFancyHPBar("MercsStatusHPBar" .. peer, pctHp, ImGui.GetTextLineHeight(), nil, 0, 4)
                 else
                     Ui.RenderColoredText(
-                        Ui.GetPercentageColor(data.Data.HPs or 0, { Colors.BrightGreen, Colors.Yellow, Colors.Red, }),
-                        data.Data.HPs and "%d%%" or "", math.ceil(data.Data.HPs or 0) or "")
+                        Ui.GetPercentageColor(pctHp, { Colors.BrightGreen, Colors.Yellow, Colors.Red, }), "%d%%", pctHp)
                 end
             end,
         },
@@ -911,12 +911,12 @@ function Ui.RenderMercsStatus(showPopout)
             end,
             render = function(peer, data)
                 if Globals.Constants.RGCasters:contains(data.Data.Class) then
+                    local pctMana = data.Data.Mana and math.ceil(data.Data.Mana or 0) or nil
                     if Config:GetSetting('StatusUseBars') then
-                        Ui.RenderFancyManaBar("MercsStatusManaBar" .. peer, math.ceil(data.Data.Mana or 0), ImGui.GetTextLineHeight(), 0, 4)
+                        Ui.RenderFancyManaBar("MercsStatusManaBar" .. peer, pctMana, ImGui.GetTextLineHeight(), 0, 4)
                     else
                         Ui.RenderColoredText(
-                            Ui.GetPercentageColor(data.Data.Mana or 0, { Colors.Cyan, Colors.LightBlue, Colors.Red, }),
-                            data.Data.Mana and "%d%%" or "", math.ceil(data.Data.Mana or 0) or "")
+                            Ui.GetPercentageColor(pctMana, { Colors.Cyan, Colors.LightBlue, Colors.Red, }), pctMana and "%d%%" or "", pctMana or "")
                     end
                 end
             end,
@@ -931,13 +931,13 @@ function Ui.RenderMercsStatus(showPopout)
                 return data_a.Data.Endurance or 0, data_b.Data.Endurance or 0
             end,
             render = function(peer, data)
+                local pctEnd = math.ceil(data.Data.Endurance or 0)
                 if Config:GetSetting('StatusUseBars') then
-                    Ui.RenderAnimatedPercentage("MercsStatusEnduranceBar" .. peer, math.ceil(data.Data.Endurance or 0), ImGui.GetTextLineHeight(), 0, Colors.LightRed,
+                    Ui.RenderAnimatedPercentage("MercsStatusEnduranceBar" .. peer, pctEnd, ImGui.GetTextLineHeight(), 0, Colors.LightRed,
                         Colors.Yellow, nil, 0, 4)
                 else
                     Ui.RenderColoredText(
-                        Ui.GetPercentageColor(data.Data.Endurance or 0, { Colors.Yellow, Colors.Grey, Colors.Red, }),
-                        data.Data.Endurance and "%d%%" or "", math.ceil(data.Data.Endurance or 0) or "")
+                        Ui.GetPercentageColor(pctEnd, { Colors.Yellow, Colors.Grey, Colors.Red, }), "%d%%", pctEnd)
                 end
             end,
         },
@@ -1345,8 +1345,9 @@ function Ui.RenderForceTargetList(showPopout)
     end
 
     -- flashy highlights
-    local hlColorOne = Globals.Constants.Colors.FTHighlight
-    local hlColorTwo = ImVec4(hlColorOne.x * .8, hlColorOne.y * .8, hlColorOne.z * .8, hlColorOne.w)
+    local Colors       = Globals.Constants.BasicColors
+    local hlColorOne   = Globals.Constants.Colors.FTHighlight
+    local hlColorTwo   = ImVec4(hlColorOne.x * .8, hlColorOne.y * .8, hlColorOne.z * .8, hlColorOne.w)
 
     local tableColumns = {
         {
@@ -1460,7 +1461,12 @@ function Ui.RenderForceTargetList(showPopout)
                 return math.ceil(a.PctHPs() or 0), math.ceil(b.PctHPs() or 0)
             end,
             render = function(xtarg, _)
-                Ui.RenderText(tostring(math.ceil(xtarg.PctHPs() or 0)))
+                local hpPct = math.ceil(xtarg.PctHPs() or 0)
+                if Config:GetSetting('FTUseBars') then
+                    Ui.RenderFancyHPBar("FTHPBar" .. tostring(xtarg.ID()), hpPct, ImGui.GetTextLineHeight(), nil, 0, 4)
+                else
+                    Ui.RenderColoredText(Ui.GetPercentageColor(hpPct, { Colors.LightYellow, Colors.Yellow, Colors.Orange, }), tostring(hpPct) and "%6.2f%%" or "", tostring(hpPct))
+                end
             end,
         },
         {
@@ -1471,7 +1477,16 @@ function Ui.RenderForceTargetList(showPopout)
                 return math.ceil(a.PctAggro() or 0), math.ceil(b.PctAggro() or 0)
             end,
             render = function(xtarg, _)
-                Ui.RenderText(tostring(math.ceil(xtarg.PctAggro() or 0)))
+                local aggroPct = math.ceil(xtarg.PctAggro() or 0)
+                local IAmMA = Core.IAmMA()
+                if Config:GetSetting('FTUseBars') then
+                    Ui.RenderAnimatedPercentage("FTAggroBar" .. tostring(xtarg.ID()), aggroPct, ImGui.GetTextLineHeight(), 0, IAmMA and Colors.Orange or Colors.LightGreen,
+                        IAmMA and Colors.LightGreen or Colors.Orange, string.format("%d%%", aggroPct), 0, 4)
+                else
+                    Ui.RenderColoredText(
+                        Ui.GetPercentageColor(aggroPct, IAmMA and { Colors.LightGreen, Colors.Yellow, Colors.Orange, } or { Colors.Orange, Colors.Yellow, Colors.LightGreen, }),
+                        aggroPct and "%d" or "", aggroPct)
+                end
             end,
         },
         {
