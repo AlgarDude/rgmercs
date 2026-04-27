@@ -121,7 +121,6 @@ function TargetUI:RenderContent()
                 ImGui.PushStyleVar(ImGuiStyleVar.ItemSpacing, ImVec2(2, 2))
                 local buffCount = target.BuffCount() or 0
                 local buffsPerRow = math.floor((ImGui.GetContentRegionAvailVec().x) / (iconSize + ImGui.GetStyle().ItemSpacing.x))
-                print("Buffs per row: " .. tostring(buffsPerRow))
                 local showBuffName = Config:GetSetting('TargetBuffNameTooltip')
                 local showBuffDescription = Config:GetSetting('TargetBuffDescriptionTooltip')
                 local showBuffCaster = Config:GetSetting('TargetBuffCasterTooltip')
