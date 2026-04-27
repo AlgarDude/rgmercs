@@ -6,6 +6,8 @@ local Ui         = require('utils.ui')
 local Icons      = require('mq.ICONS')
 local Targeting  = require('utils.targeting')
 
+local Colors     = Globals.Constants.BasicColors
+
 local TargetUI   = { _version = '1.1', _name = "TargetUI", _author = 'Derple, Algar', }
 TargetUI.__index = TargetUI
 
@@ -104,60 +106,32 @@ function TargetUI:RenderContent()
 
     Ui.RenderFancyHPBar("##TargetHPBar" .. tostring(target.ID()), pctHPs, 25, burning, 1.0, nil, hpLowOverride, hpHighOverride)
 
-    local Colors = Globals.Constants.BasicColors
+    local showToT = Config:GetSetting('ShowTargetOfTarget')
+    local showAggro = Config:GetSetting('ShowTargetSecondaryAggro')
+    local totHeight = 20
 
     if Config:GetSetting('ShowTargetBuffs') then
         local iconSize = Config:GetSetting('TargetBuffIconSize')
 
         ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, ImVec2(0, 0))
-        if ImGui.BeginChild("##TargetBuffsArea", ImVec2(0, 24 * 2 + 2), ImGuiChildFlags.None, bit32.bor(ImGuiWindowFlags.NoBackground)) then
+        local maxHeight = ImGui.GetContentRegionAvailVec().y - (totHeight + ImGui.GetStyle().ItemSpacing.y * 2)
+        if ImGui.BeginChild("##TargetBuffsArea", ImVec2(0, math.max(24 * 2 + 2, maxHeight)), ImGuiChildFlags.None, bit32.bor(ImGuiWindowFlags.NoBackground)) then
             if target.BuffsPopulated() then
                 local blinkAtTime = Config:GetSetting('TargetBuffBlinkAtTime')
                 ImGui.PushStyleVar(ImGuiStyleVar.ItemSpacing, ImVec2(2, 2))
                 local buffCount = target.BuffCount() or 0
                 local buffsPerRow = math.floor((ImGui.GetContentRegionAvailVec().x) / (iconSize + ImGui.GetStyle().ItemSpacing.x))
-                local maxBuffs = math.min(buffCount, buffsPerRow * 2)
+                print("Buffs per row: " .. tostring(buffsPerRow))
                 local showBuffName = Config:GetSetting('TargetBuffNameTooltip')
                 local showBuffDescription = Config:GetSetting('TargetBuffDescriptionTooltip')
                 local showBuffCaster = Config:GetSetting('TargetBuffCasterTooltip')
-                for i = 1, maxBuffs do
+                for i = 1, buffCount do
                     local buff = target.Buff(i)
                     if buff and buff() and buff.ID() ~= 0 then
                         local borderCol = (buff.CasterName() == mq.TLO.Me.Name()) and Colors.Yellow:ToImU32() or nil
                         local doBlink = (math.floor((buff.Duration.TotalSeconds() or 0)) < blinkAtTime)
                         Ui.DrawInspectableSpellIcon(buff.SpellIcon(), buff, iconSize, doBlink, borderCol)
-                        if ImGui.IsItemHovered() then
-                            local toolTip = {}
-                            if showBuffName then
-                                local durationPercent = (buff.Spell.Duration.TotalSeconds() or 0) > 0 and
-                                    (buff.Duration.TotalSeconds() or 0) / (buff.Spell.Duration.TotalSeconds() or 1.0) or
-                                    1.0
-                                table.insert(toolTip,
-                                    { text = string.format("%s (", buff.RankName() or "Unknown"), color = Colors.White, })
-                                table.insert(toolTip,
-                                    {
-                                        text = buff.Duration.TimeHMS(),
-                                        color = durationPercent > 0.6 and Colors.LightGreen or
-                                            durationPercent > 0.2 and Colors.LightYellow or Colors.LightRed,
-                                        sameLine = true,
-                                    })
-                                table.insert(toolTip,
-                                    { text = ")", color = Colors.White, sameLine = true, })
-                            end
-
-                            if showBuffCaster then
-                                table.insert(toolTip, { text = "Caster:", color = Colors.White, padAfter = 4, })
-                                table.insert(toolTip, { text = buff.CasterName() or "Unknown Caster", color = Colors.LightOrange, sameLine = true, })
-                            end
-
-                            if showBuffDescription then
-                                table.insert(toolTip, { text = buff.Description() or "No description available.", color = Colors.LightBlue, })
-                            end
-
-                            if #toolTip > 0 then
-                                Ui.AnimatedTooltip("##BuffID_" .. tostring(target.ID()) .. "_" .. tostring(buff.ID()), toolTip)
-                            end
-                        end
+                        self:RenderTooltipForBuff(buff, target.ID(), showBuffName, showBuffDescription, showBuffCaster)
 
                         if i == 1 or i % buffsPerRow ~= 0 then
                             ImGui.SameLine()
@@ -170,9 +144,6 @@ function TargetUI:RenderContent()
         ImGui.EndChild()
         ImGui.PopStyleVar(1)
     end
-
-    local showToT = Config:GetSetting('ShowTargetOfTarget')
-    local showAggro = Config:GetSetting('ShowTargetSecondaryAggro')
 
     if showToT then
         local tot = mq.TLO.Me.TargetOfTarget
@@ -188,7 +159,7 @@ function TargetUI:RenderContent()
             ImGui.SetCursorPosX(ImGui.GetCursorPosX() + (availX - totWidth) / 2)
         end
         if ImGui.BeginChild("##TargetToTBlock", ImVec2(totWidth, 0), ImGuiChildFlags.AutoResizeY, ImGuiWindowFlags.NoBackground) then
-            Ui.RenderAnimatedPercentage(totBarId, totPctHPs, 20, 0, Globals.Constants.Colors.HPLowColor, Globals.Constants.Colors.HPHighColor, totBarLabel, 1.0)
+            Ui.RenderAnimatedPercentage(totBarId, totPctHPs, totHeight, 0, Globals.Constants.Colors.HPLowColor, Globals.Constants.Colors.HPHighColor, totBarLabel, 1.0)
         end
         ImGui.EndChild()
     end
@@ -216,6 +187,41 @@ function TargetUI:RenderContent()
             Ui.RenderText(aggroText)
             ImGui.PopStyleColor()
             ImGui.PopFont()
+        end
+    end
+end
+
+function TargetUI:RenderTooltipForBuff(buff, targetId, showBuffName, showBuffDescription, showBuffCaster)
+    if ImGui.IsItemHovered() then
+        local toolTip = {}
+        if showBuffName then
+            local durationPercent = (buff.Spell.Duration.TotalSeconds() or 0) > 0 and
+                (buff.Duration.TotalSeconds() or 0) / (buff.Spell.Duration.TotalSeconds() or 1.0) or
+                1.0
+            table.insert(toolTip,
+                { text = string.format("%s (", buff.RankName() or "Unknown"), color = Colors.White, })
+            table.insert(toolTip,
+                {
+                    text = buff.Duration.TimeHMS(),
+                    color = durationPercent > 0.6 and Colors.LightGreen or
+                        durationPercent > 0.2 and Colors.LightYellow or Colors.LightRed,
+                    sameLine = true,
+                })
+            table.insert(toolTip,
+                { text = ")", color = Colors.White, sameLine = true, })
+        end
+
+        if showBuffCaster then
+            table.insert(toolTip, { text = "Caster:", color = Colors.White, padAfter = 4, })
+            table.insert(toolTip, { text = buff.CasterName() or "Unknown Caster", color = Colors.LightOrange, sameLine = true, })
+        end
+
+        if showBuffDescription then
+            table.insert(toolTip, { text = buff.Description() or "No description available.", color = Colors.LightBlue, })
+        end
+
+        if #toolTip > 0 then
+            Ui.AnimatedTooltip("##BuffID_" .. tostring(targetId) .. "_" .. tostring(buff.ID()), toolTip)
         end
     end
 end

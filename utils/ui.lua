@@ -1739,7 +1739,6 @@ function Ui.DrawInspectableSpellIcon(iconID, spell, iconSize, doBlink, borderCol
 
     animspellIcons:SetTextureCell(iconID or 0)
 
-    ImGui.SameLine()
     dl:AddTextureAnimation(Ui.GetBGForSpell(spell), sp, ImVec2(iconSize, iconSize))
     dl:AddTextureAnimation(animspellIcons, ImVec2(sp.x + 2, sp.y + 2), ImVec2(iconSize - 4, iconSize - 4))
 
