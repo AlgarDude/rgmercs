@@ -4009,7 +4009,7 @@ function Ui.RenderToastNotifications(states, lingerTime)
     for i = #states, 1, -1 do
         if not states[i].active then
             table.remove(states, i)
-        elseif states[i].from and (Globals.GetTimeSeconds() - states[i].receivedTime) > (lingerTime * 10) then
+        elseif states[i].from and (os.time() - states[i].receivedTime) > (lingerTime * 10) then
             Logger.log_debug("Auto-dismissing toast from %s after %.1f seconds. Msg: %s", states[i].from, Globals.GetTimeSeconds() - states[i].receivedTime, states[i].message)
             table.remove(states, i)
         end
