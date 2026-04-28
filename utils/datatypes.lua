@@ -33,6 +33,10 @@ local rgMercsMainType   = mq.DataType.new('RGMercsMain', {
             return 'bool', Globals.PauseMain
         end,
         Config = function(param, self)
+            if not Globals.SubmodulesLoaded then
+                return 'string', "Submodules not loaded yet, please wait..."
+            end
+
             if not param or param:len() == 0 then
                 return 'string', "false"
             end
