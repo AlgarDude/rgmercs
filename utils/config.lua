@@ -2553,6 +2553,9 @@ Config.DefaultConfig                                     = {
         Category = "Internals",
         --Type = "Custom",
         Default = false,
+        OnChange = function(_, newValue)
+            Logger.set_log_to_file(newValue)
+        end,
     },
     ['LogTimeStampsToConsole']           = {
         DisplayName = "Log Timestamps To RGMercs Console",
