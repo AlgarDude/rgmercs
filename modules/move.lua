@@ -865,13 +865,23 @@ function Module:CheckStuck()
             -- is autosize loaded?
             ---@diagnostic disable-next-line: undefined-field
             if mq.TLO.Plugin("MQ2AutoSize").IsLoaded() and mq.TLO.AutoSize ~= nil then
-                Logger.log_warning("\awWARNING:\ax Attempting to unstick via MQ2AutoSize")
+                Logger.log_warning("\awWARNING:\ax Attempting to unstick via MQ2AutoSize and Toggling Nav Pause")
                 ---@diagnostic disable-next-line: undefined-field
                 local startingSize = mq.TLO.AutoSize.SizeSelf()
                 ---@diagnostic disable-next-line: undefined-field
                 local startingToggleEnabled = mq.TLO.AutoSize.Enabled()
                 ---@diagnostic disable-next-line: undefined-field
                 local startingToggleSelf = mq.TLO.AutoSize.ResizeSelf()
+
+                if not Nav.Paused() then
+                    Logger.log_debug("\awWARNING:\ax Pausing Nav to unstick")
+                    Movement:DoNav(true, "pause")
+                    mq.delay(500)
+                    if not Nav.Paused() and not self:IAmStuck() then
+                        Logger.log_warning("\agUnstuck successful!\ax Resuming Navigation.")
+                        return
+                    end
+                end
 
                 if not startingToggleEnabled then
                     Logger.log_debug("\awWARNING:\ax Enabling AutoSize to unstick")
