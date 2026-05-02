@@ -227,10 +227,8 @@ end
 --- @return string|nil, string|nil
 function Signatures.ResolveCompletion(text, cursorIdx)
     local sub   = text:sub(1, cursorIdx)
-    -- grab the last token on this line (stops at newline, space, operators, etc.)
-    local token = sub:match('([A-Za-z][A-Za-z0-9_.]*)$')
-    if not token then return nil, nil end
-    local prefix, partial = token:match('^([A-Za-z][A-Za-z0-9_]*)%.([A-Za-z0-9_]*)$')
+    -- match Class.partial, Class:partial, Class., or Class: at end of text
+    local prefix, partial = sub:match('([A-Za-z][A-Za-z0-9_]*)[.:]([A-Za-z0-9_]*)$')
     if not prefix then return nil, nil end
     -- If the character immediately after the cursor continues the identifier or opens a call,
     -- the token is already fully completed — don't offer the dropdown.
