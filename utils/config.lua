@@ -3187,6 +3187,20 @@ function Config:RemoteSetSetting(data)
     end
 end
 
+---Toggles a boolean setting.
+--- @param setting string: The name of the setting to be updated.
+--- @param tempOnly boolean?: The new value to assign to the setting.
+--- @param noCallback boolean?: If true, the setting will be updated without triggering the OnChange callback.
+function Config:ToggleSetting(setting, tempOnly, noCallback)
+    local currentValue = Config:GetSetting(setting)
+    if type(currentValue) ~= "boolean" then
+        Logger.log_error("Cannot toggle setting %s because it is not a boolean!", setting)
+        return
+    end
+
+    Config:SetSetting(setting, not currentValue, tempOnly, noCallback)
+end
+
 ---Sets a setting from either in global or a module setting table.
 --- @param setting string: The name of the setting to be updated.
 --- @param value any: The new value to assign to the setting.

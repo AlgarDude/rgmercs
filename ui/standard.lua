@@ -34,7 +34,12 @@ end
 
 function StandardUI:RenderTargetInfo()
     ImGui.TableNextColumn()
-    Ui.RenderText("Target")
+    --Ui.RenderText("Target")
+    Ui.RenderHyperText("Target  " .. Icons.FA_CROSSHAIRS, IM_COL32(255, 255, 255, 255), IM_COL32(255, 52, 52, 255),
+        function()
+            Config:ToggleSetting("ShowTargetWindow")
+        end)
+    Ui.Tooltip("Click to toggle the Target Window, which displays more detailed information about your current target.")
     ImGui.TableNextColumn()
 
     local assistSpawn = mq.TLO.Target
