@@ -1154,87 +1154,95 @@ end
 
 function Module:RenderClickyControls(clickies, clickyIdx, headerCursorPos, headerScreenPos, preRender)
     local startingPosVec = ImGui.GetCursorPosVec()
-    local offset_trash = 40
-    local offset_enable = 160
-    local yOffset = 0
 
     self:RenderClickyHeaderIcon(clickies[clickyIdx], headerScreenPos)
 
-    ImGui.SetCursorPos(ImGui.GetWindowWidth() - offset_enable, headerCursorPos.y + yOffset)
+    local style = ImGui.GetStyle()
+    local tableWidth = 24 + 30 + 22 + 22 + 22 + (style.CellPadding.x * 4) + (style.ItemSpacing.x * 4)
+    ImGui.SetCursorPos(ImVec2(ImGui.GetWindowWidth() - tableWidth, headerCursorPos.y))
 
     ImGui.PushID("##_small_btn_ctrl_clicky_" .. tostring(clickyIdx) .. (preRender and "_pre" or ""))
 
-    if clickies[clickyIdx] then
-        local changed = false
-        local enabled = clickies[clickyIdx].enabled == nil or clickies[clickyIdx].enabled
+    if ImGui.BeginTable("##clicky_ctrl_" .. tostring(clickyIdx) .. (preRender and "_pre" or ""), 5,
+            bit32.bor(ImGuiTableFlags.NoHostExtendX), ImVec2(tableWidth, 0)) then
+        ImGui.TableSetupColumn("##warn", ImGuiTableColumnFlags.WidthFixed, 24)
+        ImGui.TableSetupColumn("##enable", ImGuiTableColumnFlags.WidthFixed, 30)
+        ImGui.TableSetupColumn("##up", ImGuiTableColumnFlags.WidthFixed, 22)
+        ImGui.TableSetupColumn("##down", ImGuiTableColumnFlags.WidthFixed, 22)
+        ImGui.TableSetupColumn("##trash", ImGuiTableColumnFlags.WidthFixed, 22)
 
-        enabled, changed = Ui.RenderOptionToggle("##EnableDrawn" .. tostring(clickyIdx), "", enabled, true)
-        if changed then
-            clickies[clickyIdx].enabled = enabled
-            Config:SetSetting('Clickies', clickies)
-        end
-    end
+        ImGui.TableNextRow()
 
-    if clickyIdx > 1 then
-        ImGui.SameLine()
-        ImGui.PushID("##_small_btn_up_clicky_" .. tostring(clickyIdx) .. (preRender and "_pre" or ""))
-        if ImGui.SmallButton(Icons.FA_CHEVRON_UP) then
-            clickies[clickyIdx], clickies[clickyIdx - 1] = clickies[clickyIdx - 1], clickies[clickyIdx]
-            Config:SetSetting('Clickies', clickies)
-        end
-        ImGui.PopID()
-    else
-        ImGui.SameLine()
-        ImGui.InvisibleButton(Icons.FA_CHEVRON_UP, ImVec2(22, 1))
-    end
-
-    if clickyIdx < #clickies then
-        ImGui.SameLine()
-        ImGui.PushID("##_small_btn_dn_clicky_" .. tostring(clickyIdx) .. (preRender and "_pre" or ""))
-        if ImGui.SmallButton(Icons.FA_CHEVRON_DOWN) then
-            clickies[clickyIdx], clickies[clickyIdx + 1] = clickies[clickyIdx + 1], clickies[clickyIdx]
-            Config:SetSetting('Clickies', clickies)
-        end
-        ImGui.PopID()
-    else
-        ImGui.SameLine()
-        ImGui.InvisibleButton(Icons.FA_CHEVRON_DOWN, ImVec2(22, 1))
-    end
-
-    if clickies[clickyIdx] then
-        local rotationClickies = Modules:ExecModule("Class", "GetRotationClickies")
-        local hasWarning = rotationClickies:contains(clickies[clickyIdx].itemName)
-        if hasWarning then
-            ImGui.SameLine()
-            ImGui.TextColored(Globals.Constants.Colors.ConditionFailColor, Icons.MD_WARNING)
-            if not preRender then
-                Ui.MultilineTooltipWithColors({
-                    { text = "! WARNING !",                                                                                color = Globals.Constants.Colors.ConditionFailColor, },
-                    { text = "",                                                                                           color = Globals.Constants.Colors.ConditionFailColor, },
-                    { text = "This clicky is in use in your current class config rotation. Check for possible conflicts!", color = Globals.Constants.Colors.FAQCmdQuestionColor, },
-                })
-            end
-        elseif self.TempSettings.ClickyState[clickies[clickyIdx].itemName] and not self.TempSettings.ClickyState[clickies[clickyIdx].itemName].itemFound then
-            ImGui.SameLine()
-            ImGui.TextColored(Globals.Constants.Colors.ConditionFailColor, Icons.MD_WARNING)
-            if not preRender then
-                Ui.MultilineTooltipWithColors({
-                    { text = "! WARNING !",                                      color = Globals.Constants.Colors.ConditionFailColor, },
-                    { text = "",                                                 color = Globals.Constants.Colors.ConditionFailColor, },
-                    { text = "This clicky item is no longer in your inventory!", color = Globals.Constants.Colors.FAQCmdQuestionColor, },
-                })
+        -- Warning
+        ImGui.TableNextColumn()
+        if clickies[clickyIdx] then
+            local rotationClickies = Modules:ExecModule("Class", "GetRotationClickies")
+            local hasWarning = rotationClickies:contains(clickies[clickyIdx].itemName)
+            if hasWarning then
+                ImGui.TextColored(Globals.Constants.Colors.ConditionFailColor, Icons.MD_WARNING)
+                if not preRender then
+                    Ui.MultilineTooltipWithColors({
+                        { text = "! WARNING !",                                                                                color = Globals.Constants.Colors.ConditionFailColor, },
+                        { text = "",                                                                                           color = Globals.Constants.Colors.ConditionFailColor, },
+                        { text = "This clicky is in use in your current class config rotation. Check for possible conflicts!", color = Globals.Constants.Colors.FAQCmdQuestionColor, },
+                    })
+                end
+            elseif self.TempSettings.ClickyState[clickies[clickyIdx].itemName] and
+                not self.TempSettings.ClickyState[clickies[clickyIdx].itemName].itemFound then
+                ImGui.TextColored(Globals.Constants.Colors.ConditionFailColor, Icons.MD_WARNING)
+                if not preRender then
+                    Ui.MultilineTooltipWithColors({
+                        { text = "! WARNING !",                                      color = Globals.Constants.Colors.ConditionFailColor, },
+                        { text = "",                                                 color = Globals.Constants.Colors.ConditionFailColor, },
+                        { text = "This clicky item is no longer in your inventory!", color = Globals.Constants.Colors.FAQCmdQuestionColor, },
+                    })
+                end
             end
         end
+
+        -- Enable toggle
+        ImGui.TableNextColumn()
+        if clickies[clickyIdx] then
+            local enabled = clickies[clickyIdx].enabled == nil or clickies[clickyIdx].enabled
+            local newEnabled, changed = Ui.RenderOptionToggle("##EnableDrawn" .. tostring(clickyIdx), "", enabled, true)
+            if changed then
+                clickies[clickyIdx].enabled = newEnabled
+                Config:SetSetting('Clickies', clickies)
+            end
+        end
+
+        -- Up
+        ImGui.TableNextColumn()
+        if clickyIdx > 1 then
+            ImGui.PushID("##_small_btn_up_clicky_" .. tostring(clickyIdx) .. (preRender and "_pre" or ""))
+            if ImGui.SmallButton(Icons.FA_CHEVRON_UP) then
+                clickies[clickyIdx], clickies[clickyIdx - 1] = clickies[clickyIdx - 1], clickies[clickyIdx]
+                Config:SetSetting('Clickies', clickies)
+            end
+            ImGui.PopID()
+        end
+
+        -- Down
+        ImGui.TableNextColumn()
+        if clickyIdx < #clickies then
+            ImGui.PushID("##_small_btn_dn_clicky_" .. tostring(clickyIdx) .. (preRender and "_pre" or ""))
+            if ImGui.SmallButton(Icons.FA_CHEVRON_DOWN) then
+                clickies[clickyIdx], clickies[clickyIdx + 1] = clickies[clickyIdx + 1], clickies[clickyIdx]
+                Config:SetSetting('Clickies', clickies)
+            end
+            ImGui.PopID()
+        end
+
+        -- Trash
+        ImGui.TableNextColumn()
+        if ImGui.SmallButton(Icons.FA_TRASH) then
+            clickies[clickyIdx].Delete = true
+        end
+
+        ImGui.EndTable()
     end
 
-    ImGui.SetCursorPos(ImGui.GetWindowWidth() - offset_trash, headerCursorPos.y + yOffset)
-
-    if ImGui.SmallButton(Icons.FA_TRASH) then
-        -- if we do this in the UI thread then there could be a race condition if the user is clicking fast
-        clickies[clickyIdx].Delete = true
-    end
     ImGui.PopID()
-
     ImGui.SetCursorPos(startingPosVec)
 end
 
