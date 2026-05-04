@@ -9,15 +9,17 @@ local Files    = require("utils.files")
 local Globals  = require("utils.globals")
 
 local Config   = {
-    _version = '2.1.1',
+    _version    = '2.1.1',
     _subVersion = "Shattering of Ro",
-    _name = "Config",
-    _AppName = "RGMercs Lua Edition",
-    _author = 'Lead Devs: Derple, Algar',
+    _name       = "Config",
+    _AppName    = "RGMercs Lua Edition",
+    _author     = 'Lead Devs: Derple, Algar',
 }
 Config.__index = Config
-Config.Db      = require("utils.config_db").new(mq.configDir .. '/rgmercs/rgmercs_config.db')
+printf("Loading Config DB Module...")
+Config.Db = require("utils.config_db").new(mq.configDir .. '/rgmercs/rgmercs_config.db')
 Config.Db:setCollectStats(true)
+printf("Loaded Config DB Module...")
 Config.moduleDefaultSettings                             = {}
 Config.moduleTempSettings                                = {}
 Config.moduleSettingCategories                           = {}

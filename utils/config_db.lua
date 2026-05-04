@@ -3,6 +3,7 @@ local ImGui      = require('ImGui')
 local ImPlot     = require('ImPlot')
 local ok, sqlite = pcall(require, 'lsqlite3')
 if not ok then
+    printf("\arDB: failed to load lsqlite3: %s", tostring(sqlite))
     error(string.format("DB: failed to load lsqlite3: %s", tostring(sqlite)))
 end
 local Logger              = require('utils.logger')
@@ -48,6 +49,7 @@ local SCHEMA              = [[
 ---                                 operation is sqlite.INSERT, sqlite.UPDATE, or sqlite.DELETE
 ---@return any|nil  DB instance or nil on failure
 function DB.new(path, onUpdate)
+    printf("Creating new DB Object with path: %s", path)
     local dirOk, dirErr = Files.make_p_for_file(path)
     if not dirOk then
         Logger.log_error("\arDB: failed to create directory for %s: %s", path, tostring(dirErr))
@@ -899,4 +901,5 @@ function DB:renderTelemetry()
     ImGui.TextWrapped(stats.lastQuery)
 end
 
+printf("Returning DB Object")
 return DB
