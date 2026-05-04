@@ -9,8 +9,16 @@ local ImGui      = require('ImGui')
 
 -- Preload these incase any modules need them.
 local PackageMan = require('mq.PackageMan')
-PackageMan.Require('lsqlite3')
-PackageMan.Require('luafilesystem', 'lfs')
+
+local sqllite3   = PackageMan.Require('lsqlite3')
+if not sqllite3 then
+    error("Failed to load lsqlite3. Please ensure it is installed and in the correct directory.")
+end
+
+local lfs = PackageMan.Require('luafilesystem', 'lfs')
+if not lfs then
+    error("Failed to load luafilesystem. Please ensure it is installed and in the correct directory.")
+end
 
 local Config = require('utils.config')
 Config:LoadSettings()
