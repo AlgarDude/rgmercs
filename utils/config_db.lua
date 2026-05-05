@@ -49,31 +49,25 @@ local SCHEMA              = [[
 ---                                 operation is sqlite.INSERT, sqlite.UPDATE, or sqlite.DELETE
 ---@return any|nil  DB instance or nil on failure
 function DB.new(path, onUpdate)
-    printf("Creating new DB Object with path: %s", path)
     local dirOk, dirErr = Files.make_p_for_file(path)
     if not dirOk then
         Logger.log_error("\arDB: failed to create directory for %s: %s", path, tostring(dirErr))
         return nil
     end
-    printf("DB Directory is good to go.")
 
     local db = nil
     local deadline = mq.gettime() + 5000
     while not db and mq.gettime() < deadline do
-        printf("Attempting to open DB at path: %s", path)
         db = sqlite.open(path, bit32.bor(sqlite.OPEN_READWRITE, sqlite.OPEN_CREATE, sqlite.OPEN_NOMUTEX))
         if not db then
             Logger.log_warn("\ayDB: database locked on open, retrying... (%s)", path)
             mq.delay(50)
         end
-        printf("DB Opened")
     end
     if not db then
         Logger.log_error("\arDB: failed to open database at %s after retries", path)
         return nil
     end
-
-    printf("Setting up DB Telemetry...")
 
     db:busy_timeout(500)
     local telemetry = {
@@ -100,22 +94,16 @@ function DB.new(path, onUpdate)
         -- previous totals for delta calculation
         prev         = { selects = 0, inserts = 0, deletes = 0, cacheHits = 0, cacheMisses = 0, },
     }
-    printf("Setting up DB Metatable...")
     local self = setmetatable(
         { _db = db, _onUpdate = onUpdate, _writeQueue = {}, _cache = {}, _dataVersion = 0, _externalVersion = -1, _telemetry = telemetry, _collectStats = false, }, DB)
-    printf("Creating DB Schema...")
     self:_exec(SCHEMA)
-    printf("Created DB Schema...")
     self._externalVersion = self:_getDataVersion()
-    printf("DB Schema version: %d", self._externalVersion)
 
-    printf("Setting up DB Update Hook...")
     if onUpdate then
         db:update_hook(function(ud, operation, dbName, tableName, rowId)
             onUpdate(operation, dbName, tableName, rowId)
         end)
     end
-    printf("DB Object created successfully.")
     return self
 end
 
@@ -911,5 +899,4 @@ function DB:renderTelemetry()
     ImGui.TextWrapped(stats.lastQuery)
 end
 
-printf("Returning DB Object")
 return DB

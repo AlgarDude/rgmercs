@@ -16,10 +16,8 @@ local Config   = {
     _author     = 'Lead Devs: Derple, Algar',
 }
 Config.__index = Config
-printf("Loading Config DB Module...")
-Config.Db = require("utils.config_db").new(mq.configDir .. '/rgmercs/rgmercs_config.db')
+Config.Db      = require("utils.config_db").new(mq.configDir .. '/rgmercs/rgmercs_config.db')
 Config.Db:setCollectStats(true)
-printf("Loaded Config DB Module...")
 Config.moduleDefaultSettings                             = {}
 Config.moduleTempSettings                                = {}
 Config.moduleSettingCategories                           = {}
