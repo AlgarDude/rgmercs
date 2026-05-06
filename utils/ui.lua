@@ -1514,7 +1514,7 @@ function Ui.RenderForceTargetList(showPopout)
                 if Config:GetSetting('FTUseBars') then
                     Ui.RenderFancyHPBar("FTHPBar" .. tostring(xtarg.ID()), hpPct, ImGui.GetTextLineHeight(), nil, 0, 4)
                 else
-                    Ui.RenderColoredText(Ui.GetPercentageColor(hpPct, { Colors.LightYellow, Colors.Yellow, Colors.Orange, }), tostring(hpPct) and "%6.2f%%" or "", tostring(hpPct))
+                    Ui.RenderColoredText(Ui.GetPercentageColor(hpPct, { Colors.LightYellow, Colors.Yellow, Colors.Orange, }), tostring(hpPct) and "%d%%" or "", tostring(hpPct))
                 end
             end,
         },
