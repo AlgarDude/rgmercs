@@ -2192,7 +2192,7 @@ function Casting.UseItem(itemName, targetId, bAllowDead, retryCount)
         mq.delay(1)
         Logger.log_verbose("\ayUseItem(): Finished waiting on cast: %s result = %s retries left = %d", itemName, Casting.GetLastCastResultName(), retryCount)
         retryCount = retryCount - 1
-    until Globals.Constants.CastCompleted:contains(Casting.GetLastCastResultName()) or retryCount < 0
+    until Globals.Constants.CastCompleted:contains(Casting.GetLastCastResultName()) or not me.ItemReady(itemName) or retryCount < 0
 
     if mq.TLO.Cursor.ID() then
         Core.DoCmd("/autoinv")
