@@ -51,7 +51,20 @@ OptionsUI.Groups                = { --- Add a default of the same name for any k
             { Name = 'Following',  Categories = { "Chase", "Camp", }, },
             { Name = 'Meditation', Categories = { "Med Rules", "Med Thresholds", }, },
             { Name = 'Drag',       Categories = { "Drag", }, },
-            { Name = 'Pulling',    Categories = { "Pull Rules", "Puller Vitals", "Group Vitals", "Distance", "Targets", }, },
+            {
+                Name = 'Pulling',
+                Categories = { "Pull Rules", "Distance", "Targets", "Puller Vitals", "Peer and Group Vitals", },
+                RenderCategories = {
+                    {
+                        Render = function()
+                            Modules:ExecModule("Pull", "RenderWatchCombo")
+                        end,
+                        Search = function(searchFilter)
+                            return string.match("pull watch group", searchFilter:lower()) ~= nil
+                        end,
+                    },
+                },
+            },
         },
     },
     {

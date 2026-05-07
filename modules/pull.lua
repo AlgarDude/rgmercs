@@ -43,7 +43,6 @@ Module.TempSettings.HuntX                 = 0
 Module.TempSettings.HuntY                 = 0
 Module.TempSettings.HuntZ                 = 0
 Module.TempSettings.MyPaths               = {}
-Module.TempSettings.LastGroupUpdateTime   = Globals.GetTimeSeconds()
 Module.TempSettings.SelectedPath          = "None"
 Module.TempSettings.PullAttemptStarted    = 0
 Module.TempSettings.PullRadius            = 0
@@ -53,6 +52,7 @@ Module.TempSettings.PausePulls            = false
 local PullStates                          = {
     ['PULL_IDLE']               = 1,
     ['PULL_GROUPWATCH_WAIT']    = 2,
+    ['PULL_PEERWATCH_WAIT']     = 12,
     ['PULL_NAV_INTERRUPT']      = 3,
     ['PULL_SCAN']               = 4,
     ['PULL_PULLING']            = 5,
@@ -68,6 +68,7 @@ local PullStateDisplayStrings             = {
     ['MERCS_PAUSED']            = { Display = Icons.MD_REPORT_PROBLEM, Text = "RGMercs Main Paused", Color = 'Red', },
     ['PULL_IDLE']               = { Display = Icons.FA_CLOCK_O, Text = "Idle", Color = 'Green', },
     ['PULL_GROUPWATCH_WAIT']    = { Display = Icons.MD_GROUP, Text = "Waiting on GroupWatch", Color = 'Yellow', },
+    ['PULL_PEERWATCH_WAIT']     = { Display = Icons.MD_PEOPLE, Text = "Waiting on PeerWatch", Color = 'Yellow', },
     ['PULL_NAV_INTERRUPT']      = { Display = Icons.MD_PAUSE_CIRCLE_OUTLINE, Text = "Navigation Interrupted", Color = 'Red', },
     ['PULL_SCAN']               = { Display = Icons.FA_EYE, Text = "Scanning for Targets", Color = 'Green', },
     ['PULL_PULLING']            = { Display = Icons.FA_BULLSEYE, Text = "Pulling", Color = 'Red', },
@@ -584,91 +585,76 @@ Module.DefaultConfig                   = {
         DisplayName = "Enable Group Watch",
         Group = "Movement",
         Header = "Pulling",
-        Category = "Group Vitals",
+        Category = "Peer and Group Vitals",
         Index = 1,
-        Tooltip = "Watch the mana and/or endurance of the groupmembers selected below.",
-        Default = true,
+        Tooltip = "Watch the vitals of group members matching the selected class types.",
+        Default = false,
+        OnChange = function(_, newVal)
+            if newVal == true then
+                Config:SetSetting("PeerWatch", false)
+            end
+        end,
     },
-    ['GroupWatchF2']                           = {
-        DisplayName = mq.TLO.Group.Member(1)() and string.format("Watch %s", mq.TLO.Group.Member(1).CleanName()) or "No GroupMember",
+    ['PeerWatch']                              = {
+        DisplayName = "Enable Peer Watch",
         Group = "Movement",
         Header = "Pulling",
-        Category = "Group Vitals",
+        Category = "Peer and Group Vitals",
         Index = 2,
-        Tooltip = "Watch the mana and/or endurance of the selected groupmember (if present).",
-        Default = false,
+        Tooltip = "Watch the vitals of RGMercs peers matching the selected class types.",
+        Default = true,
+        OnChange = function(_, newVal)
+            if newVal == true then
+                Config:SetSetting("GroupWatch", false)
+            end
+        end,
     },
-    ['GroupWatchF3']                           = {
-        DisplayName = mq.TLO.Group.Member(2)() and string.format("Watch %s", mq.TLO.Group.Member(2).CleanName()) or "No GroupMember",
+    ['WatchEnd']                               = {
+        DisplayName = "Watch Endurance",
         Group = "Movement",
         Header = "Pulling",
-        Category = "Group Vitals",
+        Category = "Peer and Group Vitals",
         Index = 3,
-        Tooltip = "Watch the mana and/or endurance of the selected groupmember (if present).",
+        Tooltip = "Check endurance when monitoring group member or peer vitals.",
         Default = false,
     },
-    ['GroupWatchF4']                           = {
-        Group = "Movement",
-        Header = "Pulling",
-        Category = "Group Vitals",
-        Index = 4,
-        Tooltip = "Watch the mana and/or endurance of the selected groupmember (if present).",
-        Default = false,
-    },
-    ['GroupWatchF5']                           = {
-        DisplayName = mq.TLO.Group.Member(4)() and string.format("Watch %s", mq.TLO.Group.Member(4).CleanName()) or "No GroupMember",
-        Group = "Movement",
-        Header = "Pulling",
-        Category = "Group Vitals",
-        Index = 5,
-        Tooltip = "Watch the mana and/or endurance of the selected groupmember (if present).",
-        Default = false,
-    },
-    ['GroupWatchF6']                           = {
-        DisplayName = mq.TLO.Group.Member(5)() and string.format("Watch %s", mq.TLO.Group.Member(5).CleanName()) or "No GroupMember",
-        Group = "Movement",
-        Header = "Pulling",
-        Category = "Group Vitals",
-        Index = 6,
-        Tooltip = "Watch the mana and/or endurance of the selected groupmember (if present).",
-        Default = false,
-    },
-    ['GroupWatchEnd']                          = {
-        DisplayName = "Watch Group Endurance",
-        Group = "Movement",
-        Header = "Pulling",
-        Category = "Group Vitals",
-        Index = 9,
-        Tooltip = "Check for endurance when checking selected group members' vitals.",
-        Default = false,
-    },
-    ['GroupWatchStopPct']                      = {
+    ['WatchStopPct']                           = {
         DisplayName = "Pulling Pause %",
         Group = "Movement",
         Header = "Pulling",
-        Category = "Group Vitals",
-        Index = 7,
-        Tooltip = "Stop pulls when a selected groupmembers' vitals fall under this percent.",
+        Category = "Peer and Group Vitals",
+        Index = 4,
+        Tooltip = "Stop pulls when a watched member's vitals fall under this percent.",
         Default = 40,
         Min = 1,
         Max = 100,
     },
-    ['GroupWatchStartPct']                     = {
+    ['WatchStartPct']                          = {
         DisplayName = "Pulling Resume %",
         Group = "Movement",
         Header = "Pulling",
-        Category = "Group Vitals",
-        Index = 8,
-        Tooltip = "Resume pulls when a selected groupmembers' vitals climb above this percent.",
+        Category = "Peer and Group Vitals",
+        Index = 5,
+        Tooltip = "Resume pulls when a watched member's vitals climb above this percent.",
         Default = 80,
         Min = 1,
         Max = 100,
+    },
+    ['WatchClasses']                           = {
+        DisplayName = "Watched Classes",
+        Group = "Movement",
+        Header = "Pulling",
+        Category = "Peer and Group Vitals",
+        Index = 6,
+        Type = "Custom",
+        Tooltip = "Select which class types to monitor for both Group Watch and Peer Watch.",
+        Default = {},
     },
     ['PullWaitCorpse']                         = {
         DisplayName = "Hold for Corpses",
         Group = "Movement",
         Header = "Pulling",
-        Category = "Group Vitals",
+        Category = "Peer and Group Vitals",
         Index = 10,
         Tooltip = "Hold pulls while we detect any groupmember's corpse in the vicinity.",
         Default = Globals.ServerEnv:lower() == "live",
@@ -677,7 +663,7 @@ Module.DefaultConfig                   = {
         DisplayName = "Delay After Rez",
         Group = "Movement",
         Header = "Pulling",
-        Category = "Group Vitals",
+        Category = "Peer and Group Vitals",
         Index = 11,
         Tooltip = "If the puller detected a group corpse and held pulls, allow x seconds for the group to rebuff after the corpse is rezzed.\n" ..
             "**Only respected when \"Hold for Corpses\" is enabled and a corpse was detected by that process!**",
@@ -1537,27 +1523,6 @@ function Module:FarmFullInvActions()
     Core.DoCmd("/beep")
 end
 
-function Module:RefreshGroupNames()
-    -- Update the display names for the group watch members
-
-    if Globals.GetTimeSeconds() - self.TempSettings.LastGroupUpdateTime < 10 then return end
-    self.TempSettings.LastGroupUpdateTime = Globals.GetTimeSeconds()
-
-    local groupWatch = {
-        'GroupWatchF2',
-        'GroupWatchF3',
-        'GroupWatchF4',
-        'GroupWatchF5',
-        'GroupWatchF6',
-    }
-
-    for i, id in ipairs(groupWatch) do
-        local member = mq.TLO.Group.Member(i)
-        self.DefaultConfig[id].DisplayName = member() and string.format("Watch %s", member.CleanName()) or "No GroupMember"
-    end
-end
-
----comment
 ---@param resourceResumePct number -- Resume pulls at this pct
 ---@param resourcePausePct number -- Hold pulls at this pct
 ---@param campData table
@@ -1568,17 +1533,13 @@ function Module:CheckGroupForPull(resourceResumePct, resourcePausePct, campData)
     if not groupCount or groupCount == 0 then return true, "" end
     local maxDist = math.max(Config:GetSetting('AutoCampRadius') ^ 2, 200 ^ 2)
 
-    local groupWatch = {
-        Config:GetSetting('GroupWatchF2'),
-        Config:GetSetting('GroupWatchF3'),
-        Config:GetSetting('GroupWatchF4'),
-        Config:GetSetting('GroupWatchF5'),
-        Config:GetSetting('GroupWatchF6'),
-    }
+    local watchedClasses = Config:GetSetting('WatchClasses') or {}
+    if not next(watchedClasses) then return true, "" end
+    local watchSet = Set.new(watchedClasses)
 
-    for i, _ in ipairs(groupWatch) do
+    for i = 1, groupCount do
         local member = mq.TLO.Group.Member(i)
-        if groupWatch[i] and member() and member.ID() > 0 then
+        if member() and member.ID() > 0 and watchSet:contains(member.Class.ShortName() or "") then
             local resourcePct = self.TempSettings.PullState == PullStates.PULL_GROUPWATCH_WAIT and resourceResumePct or resourcePausePct
             if member.PctHPs() < resourcePct then
                 Comms.HandleAnnounce(Comms.FormatChatEvent("Pull", member.CleanName(), "Low on hp - Holding pulls!"),
@@ -1596,7 +1557,7 @@ function Module:CheckGroupForPull(resourceResumePct, resourcePausePct, campData)
                     resourcePct, resourcePausePct, resourceResumePct, self.TempSettings.PullState)
                 return false, string.format("%s Low Mana", member.CleanName())
             end
-            if Config:GetSetting('GroupWatchEnd') and member.Class.ShortName() ~= "BRD" and member.PctEndurance() < resourcePct then
+            if Config:GetSetting('WatchEnd') and member.Class.ShortName() ~= "BRD" and member.PctEndurance() < resourcePct then
                 Comms.HandleAnnounce(Comms.FormatChatEvent("Pull", member.CleanName(), "Low on endurance - Holding pulls!"),
                     Config:GetSetting('PullAnnounceGroup'),
                     Config:GetSetting('PullAnnounce'), Config:GetSetting('AnnounceToRaidIfInRaid'))
@@ -1668,6 +1629,153 @@ function Module:CheckGroupForPull(resourceResumePct, resourcePausePct, campData)
     end
 
     return true, ""
+end
+
+---@param resourceResumePct number
+---@param resourcePausePct  number
+---@param campData table
+---@return boolean, string
+function Module:CheckPeersForPull(resourceResumePct, resourcePausePct, campData)
+    local watchedClasses = Config:GetSetting('WatchClasses') or {}
+    if not next(watchedClasses) then return true, "" end
+
+    local watchSet   = Set.new(watchedClasses)
+    local heartbeats = Comms.GetAllPeerHeartbeats()
+    local maxDist    = math.max(Config:GetSetting('AutoCampRadius') ^ 2, 200 ^ 2)
+
+    for _, hb in pairs(heartbeats) do
+        local data = hb.Data
+        if data and data.Class and watchSet:contains(data.Class) then
+            local resourcePct = self.TempSettings.PullState == PullStates.PULL_PEERWATCH_WAIT and resourceResumePct or resourcePausePct
+            local name        = data.Name or data.From or "Unknown"
+
+            if (data.HPs or 100) == 0 then
+                Comms.HandleAnnounce(Comms.FormatChatEvent("Pull", name, "Dead - Holding pulls!"),
+                    Config:GetSetting('PullAnnounceGroup'), Config:GetSetting('PullAnnounce'), Config:GetSetting('AnnounceToRaidIfInRaid'))
+                return false, string.format("%s Dead", name)
+            end
+
+            if (data.HPs or 100) < resourcePct then
+                Comms.HandleAnnounce(Comms.FormatChatEvent("Pull", name, "Low on hp - Holding pulls!"),
+                    Config:GetSetting('PullAnnounceGroup'), Config:GetSetting('PullAnnounce'), Config:GetSetting('AnnounceToRaidIfInRaid'))
+                return false, string.format("%s Low HP", name)
+            end
+
+            local useMana = Globals.Constants.RGCasters:contains(data.Class)
+            if useMana and data.Class ~= "BRD" and data.Mana and data.Mana < resourcePct then
+                Comms.HandleAnnounce(Comms.FormatChatEvent("Pull", name, "Low on mana - Holding pulls!"),
+                    Config:GetSetting('PullAnnounceGroup'), Config:GetSetting('PullAnnounce'), Config:GetSetting('AnnounceToRaidIfInRaid'))
+                return false, string.format("%s Low Mana", name)
+            end
+
+            if Config:GetSetting('WatchEnd') and data.Class ~= "BRD" and data.Endurance and data.Endurance < resourcePct then
+                Comms.HandleAnnounce(Comms.FormatChatEvent("Pull", name, "Low on endurance - Holding pulls!"),
+                    Config:GetSetting('PullAnnounceGroup'), Config:GetSetting('PullAnnounce'), Config:GetSetting('AnnounceToRaidIfInRaid'))
+                return false, string.format("%s Low End", name)
+            end
+
+            if data.ZoneShortName and data.ZoneShortName ~= mq.TLO.Zone.ShortName() then
+                Comms.HandleAnnounce(Comms.FormatChatEvent("Pull", name, "Not in Zone - Holding pulls!"),
+                    Config:GetSetting('PullAnnounceGroup'), Config:GetSetting('PullAnnounce'), Config:GetSetting('AnnounceToRaidIfInRaid'))
+                return false, string.format("%s Out of Zone", name)
+            end
+
+            if data.X and data.Y then
+                if campData.returnToCamp then
+                    if Math.GetDistanceSquared(data.X, data.Y, campData.campSettings.AutoCampX, campData.campSettings.AutoCampY) > maxDist then
+                        Comms.HandleAnnounce(Comms.FormatChatEvent("Pull", name, "Too far away - Holding pulls!"),
+                            Config:GetSetting('PullAnnounceGroup'), Config:GetSetting('PullAnnounce'), Config:GetSetting('AnnounceToRaidIfInRaid'))
+                        return false, string.format("%s Too Far (%d)", name,
+                            Math.GetDistance(data.X, data.Y, campData.campSettings.AutoCampX, campData.campSettings.AutoCampY))
+                    end
+                else
+                    if Math.GetDistanceSquared(data.X, data.Y, mq.TLO.Me.X(), mq.TLO.Me.Y()) > maxDist then
+                        Comms.HandleAnnounce(Comms.FormatChatEvent("Pull", name, "Too far away - Holding pulls!"),
+                            Config:GetSetting('PullAnnounceGroup'), Config:GetSetting('PullAnnounce'), Config:GetSetting('AnnounceToRaidIfInRaid'))
+                        return false, string.format("%s Too Far (%d)", name,
+                            Math.GetDistance(data.X, data.Y, mq.TLO.Me.X(), mq.TLO.Me.Y()))
+                    end
+                end
+
+                if self.Constants.PullModes[Config:GetSetting('PullMode')] == "Chain" and data.X and data.Y then
+                    if name == Globals.MainAssist then
+                        if campData.returnToCamp and Math.GetDistanceSquared(data.X, data.Y, campData.campSettings.AutoCampX, campData.campSettings.AutoCampY) > maxDist then
+                            Comms.HandleAnnounce(
+                                Comms.FormatChatEvent("Pull", name, string.format("Assist Target is beyond AutoCampRadius from %d, %d, %d : %d. Holding pulls.",
+                                    campData.campSettings.AutoCampY, campData.campSettings.AutoCampX, campData.campSettings.AutoCampZ, Config:GetSetting('AutoCampRadius'))),
+                                Config:GetSetting('PullAnnounceGroup'), Config:GetSetting('PullAnnounce'), Config:GetSetting('AnnounceToRaidIfInRaid'))
+                            return false, string.format("%s Beyond AutoCampRadius", name)
+                        end
+                    else
+                        if Math.GetDistanceSquared(data.X, data.Y, mq.TLO.Me.X(), mq.TLO.Me.Y()) > maxDist then
+                            Comms.HandleAnnounce(
+                                Comms.FormatChatEvent("Pull", name, string.format("Assist Target is beyond AutoCampRadius from me : %d. Holding pulls.", Config:GetSetting('AutoCampRadius'))),
+                                Config:GetSetting('PullAnnounceGroup'), Config:GetSetting('PullAnnounce'), Config:GetSetting('AnnounceToRaidIfInRaid'))
+                            return false, string.format("%s Beyond AutoCampRadius", name)
+                        end
+                    end
+                end
+            end
+        end
+    end
+
+    return true, ""
+end
+
+function Module:RenderWatchCombo()
+    local groupWatchOn = Config:GetSetting('GroupWatch')
+    local peerWatchOn  = Config:GetSetting('PeerWatch')
+    if not groupWatchOn and not peerWatchOn then return end
+
+    local watchedClasses = Config:GetSetting('WatchClasses') or {}
+    local watchSet       = Set.new(watchedClasses)
+    local label          = next(watchedClasses) and table.concat(watchedClasses, ", ") or "None"
+
+    ImGui.Text("Watched Classes:")
+    if ImGui.BeginCombo("##WatchClasses", label) then
+        for _, class in ipairs(Globals.Constants.AllClasses) do
+            local selected    = watchSet:contains(class)
+            local newSelected = ImGui.Checkbox(class, selected)
+            if newSelected ~= selected then
+                if newSelected then watchSet:add(class) else watchSet:remove(class) end
+                Config:SetSetting('WatchClasses', watchSet:toList())
+            end
+        end
+        ImGui.EndCombo()
+    end
+
+    if not next(watchedClasses) then return end
+
+    ImGui.Spacing()
+    local items = {}
+    if peerWatchOn then
+        for _, hb in pairs(Comms.GetAllPeerHeartbeats()) do
+            local data = hb.Data
+            if data and data.Class and watchSet:contains(data.Class) then
+                local name        = data.Name or data.From or "?"
+                local hp          = data.HPs and string.format("%d%%", data.HPs) or "?"
+                local mana        = data.Mana and string.format("%d%%", data.Mana) or "-"
+                local endu        = data.Endurance and string.format("%d%%", data.Endurance) or "-"
+                items[#items + 1] = string.format("[%s] %s  HP:%s  Mana:%s  End:%s", data.Class, name, hp, mana, endu)
+            end
+        end
+        if #items == 0 then items[1] = "No matching peers online" end
+    else
+        local groupCount = mq.TLO.Group.Members() or 0
+        for i = 1, groupCount do
+            local member = mq.TLO.Group.Member(i)
+            if member() and member.ID() > 0 and watchSet:contains(member.Class.ShortName() or "") then
+                local name        = member.CleanName() or "?"
+                local hp          = string.format("%d%%", member.PctHPs() or 0)
+                local mana        = member.Class.CanCast() and string.format("%d%%", member.PctMana() or 0) or "-"
+                local endu        = string.format("%d%%", member.PctEndurance() or 0)
+                items[#items + 1] = string.format("[%s] %s  HP:%s  Mana:%s  End:%s", member.Class.ShortName(), name, hp, mana, endu)
+            end
+        end
+        if #items == 0 then items[1] = "No matching group members" end
+    end
+    local selected = 0
+    ImGui.ListBox("##WatchList", selected, items, #items, math.max(2, #items))
 end
 
 function Module:FixPullerMerc()
@@ -2030,7 +2138,11 @@ end
 function Module:GiveTime()
     local combat_state = Combat.GetCachedCombatState()
 
-    self:RefreshGroupNames()
+    if Config:GetSetting('PeerWatch') and Config:GetSetting('GroupWatch') then
+        Logger.log_info(
+            "Disabled GroupWatch because PeerWatch is enabled. PeerWatch has more comprehensive checks and will cover all group members. You can re-enable GroupWatch if you want separate checks for group members, but it is redundant with PeerWatch.")
+        Config:SetSetting('GroupWatch', false)
+    end
 
     self:ProcessDeleteWPs()
 
@@ -2128,7 +2240,7 @@ function Module:GiveTime()
     end
 
     if Config:GetSetting('GroupWatch') then
-        local groupReady, groupReason = self:CheckGroupForPull(Config:GetSetting('GroupWatchStartPct'), Config:GetSetting('GroupWatchStopPct'), campData)
+        local groupReady, groupReason = self:CheckGroupForPull(Config:GetSetting('WatchStartPct'), Config:GetSetting('WatchStopPct'), campData)
         if not groupReady then
             Logger.log_verbose("PULL:GiveTime() - GroupWatch Failed")
             Module:StopNavAfterFailedMovingCheck()
@@ -2143,9 +2255,23 @@ function Module:GiveTime()
         end
     end
 
+    if Config:GetSetting('PeerWatch') then
+        local peerReady, peerReason = self:CheckPeersForPull(Config:GetSetting('WatchStartPct'), Config:GetSetting('WatchStopPct'), campData)
+        if not peerReady then
+            Logger.log_verbose("PULL:GiveTime() - PeerWatch Failed")
+            Module:StopNavAfterFailedMovingCheck()
+            self:SetPullState(PullStates.PULL_PEERWATCH_WAIT, peerReason)
+            local me = mq.TLO.Me
+            if me.Standing() and not me.Moving() and (me.PctHPs() < Config:GetSetting('HPMedPctStop') or me.PctMana() < Config:GetSetting('ManaMedPctStop') or me.PctEndurance() < Config:GetSetting('EndMedPctStop')) then
+                me.Sit()
+            end
+            return
+        end
+    end
+
     -- GROUPWATCH and NAVINTERRUPT are the two states we can't reset. In the future it may be best to
     -- limit this to only the states we know should be transitionable to the IDLE state.
-    if self.TempSettings.PullState ~= PullStates.PULL_GROUPWATCH_WAIT and self.TempSettings.PullState ~= PullStates.PULL_NAV_INTERRUPT then
+    if self.TempSettings.PullState ~= PullStates.PULL_GROUPWATCH_WAIT and self.TempSettings.PullState ~= PullStates.PULL_PEERWATCH_WAIT and self.TempSettings.PullState ~= PullStates.PULL_NAV_INTERRUPT then
         self:SetPullState(PullStates.PULL_IDLE, "")
     end
 
