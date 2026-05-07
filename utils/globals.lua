@@ -66,7 +66,8 @@ Globals.Constants.RGNotMezzedAnims    = Set.new({ 1, 5, 6, 27, 43, 44, 45, 80, 8
 Globals.Constants.ModRods             = { "Modulation Shard", "Transvergence", "Modulation", "Modulating", "Azure Mind Crystal", }
 Globals.Constants.ModRodUse           = { "Never", "Combat", "Anytime", }
 Globals.Constants.SpellBookSlots      = 1120
-Globals.Constants.CastCompleted       = Set.new({ "CAST_SUCCESS", "CAST_IMMUNE", "CAST_TAKEHOLD", "CAST_RESISTED", "CAST_RECOVER", })
+Globals.Constants.CastCompleted       = Set.new({ "CAST_SUCCESS", "CAST_IMMUNE", "CAST_TAKEHOLD", "CAST_RESISTED", })
+Globals.Constants.CastRetriable       = Set.new({ "CAST_INTERRUPTED", "CAST_FIZZLE", "CAST_STUNNED", "CAST_DISTRACTED", "CAST_RECOVER", "CAST_NOTREADY", "CAST_COLLAPSE", })
 Globals.Constants.GroupTargetTypes    = Set.new({ "Group v1", "Group v2", "AE PC v1", "AE PC v2", })
 
 Globals.Constants.CastResults         = {
