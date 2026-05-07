@@ -1631,6 +1631,16 @@ function Module:CheckGroupForPull(resourceResumePct, resourcePausePct, campData)
     return true, ""
 end
 
+function Module.IsPeerWatched(data, watchSet)
+    -- Class is watched
+    -- Server is the same
+    -- Either in a raid or group with me.
+    return data and data.Class and watchSet:contains(data.Class) and
+        (data.Server or "") == Globals.CurServer and
+        (data.GroupLeader == mq.TLO.Group.Leader() or
+            data.RaidLeader == mq.TLO.Raid.Leader())
+end
+
 ---@param resourceResumePct number
 ---@param resourcePausePct  number
 ---@param campData table
@@ -1645,7 +1655,7 @@ function Module:CheckPeersForPull(resourceResumePct, resourcePausePct, campData)
 
     for _, hb in pairs(heartbeats) do
         local data = hb.Data
-        if data and data.Class and watchSet:contains(data.Class) then
+        if self.IsPeerWatched(data, watchSet) then
             local resourcePct = self.TempSettings.PullState == PullStates.PULL_PEERWATCH_WAIT and resourceResumePct or resourcePausePct
             local name        = data.Name or data.From or "Unknown"
 
@@ -1709,7 +1719,8 @@ function Module:CheckPeersForPull(resourceResumePct, resourcePausePct, campData)
                     else
                         if Math.GetDistanceSquared(data.X, data.Y, mq.TLO.Me.X(), mq.TLO.Me.Y()) > maxDist then
                             Comms.HandleAnnounce(
-                                Comms.FormatChatEvent("Pull", name, string.format("Assist Target is beyond AutoCampRadius from me : %d. Holding pulls.", Config:GetSetting('AutoCampRadius'))),
+                                Comms.FormatChatEvent("Pull", name,
+                                    string.format("Assist Target is beyond AutoCampRadius from me : %d. Holding pulls.", Config:GetSetting('AutoCampRadius'))),
                                 Config:GetSetting('PullAnnounceGroup'), Config:GetSetting('PullAnnounce'), Config:GetSetting('AnnounceToRaidIfInRaid'))
                             return false, string.format("%s Beyond AutoCampRadius", name)
                         end
@@ -1751,7 +1762,7 @@ function Module:RenderWatchCombo()
     if peerWatchOn then
         for _, hb in pairs(Comms.GetAllPeerHeartbeats()) do
             local data = hb.Data
-            if data and data.Class and watchSet:contains(data.Class) then
+            if self.IsPeerWatched(data, watchSet) then
                 local name        = data.Name or data.From or "?"
                 local hp          = data.HPs and string.format("%d%%", data.HPs) or "?"
                 local mana        = data.Mana and string.format("%d%%", data.Mana) or "-"
