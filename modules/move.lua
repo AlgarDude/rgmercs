@@ -874,11 +874,11 @@ function Module:CheckStuck()
 
                 if not Nav.Paused() then
                     Logger.log_debug("\awWARNING:\ax Pausing Nav to unstick")
-                    Movement:DoNav(true, "pause")
+                    Movement:DoNav(true, "pause 1")
                     mq.delay(500)
 
                     if Nav.Paused() then
-                        Movement:DoNav(true, "pause")
+                        Movement:DoNav(true, "pause 2")
                     end
 
                     if not Nav.Paused() and not self:IAmStuck() then
