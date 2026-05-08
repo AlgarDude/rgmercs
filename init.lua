@@ -378,7 +378,7 @@ local function RGInit(...)
 end
 
 local function Main()
-    Logger.log_verbose("Starting Main loop.")
+    Logger.log_super_verbose("Starting Main loop.")
 
     -- always do this and do it first
     Config:FlushDB()
@@ -400,6 +400,7 @@ local function Main()
         mq.delay(100)
         Globals.CurZoneId = mq.TLO.Zone.ID()
         Globals.CurInstance = mq.TLO.Me.Instance()
+        Logger.log_super_verbose("Completed Main loop.")
         return
     end
 
@@ -585,7 +586,7 @@ local function Main()
     Modules:ExecAll("GiveTime")
 
     mq.doevents()
-    Logger.log_verbose("Completed Main loop.")
+    Logger.log_super_verbose("Completed Main loop.")
     mq.delay(10)
 end
 
@@ -596,7 +597,7 @@ local script_actor = Comms.Actors.register(function(message)
     if msg.From == Comms.GetPeerName() then return end
     if msg.Script ~= Comms.ScriptName then return end
 
-    Logger.log_verbose("\ayGot Event from(\am%s\ay) module(\at%s\ay) event(\at%s\ay)", msg.From,
+    Logger.log_super_verbose("\ayGot Event from(\am%s\ay) module(\at%s\ay) event(\at%s\ay)", msg.From,
         msg.Module,
         msg.Event)
 
