@@ -814,6 +814,18 @@ function OptionsUI:RenderCurrentTab()
     self:RenderOptionsPanel(self.selectedGroup)
 end
 
+function OptionsUI:ValidateSelectedPeer()
+    if self.selectedCharacter == nil or self.selectedCharacter == "" then
+        Logger.log_error("\ayOptionsUI: \awSelected peer is invalid. Defaulting back to local character.")
+        self.selectedCharacter = Comms.GetPeerName()
+    end
+
+    if not next(Comms.GetPeerHeartbeat(self.selectedCharacter)) then
+        Logger.log_error("\ayOptionsUI: \awSelected peer '%s' is not valid. Defaulting back to local character.", self.selectedCharacter)
+        self.selectedCharacter = Comms.GetPeerName()
+    end
+end
+
 function OptionsUI:RenderMainWindow(_, openGUI, flags)
     local shouldDrawGUI = true
 
@@ -823,6 +835,8 @@ function OptionsUI:RenderMainWindow(_, openGUI, flags)
         Logger.log_debug("\ayOptionsUI: \awSettings re-sorted due to new module settings being registered.")
         self.FirstRender = false
     end
+
+    self:ValidateSelectedPeer()
 
     if Config.TempSettings.ResetOptionsUIPosition then
         ImGui.SetNextWindowPos(ImVec2(100, 100), ImGuiCond.Always)
