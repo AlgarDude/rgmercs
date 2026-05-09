@@ -14,6 +14,27 @@ return {
     ['Modes']         = {
         'DPS',
     },
+    ['Themes']        = {
+        ['DPS'] = {
+            { element = ImGuiCol.TitleBgActive,    color = { r = 0.10, g = 0.10, b = 0.16, a = 0.8, }, },
+            { element = ImGuiCol.TableHeaderBg,    color = { r = 0.10, g = 0.10, b = 0.16, a = 0.8, }, },
+            { element = ImGuiCol.Tab,              color = { r = 0.04, g = 0.04, b = 0.07, a = 0.8, }, },
+            { element = ImGuiCol.TabSelected,      color = { r = 0.10, g = 0.10, b = 0.16, a = 0.8, }, },
+            { element = ImGuiCol.TabHovered,       color = { r = 0.10, g = 0.10, b = 0.16, a = 1.0, }, },
+            { element = ImGuiCol.Header,           color = { r = 0.04, g = 0.04, b = 0.07, a = 0.8, }, },
+            { element = ImGuiCol.HeaderActive,     color = { r = 0.10, g = 0.10, b = 0.16, a = 0.8, }, },
+            { element = ImGuiCol.HeaderHovered,    color = { r = 0.10, g = 0.10, b = 0.16, a = 1.0, }, },
+            { element = ImGuiCol.FrameBgHovered,   color = { r = 0.10, g = 0.10, b = 0.16, a = 0.7, }, },
+            { element = ImGuiCol.Button,           color = { r = 0.07, g = 0.07, b = 0.11, a = 0.8, }, },
+            { element = ImGuiCol.ButtonActive,     color = { r = 0.10, g = 0.10, b = 0.16, a = 0.8, }, },
+            { element = ImGuiCol.ButtonHovered,    color = { r = 0.10, g = 0.10, b = 0.16, a = 1.0, }, },
+            { element = ImGuiCol.TextSelectedBg,   color = { r = 0.10, g = 0.10, b = 0.16, a = 0.1, }, },
+            { element = ImGuiCol.FrameBg,          color = { r = 0.04, g = 0.04, b = 0.07, a = 0.8, }, },
+            { element = ImGuiCol.SliderGrab,       color = { r = 0.15, g = 0.75, b = 0.30, a = 0.8, }, },
+            { element = ImGuiCol.SliderGrabActive, color = { r = 0.15, g = 0.75, b = 0.30, a = 0.9, }, },
+            { element = ImGuiCol.FrameBgActive,    color = { r = 0.10, g = 0.10, b = 0.16, a = 1.0, }, },
+        },
+    },
     ['ItemSets']      = {
         ['OoW_Chest'] = {
             "Whisperer's Ascendant Tunic of Shadows",
