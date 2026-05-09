@@ -122,7 +122,7 @@ end
 --- Loads any plugins in t that are not currently loaded. When
 --- reloadingUnloaded is true, logs that the plugin is being reloaded.
 ---@param t string[] List of plugin names to verify are loaded.
----@param reloadingUnloaded boolean If true, treat load as a reload operation.
+---@param reloadingUnloaded boolean? If true, treat load as a reload operation.
 function Core.CheckPlugins(t, reloadingUnloaded)
     for _, p in pairs(t) do
         if not mq.TLO.Plugin(p)() then
@@ -313,7 +313,7 @@ end
 --- Targets targetId and waits up to 2×ping+500 ms for buffs to populate,
 --- then fires OnTargetChange on all modules.
 ---@param targetId number Spawn ID to target.
----@param ignoreBuffPopulation boolean If true, don't wait for buff population.
+---@param ignoreBuffPopulation boolean? If true, don't wait for buff population.
 function Core.SetTarget(targetId, ignoreBuffPopulation)
     if targetId == 0 then return end
 
@@ -418,9 +418,8 @@ function Core.AAUsedInRotation(aaName)
 end
 
 --- Returns the timestamp of the last combat mode change from the class module.
----@param aaName string Unused; forwarded to the class module for compatibility.
 ---@return number Timestamp in seconds of the last combat mode change.
-function Core.GetLastCombatModeChangeTime(aaName)
+function Core.GetLastCombatModeChangeTime()
     return Modules:ExecModule("Class", "GetLastCombatModeChangeTime")
 end
 
