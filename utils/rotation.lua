@@ -145,7 +145,7 @@ function Rotation.ExecEntry(caller, entry, targetId, resolvedActionMap, bAllowMe
 
         if Casting.ItemReady(itemName) then
             Rotation.RunPreActivate(caller, resolvedActionMap, entry)
-            ret, isGroup = Casting.UseItem(itemName, entry.NoTarget == true and nil or targetId)
+            ret, isGroup = Casting.UseItem(itemName, entry.no_target == true and nil or targetId)
         end
         Logger.log_verbose("Trying to use item %s :: %s", itemName, ret and "\agSuccess" or "\arFailed!")
     end
@@ -158,7 +158,7 @@ function Rotation.ExecEntry(caller, entry, targetId, resolvedActionMap, bAllowMe
 
         if Casting.ItemReady(itemName) then
             Rotation.RunPreActivate(caller, resolvedActionMap, entry)
-            ret, isGroup = Casting.UseItem(itemName, entry.NoTarget == true and nil or targetId)
+            ret, isGroup = Casting.UseItem(itemName, entry.no_target == true and nil or targetId)
         end
         Logger.log_verbose("Trying to use clickyitem %s :: %s", itemName, ret and "\agSuccess" or "\arFailed!")
     end
