@@ -32,7 +32,7 @@ local function parseFile(path, out)
     local inBlock       = false
 
     for line in f:lines() do
-        local commentBody = line:match('^%s*%-%-%-%s?(.*)')
+        local commentBody = line:match('^%s*%-%-%- ?(.*)')
         if commentBody ~= nil then
             inBlock = true
             local pName, pType = commentBody:match('^@param%s+(%S+)%s+(%S+)')
@@ -42,8 +42,12 @@ local function parseFile(path, out)
                 local rType = commentBody:match('^@return%s+(%S+)')
                 if rType then
                     pendingRet = rType
-                elseif commentBody ~= '' and not commentBody:match('^@') and pendingDesc == nil then
-                    pendingDesc = commentBody
+                elseif commentBody ~= '' and not commentBody:match('^@') then
+                    if pendingDesc == nil then
+                        pendingDesc = commentBody
+                    else
+                        pendingDesc = pendingDesc .. ' ' .. commentBody
+                    end
                 end
             end
         else

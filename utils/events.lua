@@ -10,8 +10,8 @@ local Events   = { _version = '1.0', _name = "Events", _author = 'Derple', }
 
 Events.__index = Events
 
---- Handles the death event for RGMercs.
---- This function is triggered when a death event occurs and performs necessary operations.
+--- Handles player death: fires OnDeath on all modules, waits for
+--- release or rez, then uses the fellowship insignia if configured.
 function Events.HandleDeath()
     Logger.log_warn("You are sleeping with the fishes.")
 
@@ -46,12 +46,16 @@ function Events.HandleDeath()
     end
 end
 
+--- Sends the periodic heartbeat and dispatches DoEvents to all modules.
 function Events.DoEvents()
     Events.SendHeartbeat(false)
 
     Modules:ExecAll("DoEvents")
 end
 
+--- Forwards a heartbeat to Comms with the current assist target and
+--- chase state derived from active config settings.
+---@param forceSend boolean True to bypass the normal send interval.
 function Events.SendHeartbeat(forceSend)
     Comms.SendHeartbeat(Globals.MainAssist, Config:GetSetting('ChaseOn') and Config:GetSetting('ChaseTarget') or "Chase Off", forceSend)
 end

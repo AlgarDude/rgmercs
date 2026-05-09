@@ -173,6 +173,24 @@ local HINT_DIM    = ImVec4(0.6, 0.6, 0.6, 1.0)
 local HINT_TYPE   = ImVec4(0.8, 0.4, 1.0, 1.0)
 local HINT_DESC   = ImVec4(0.3, 0.5, 0.8, 1.0)
 
+local function wrapText(text, maxWidth)
+    local lines = {}
+    local words = {}
+    for word in text:gmatch('%S+') do words[#words + 1] = word end
+    local line = ''
+    for _, word in ipairs(words) do
+        local candidate = line == '' and word or (line .. ' ' .. word)
+        if ImGui.CalcTextSize(candidate) > maxWidth and line ~= '' then
+            lines[#lines + 1] = line
+            line = word
+        else
+            line = candidate
+        end
+    end
+    if line ~= '' then lines[#lines + 1] = line end
+    return lines
+end
+
 function Module:RenderHintBar()
     self.hintBarScreenPos         = ImGui.GetCursorScreenPosVec()
     local text                    = self.luaBuffer:GetText()
@@ -214,7 +232,12 @@ function Module:RenderHintBar()
     ImGui.TextColored(HINT_TYPE, sig.ret or 'nil')
     if sig.desc then
         ImGui.SameLine(0, 4)
-        ImGui.TextColored(HINT_DESC, ': ' .. sig.desc)
+        local availW = ImGui.GetContentRegionAvail() - 4
+        local lines  = wrapText(': ' .. sig.desc, availW)
+        ImGui.TextColored(HINT_DESC, lines[1] or '')
+        for i = 2, #lines do
+            ImGui.TextColored(HINT_DESC, lines[i])
+        end
     end
 end
 
@@ -294,10 +317,30 @@ function Module:RenderCompletion()
     local lineHeight  = ImGui.GetTextLineHeightWithSpacing()
     local dropX       = self.hintBarScreenPos.x
     local dropY       = self.hintBarScreenPos.y
-    local childH      = math.min(#items, COMPLETE_MAX) * lineHeight + 8
-    local mousePos    = ImGui.GetMousePosVec()
-
     local dropW       = ImGui.GetWindowWidth() * 0.98
+    local scrollbarW  = ImGui.GetStyle().ScrollbarSize
+    -- when more items than COMPLETE_MAX, a scrollbar will appear inside the child
+    local willScroll  = #items > COMPLETE_MAX
+    -- desc goes on its own indented line, so available width is nearly the full dropW
+    local indent      = ImGui.GetStyle().IndentSpacing
+    local descAvailW  = dropW - indent - 4 - (willScroll and scrollbarW or 0)
+
+    -- precompute wrapped lines per item so childH is tall enough
+    local itemLines  = {}
+    local visCount   = math.min(#items, COMPLETE_MAX)
+    local totalLines = 0
+    for i = 1, #items do
+        local item = items[i]
+        local n = 0
+        if item.sig and item.sig.desc then
+            n = #wrapText(item.sig.desc, descAvailW)
+        end
+        itemLines[i] = n
+        if i <= visCount then totalLines = totalLines + 1 + n end
+    end
+
+    local childH      = totalLines * lineHeight + 8
+    local mousePos    = ImGui.GetMousePosVec()
     local mouseInDrop = mousePos.x >= dropX and mousePos.x <= dropX + dropW
         and mousePos.y >= dropY and mousePos.y <= dropY + childH
 
@@ -325,17 +368,26 @@ function Module:RenderCompletion()
             ImGui.SameLine(0, 0)
             ImGui.TextColored(COMPLETE_TYPE, (item.sig and item.sig.ret) or 'nil')
             if item.sig and item.sig.desc then
-                ImGui.SameLine(0, 4)
-                ImGui.TextColored(COMPLETE_DESC, ': ' .. item.sig.desc)
+                ImGui.Indent(indent)
+                local lines = wrapText(item.sig.desc, descAvailW)
+                for _, ln in ipairs(lines) do
+                    ImGui.TextColored(COMPLETE_DESC, ln)
+                end
+                ImGui.Unindent(indent)
             end
         end
 
-        local targetY = (self.completionIdx - 1) * lineHeight
+        -- scroll to keep selected item visible, accounting for variable row heights
+        local targetY = 0
+        for i = 1, self.completionIdx - 1 do
+            targetY = targetY + (1 + (itemLines[i] or 0)) * lineHeight
+        end
+        local itemH   = (1 + (itemLines[self.completionIdx] or 0)) * lineHeight
         local scrollY = ImGui.GetScrollY()
         if targetY < scrollY then
             ImGui.SetScrollY(targetY)
-        elseif targetY + lineHeight > scrollY + childH - 4 then
-            ImGui.SetScrollY(targetY + lineHeight - childH + 4)
+        elseif targetY + itemH > scrollY + childH - 4 then
+            ImGui.SetScrollY(targetY + itemH - childH + 4)
         end
     end
     ImGui.EndChild()

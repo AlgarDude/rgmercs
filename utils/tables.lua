@@ -2,8 +2,8 @@ local Tables   = { _version = '1.0', _name = "Tables", _author = 'Derple', }
 Tables.__index = Tables
 
 --- Gets the size of a table.
---- @param t table The table whose size is to be determined.
---- @return number The size of the table.
+---@param t table The table whose size is to be determined.
+---@return number The size of the table.
 function Tables.GetTableSize(t)
     local i = 0
     for _, _ in pairs(t) do i = i + 1 end
@@ -11,9 +11,9 @@ function Tables.GetTableSize(t)
 end
 
 --- Checks if a table contains a specific value.
---- @param t table The table to search.
---- @param value any The value to search for in the table.
---- @return boolean True if the value is found in the table, false otherwise.
+---@param t table The table to search.
+---@param value any The value to search for in the table.
+---@return boolean True if the value is found in the table, false otherwise.
 function Tables.TableContains(t, value)
     for _, v in pairs(t) do
         if v == value then
@@ -24,45 +24,48 @@ function Tables.TableContains(t, value)
 end
 
 --- Converts an ImVec4 to a table.
---- @param vec ImVec4 The ImVec4 to convert.
---- @return table|nil The converted table with x, y, z, w keys.
+---@param vec ImVec4 The ImVec4 to convert.
+---@return table|nil The converted table with x, y, z, w keys.
 function Tables.ImVec4ToTable(vec)
     if not vec then return nil end
     return { x = vec.x, y = vec.y, z = vec.z, w = vec.w, }
 end
 
 --- Converts an ImVec4 to a table.
---- @param t table The table to convert.
---- @return table|nil The converted table with x, y, z, w keys.
+---@param t table The table to convert.
+---@return table|nil The converted table with x, y, z, w keys.
 function Tables.TableRGBAToXYZW(t)
     if not t then return nil end
     return { x = t.r, y = t.g, z = t.b, w = t.a, }
 end
 
 --- Converts a table to an ImVec4.
---- @param t table The table to convert. Must have x, y, z, w keys.
---- @return ImVec4|nil The converted ImVec4.
+---@param t table The table to convert. Must have x, y, z, w keys.
+---@return ImVec4|nil The converted ImVec4.
 function Tables.TableToImVec4(t)
     if not t then return nil end
     return ImVec4(t.x or t.r, t.y or t.g, t.z or t.b, t.w or t.a)
 end
 
 --- Converts an ImVec2 to a table.
---- @param vec ImVec2 The ImVec2 to convert.
---- @return table|nil The converted table with x, y keys.
+---@param vec ImVec2 The ImVec2 to convert.
+---@return table|nil The converted table with x, y keys.
 function Tables.ImVec2ToTable(vec)
     if not vec then return nil end
     return { x = vec.x, y = vec.y, }
 end
 
 --- Converts a table to an ImVec2.
---- @param t table The table to convert. Must have x, y keys.
---- @return ImVec2 The converted ImVec2.
+---@param t table The table to convert. Must have x, y keys.
+---@return ImVec2 The converted ImVec2.
 function Tables.TableToImVec2(t)
     if not t then return ImVec2(0, 0) end
     return ImVec2(t.x, t.y)
 end
 
+--- Merges one or more sequential tables into a new flat array.
+---@param ... table Any number of sequential tables to concatenate.
+---@return table New array containing all elements in order.
 function Tables.ConcatTables(...)
     local result = {}
     for _, t in ipairs({ ..., }) do
@@ -73,6 +76,10 @@ function Tables.ConcatTables(...)
     return result
 end
 
+--- Returns a deep copy of orig, handling cyclic references via copies.
+---@param orig any Value to copy; non-tables are returned as-is.
+---@param copies table? Cycle-detection map; omit on initial call.
+---@return any A deep clone of orig.
 function Tables.DeepCopy(orig, copies)
     copies = copies or {} -- to handle cycles
     if type(orig) ~= "table" then
@@ -89,6 +96,10 @@ function Tables.DeepCopy(orig, copies)
     return setmetatable(copy, getmetatable(orig))
 end
 
+--- Compares two scalar or table values, printing a diff on mismatch.
+---@param v1 any First value.
+---@param v2 any Second value.
+---@return boolean True if the values are considered equal.
 function Tables._compareValues(v1, v2)
     if type(v1) ~= type(v2) then
         printf("\arType mismatch: %s (type %s) ~= %s (type %s)", tostring(v1), type(v1), tostring(v2), type(v2))
@@ -111,6 +122,12 @@ function Tables._compareValues(v1, v2)
     end
 end
 
+--- Recursively compares tables a and b, tracking visited pairs to
+--- handle cycles. Calls PrintTableDiff on the first mismatch found.
+---@param a table First table.
+---@param b table Second table.
+---@param visited table Cycle-detection map; pass {} on initial call.
+---@return boolean True if both tables are deeply equal.
 function Tables._compareTables(a, b, visited)
     if visited[a] and visited[a] == b then
         return true -- already compared these tables
@@ -134,6 +151,10 @@ function Tables._compareTables(a, b, visited)
     return true
 end
 
+--- Deep equality check for two tables, handling cycles.
+---@param t1 any First value to compare.
+---@param t2 any Second value to compare.
+---@return boolean True if t1 and t2 are deeply equal.
 function Tables.AreTablesEqual(t1, t2)
     if t1 == t2 then return true end
     if type(t1) ~= "table" or type(t2) ~= "table" then return false end
@@ -195,9 +216,9 @@ local function printTable(o, depth)
 end
 
 --- Converts a table value to its string representation.
---- @param t table: The boolean value to convert.
---- @param maxLen number?: The maximum length of the resulting string. Defaults to 60 if not provided.
---- @return string: "true" if the boolean is true, "false" otherwise.
+---@param t table: The boolean value to convert.
+---@param maxLen number?: The maximum length of the resulting string. Defaults to 60 if not provided.
+---@return string: "true" if the boolean is true, "false" otherwise.
 function Tables.TableToString(t, maxLen)
     if maxLen == nil then
         maxLen = 60
@@ -211,7 +232,7 @@ function Tables.TableToString(t, maxLen)
 end
 
 --- Converts a table value to its string representation.
---- @param t table: The boolean value to convert.
+---@param t table: The boolean value to convert.
 function Tables.PrintTable(t)
     if type(t) ~= "table" then
         print("{}")
@@ -290,6 +311,11 @@ local function diffTables(a, b, depth, context, lines)
     return lines
 end
 
+--- Prints a colored unified-style diff between tables a and b,
+--- showing 2 lines of context around each change.
+---@param a table Left-hand table.
+---@param b table Right-hand table.
+---@param label string? Optional heading printed before the diff.
 function Tables.PrintTableDiff(a, b, label)
     if type(a) ~= "table" or type(b) ~= "table" then
         printf("\awPrintTableDiff: both arguments must be tables")

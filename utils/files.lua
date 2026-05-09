@@ -18,6 +18,9 @@ function Files.file_exists(path)
     end
 end
 
+--- Recursively creates every component of path, like `mkdir -p`.
+---@param path string The full directory path to create.
+---@return boolean|nil True on success; nil + error string on failure.
 function Files.make_p(path)
     local sep = package.config:sub(1, 1)
 
@@ -64,6 +67,9 @@ function Files.make_p(path)
     return true
 end
 
+--- Creates all parent directories needed for filepath to be writable.
+---@param filepath string Full path to the target file (not the directory).
+---@return boolean|nil True on success; nil + error string on failure.
 function Files.make_p_for_file(filepath)
     local sep = package.config:sub(1, 1)
     filepath = filepath:gsub("[/\\]", sep)
@@ -101,6 +107,9 @@ function Files.copy_file(from_path, to_path)
     return false
 end
 
+--- Deletes the file at path; logs an error and returns false on failure.
+---@param path string Path to the file to delete.
+---@return boolean True if deleted; false if not found or deletion failed.
 function Files.delete_file(path)
     if Files.file_exists(path) then
         local success, err = os.remove(path)

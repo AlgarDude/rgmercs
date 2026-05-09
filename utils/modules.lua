@@ -47,6 +47,9 @@ function Modules:load(lootModule)
     }
 end
 
+--- Shuts down and removes a module by name, also removing it from
+--- the execution order list.
+---@param moduleName string Name of the module to unload.
 function Modules:unloadModule(moduleName)
     if self.ModuleList[moduleName] ~= nil then
         self.ModuleList[moduleName]:Shutdown()
@@ -61,6 +64,10 @@ function Modules:unloadModule(moduleName)
     end
 end
 
+--- Loads (or reloads) a module from filePath, appends it to the
+--- execution order, then calls its Init function.
+---@param moduleName string Name key to store the module under.
+---@param filePath string Require-style path to the module file.
 function Modules:loadModule(moduleName, filePath)
     self:unloadModule(moduleName)
     self.ModuleList[moduleName] = require(filePath):New()
@@ -69,10 +76,15 @@ function Modules:loadModule(moduleName, filePath)
     Modules:ExecModule(moduleName, "Init")
 end
 
+--- Returns the raw ModuleList table (name → module instance).
+---@return table<string, RGMercsModuleType> The loaded module map.
 function Modules:GetModuleList()
     return self.ModuleList
 end
 
+--- Returns the ordered list of module name strings used for GiveTime
+--- and ExecAll dispatch.
+---@return string[] Ordered array of module names.
 function Modules:GetModuleOrderedNames()
     return self.ModuleOrder
 end
@@ -88,6 +100,12 @@ function Modules:GetModule(m)
     return nil
 end
 
+--- Calls fn on the named module (case-insensitive fallback), forwarding
+--- any extra args. Logs an error if the module is not found.
+---@param m string Module name.
+---@param fn string Method name to call on the module.
+---@param ... any Arguments forwarded to the method.
+---@return any Return value from the module method, if any.
 function Modules:ExecModule(m, fn, ...)
     if self.ModuleList[m] ~= nil then
         return self.ModuleList[m][fn](self.ModuleList[m], ...)
@@ -101,6 +119,11 @@ function Modules:ExecModule(m, fn, ...)
     Logger.log_error("\arModule: \at%s\ar not found!", m)
 end
 
+--- Calls fn on every module in ModuleOrder, collecting return values
+--- into a name-keyed table. Tracks per-frame timing for GiveTime calls.
+---@param fn string Method name to call on each module.
+---@param ... any Arguments forwarded to each module method.
+---@return table<string, any> Map of module name → return value.
 function Modules:ExecAll(fn, ...)
     local ret = {}
     for _, name in pairs(self.ModuleOrder) do

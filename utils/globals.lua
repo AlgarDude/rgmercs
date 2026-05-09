@@ -29,7 +29,7 @@ Globals.InMedState                    = false
 Globals.LastPetCmd                    = 0
 Globals.LastFaceTime                  = 0
 Globals.CurZoneId                     = mq.TLO.Zone.ID()
-Globals.CurInstance                   = mq.TLO.Me.Instance()
+Globals.CurInstanceId                 = mq.TLO.Me.Instance()
 Globals.CurLoadedChar                 = mq.TLO.Me.DisplayName()
 Globals.CurLoadedClass                = mq.TLO.Me.Class.ShortName()
 Globals.CurServer                     = mq.TLO.EverQuest.Server()
@@ -274,20 +274,31 @@ Globals.Constants.DeprecatedConfigs = {
 
 Globals.Constants.LiveLevelCap      = 130
 
+--- Returns the current MQ time in whole seconds.
+---@return number Seconds since the MQ epoch.
 function Globals.GetTimeSeconds()
     return mq.gettime() / 1000
 end
 
+--- Returns the current MQ time in milliseconds.
+---@return number Milliseconds since the MQ epoch.
 function Globals.GetTimeMS()
     return mq.gettime()
 end
 
+--- Returns colorA or colorB alternating once per second.
+---@param colorA ImU32|ImVec4? First color; defaults to orange.
+---@param colorB ImU32|ImVec4? Second color; defaults to red.
+---@return ImU32 The active color for the current second.
 function Globals.GetAlternatingColor(colorA, colorB)
     colorA = colorA or IM_COL32(200, 200, 52, 255)
     colorB = colorB or IM_COL32(200, 52, 52, 255)
     return (math.floor(Globals.GetTimeSeconds() % 2) == 1) and ImGui.GetColorU32(colorA) or ImGui.GetColorU32(colorB)
 end
 
+--- Sets or clears ForceTargetID and fires OnForceTargetChange on all
+--- modules when the value actually changes.
+---@param targetId number? Spawn ID to force-target; 0 or nil to clear.
 function Globals.SetForcedTargetId(targetId)
     if targetId == Globals.ForceTargetID then return end
 

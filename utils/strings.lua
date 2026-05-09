@@ -1,6 +1,12 @@
 local Strings   = { _version = '1.0', _name = "Strings", _author = 'Derple', }
 Strings.__index = Strings
 
+--- Returns a stateful iterator that yields each substring of text
+--- separated by pattern, similar to Python's str.split.
+---@param text string The input string to split.
+---@param pattern string The separator pattern (or plain string if plain=true).
+---@param plain boolean? If true, treats pattern as a literal string.
+---@return function Iterator yielding successive substrings.
 function Strings.gsplit(text, pattern, plain)
     local splitStart, length = 1, #text
     return function()
@@ -29,10 +35,10 @@ end
 
 --- Splits a given text into a table of substrings based on a specified pattern.
 ---
---- @param text string: The text to be split.
---- @param pattern string: The pattern to split the text by.
---- @param plain boolean?: If true, the pattern is treated as a plain string.
---- @return table: A table containing the substrings.
+---@param text string: The text to be split.
+---@param pattern string: The pattern to split the text by.
+---@param plain boolean?: If true, the pattern is treated as a plain string.
+---@return table: A table containing the substrings.
 function Strings.split(text, pattern, plain)
     local ret = {}
     if text ~= nil then
@@ -43,6 +49,10 @@ function Strings.split(text, pattern, plain)
     return ret
 end
 
+--- Case-insensitive check whether str begins with the prefix start.
+---@param str string The string to test.
+---@param start string The prefix to look for.
+---@return boolean True if str starts with start (case-insensitive).
 function Strings.StartsWith(str, start)
     if type(str) ~= "string" or type(start) ~= "string" then
         return false
@@ -56,8 +66,8 @@ end
 
 --- Formats a given time
 ---
---- @param time number The time value to format.
---- @return string The formatted time as a string.
+---@param time number The time value to format.
+---@return string The formatted time as a string.
 function Strings.FormatTime(time)
     local timeTable = Strings.GetTimeAsTable(time)
 
@@ -66,8 +76,8 @@ end
 
 --- Returns the current time as a table.
 ---
---- @param time number The time value to format.
---- @return table The time as a table with days, hours, minutes, and seconds.
+---@param time number The time value to format.
+---@return table The time as a table with days, hours, minutes, and seconds.
 function Strings.GetTimeAsTable(time)
     local days = math.floor(time / 86400)
     local hours = math.floor((time % 86400) / 3600)
@@ -78,9 +88,9 @@ end
 
 --- Formats a given time according to the specified format string.
 ---
---- @param time number The time value to format.
---- @param formatString string? The format string to use for formatting the time.
---- @return string The formatted time as a string.
+---@param time number The time value to format.
+---@param formatString string? The format string to use for formatting the time.
+---@return string The formatted time as a string.
 function Strings.FormatTimeMS(time, formatString)
     -- Convert milliseconds to seconds6
     local milliseconds = time % 1000
@@ -88,8 +98,8 @@ function Strings.FormatTimeMS(time, formatString)
 end
 
 --- Converts a boolean value to its string representation.
---- @param b boolean: The boolean value to convert.
---- @return string: "true" if the boolean is true, "false" otherwise.
+---@param b boolean: The boolean value to convert.
+---@return string: "true" if the boolean is true, "false" otherwise.
 function Strings.BoolToString(b)
     if type(b) ~= "boolean" then
         return "\ayNOT A BOOL\ax"
@@ -100,8 +110,8 @@ end
 
 --- Converts a boolean value to a color string.
 --- If the boolean is true, it returns "green", otherwise "red".
---- @param b boolean: The boolean value to convert.
---- @return string: The color string corresponding to the boolean value.
+---@param b boolean: The boolean value to convert.
+---@return string: The color string corresponding to the boolean value.
 function Strings.BoolToColorString(b)
     if type(b) ~= "boolean" then
         return "\ayNOT A BOOL\ax"
@@ -139,9 +149,9 @@ local function dumpTable(o, depth, accLen, maxLen)
 end
 
 --- Converts a table value to its string representation.
---- @param t table: The boolean value to convert.
---- @param maxLen number?: The maximum length of the resulting string. Defaults to 60 if not provided.
---- @return string: "true" if the boolean is true, "false" otherwise.
+---@param t table: The boolean value to convert.
+---@param maxLen number?: The maximum length of the resulting string. Defaults to 60 if not provided.
+---@return string: "true" if the boolean is true, "false" otherwise.
 function Strings.TableToString(t, maxLen)
     if maxLen == nil then
         maxLen = 60
@@ -156,11 +166,11 @@ end
 
 --- Pads a string to a specified length with a given character.
 ---
---- @param string string The original string to be padded.
---- @param len number The desired length of the resulting string.
---- @param padFront boolean If true, padding is added to the front of the string; otherwise, it is added to the back.
---- @param padChar string? The character to use for padding. Defaults to a space if not provided.
---- @return string The padded string.
+---@param string string The original string to be padded.
+---@param len number The desired length of the resulting string.
+---@param padFront boolean If true, padding is added to the front of the string; otherwise, it is added to the back.
+---@param padChar string? The character to use for padding. Defaults to a space if not provided.
+---@return string The padded string.
 function Strings.PadString(string, len, padFront, padChar)
     if not padChar then padChar = " " end
     local cleanText = string:gsub("\a[-]?.", "")

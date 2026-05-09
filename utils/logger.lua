@@ -21,16 +21,28 @@ local logFileHandle          = nil
 
 actions.ToastStates          = {}
 
+--- Returns the current log level threshold (1=Errors … 6=Super-Verbose).
+---@return number The active log level.
 function actions.get_log_level() return currentLogLevel end
 
+--- Sets the log level threshold; messages below this level are suppressed.
+---@param level number New log level (1=Errors … 6=Super-Verbose).
 function actions.set_log_level(level) currentLogLevel = level end
 
+--- Controls whether timestamps are prepended to console log output.
+---@param value boolean True to include timestamps.
 function actions.set_log_timestamps_to_console(value) logTimestampsToConsole = value end
 
+--- Enables or disables the caller stack-trace appended to each log line.
+---@param value boolean True to enable the debug tracer.
 function actions.set_debug_tracer_enabled(value) enableTracer = value end
 
+--- Sets the toast popup level; messages at or below this level show toasts.
+---@param level number New toast level (1=Errors … 4=Info).
 function actions.set_toast_level(level) currentToastLevel = level end
 
+--- Enables or disables always-on file logging; closes the handle when disabled.
+---@param logToFile boolean True to write every log line to the log file.
 function actions.set_log_to_file(logToFile)
 	if logToFileAlways ~= logToFile then
 		logToFileAlways = logToFile
@@ -42,10 +54,13 @@ function actions.set_log_to_file(logToFile)
 	end
 end
 
+--- Sets a pipe-separated filter; only log lines matching any token are shown.
+---@param filter string Pipe-separated list of substrings to match (case-insensitive).
 function actions.set_log_filter(filter)
 	filters = Strings.split(filter:lower(), "|")
 end
 
+--- Clears the log filter so all messages at the current level are shown.
 function actions.clear_log_filter() filters = {} end
 
 local logLevels = {

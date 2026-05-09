@@ -15,7 +15,10 @@ Comms.PeersHeartbeats      = {}
 Comms.OutgoingToasts       = {}
 
 -- Putting this here for lack of a beter spot.
---- @param peerName string? The character name string if not supplied then we use Me.DisplayName()
+--- Returns "Name (Server)" for use as the actor peer key. Uppercases
+--- the first letter of the server name for Live compatibility.
+--- @param peerName string? Character name; defaults to Me.DisplayName().
+--- @return string The formatted "Name (Server)" peer identifier.
 function Comms.GetPeerName(peerName)
     local server = mq.TLO.EverQuest.Server()
     --upper first letter if it isnt (Live)
@@ -26,6 +29,11 @@ function Comms.GetPeerName(peerName)
     return string.format("%s (%s)", peerName and peerName or mq.TLO.Me.DisplayName(), server)
 end
 
+--- Looks up a peer key in PeersToServerNameMap and returns its
+--- character name and server name as separate values.
+--- @param peer string The peer key ("Name (Server)") to look up.
+--- @return string|nil name The character name, or nil if not found.
+--- @return string|nil server The server name, or nil if not found.
 function Comms.GetNameAndServerFromPeer(peer)
     local data = Comms.PeersToServerNameMap[peer]
     if data then
@@ -35,6 +43,10 @@ function Comms.GetNameAndServerFromPeer(peer)
     return nil, nil
 end
 
+--- Looks up a peer key in PeersToServerNameMap and returns only
+--- the character name portion.
+--- @param peer string The peer key ("Name (Server)") to look up.
+--- @return string|nil The character name, or nil if not found.
 function Comms.GetNameFromPeer(peer)
     local data = Comms.PeersToServerNameMap[peer]
     if data then
@@ -44,11 +56,10 @@ function Comms.GetNameFromPeer(peer)
     return nil
 end
 
---- Broadcasts an update event to the specified module.
----
---- @param module string The name of the module to broadcast the update to.
+--- Sends an actor broadcast to all MQ instances on the network.
+--- @param module string The target module name for the message.
 --- @param event string The event type to broadcast.
---- @param data table? The data associated with the event.
+--- @param data table? The data payload for the event.
 function Comms.BroadcastMessage(module, event, data)
     Comms.Actors.send({
         From = Comms.GetPeerName(),
@@ -60,9 +71,12 @@ function Comms.BroadcastMessage(module, event, data)
     Logger.log_super_verbose("Broadcasted: %s event: %s", event, Strings.TableToString(data or {}, 512))
 end
 
---- @param module string The name of the module to broadcast the update to.
---- @param event string The event type to broadcast.
---- @param data table? The data associated with the event.
+--- Sends a directed actor message to a single peer by looking up
+--- their server and character name from PeersToServerNameMap.
+--- @param peer string The peer key ("Name (Server)") to send to.
+--- @param module string The target module name for the message.
+--- @param event string The event type to send.
+--- @param data table? The data payload for the event.
 function Comms.SendMessage(peer, module, event, data)
     local char, server = Comms.GetNameAndServerFromPeer(peer)
     Comms.Actors.send({ server = server, character = char, }, {
@@ -75,6 +89,11 @@ function Comms.SendMessage(peer, module, event, data)
     Logger.log_super_verbose("Sent Message: %s to:  %s event: %s", event, peer, Strings.TableToString(data or {}, 512))
 end
 
+--- Sends a /cmd to a single peer via SendMessage. If the peer is
+--- self, executes the command locally instead.
+--- @param peer string The peer key to target.
+--- @param cmd string The command format string.
+--- @param ... any Format arguments for the command string.
 function Comms.SendPeerDoCmd(peer, cmd, ...)
     cmd = string.format(cmd, ...)
 
@@ -87,6 +106,12 @@ function Comms.SendPeerDoCmd(peer, cmd, ...)
         cmd = cmd, })
 end
 
+--- Broadcasts a /cmd to all known peers. Optionally restricted to
+--- peers in the current zone, and optionally including self.
+--- @param inZoneOnly boolean Only send to peers in the current zone.
+--- @param includeSelf boolean Execute the command locally as well.
+--- @param cmd string The command format string.
+--- @param ... any Format arguments for the command string.
 function Comms.SendAllPeersDoCmd(inZoneOnly, includeSelf, cmd, ...)
     cmd = string.format(cmd, ...)
 
@@ -102,6 +127,13 @@ function Comms.SendAllPeersDoCmd(inZoneOnly, includeSelf, cmd, ...)
     end
 end
 
+--- Broadcasts the player's full state (HP, mana, target, buffs,
+--- position, etc.) to all peers at most once per second, then
+--- updates own entry in PeersHeartbeats. forceSend bypasses the
+--- throttle.
+--- @param assist string|nil The current assist target name.
+--- @param chase string|nil The current chase target name.
+--- @param forceSend boolean|nil Skip the 1-second throttle if true.
 function Comms.SendHeartbeat(assist, chase, forceSend)
     if not forceSend and Globals.GetTimeSeconds() - Comms.LastHeartbeat < 1 then return end
     local useMana = Globals.Constants.RGCasters:contains(mq.TLO.Me.Class.ShortName())
@@ -115,6 +147,8 @@ function Comms.SendHeartbeat(assist, chase, forceSend)
         Server        = mq.TLO.EverQuest.Server(),
         Zone          = mq.TLO.Zone.Name(),
         ZoneShortName = mq.TLO.Zone.ShortName(),
+        ZoneId        = mq.TLO.Zone.ID(),
+        InstanceId    = mq.TLO.Me.Instance(),
         ID            = mq.TLO.Me.ID(),
         Level         = mq.TLO.Me.Level(),
         X             = mq.TLO.Me.X(),
@@ -172,6 +206,10 @@ function Comms.SendHeartbeat(assist, chase, forceSend)
     Comms.OutgoingToasts = {}
 end
 
+--- Returns all cached peer heartbeat data. When includeSelf is
+--- false, the local peer's own entry is excluded.
+--- @param includeSelf boolean? Include the local peer's heartbeat.
+--- @return table Map of peer key to heartbeat data.
 function Comms.GetAllPeerHeartbeats(includeSelf)
     if not includeSelf then
         local heartbeats = {}
@@ -186,18 +224,33 @@ function Comms.GetAllPeerHeartbeats(includeSelf)
     return Comms.PeersHeartbeats or {}
 end
 
+--- Looks up a heartbeat by character name by constructing the peer
+--- key via GetPeerName, then returns the cached heartbeat or {}.
+--- @param name string The character name to look up.
+--- @return table The heartbeat data table, or {} if not found.
 function Comms.GetPeerHeartbeatByName(name)
     return Comms.PeersHeartbeats[Comms.GetPeerName(name)] or {}
 end
 
+--- Returns the cached heartbeat for the given peer key, or {} if
+--- the peer has no recorded heartbeat.
+--- @param peer string The peer key ("Name (Server)") to look up.
+--- @return table The heartbeat data table, or {} if not found.
 function Comms.GetPeerHeartbeat(peer)
     return Comms.PeersHeartbeats[peer] or {}
 end
 
+--- Returns true if the peer key exists in the active Peers set.
+--- @param peer string The peer key ("Name (Server)") to check.
+--- @return boolean True if the peer is currently tracked as active.
 function Comms.IsValidPeer(peer)
     return Comms.Peers:contains(peer)
 end
 
+--- Returns the list of active peer keys. When includeSelf is false,
+--- the local peer's own key is excluded from the result.
+--- @param includeSelf boolean Include the local peer in the list.
+--- @return table List of active peer key strings.
 function Comms.GetPeers(includeSelf)
     if not includeSelf then
         local peers = Set.new(Comms.Peers:toList() or {})
@@ -208,6 +261,12 @@ function Comms.GetPeers(includeSelf)
     return Comms.Peers:toList() or {}
 end
 
+--- Registers or refreshes a peer: adds the key to the Peers set,
+--- updates PeersToServerNameMap, normalises nil buff/song/blocked
+--- tables to {}, stores the heartbeat with a timestamp, and
+--- processes any incoming toasts from the peer.
+--- @param peer string The peer key ("Name (Server)") to update.
+--- @param data table The heartbeat data payload from the peer.
 function Comms.UpdatePeerHeartbeat(peer, data)
     Comms.Peers:add(peer)
     Comms.PeersToServerNameMap[peer] = { Server = data.Server, Name = data.Name, }
@@ -241,6 +300,9 @@ function Comms.UpdatePeerHeartbeat(peer, data)
     end
 end
 
+--- Removes peers whose last heartbeat is older than timeout seconds
+--- from the Peers set, PeersHeartbeats, and PeersToServerNameMap.
+--- @param timeout number Seconds since last heartbeat before expiry.
 function Comms.ValidatePeers(timeout)
     Logger.log_super_verbose("\ayValidating peers heartbeats for timeouts: \n  :: %s\n  :: %s", Strings.TableToString(Comms.PeersHeartbeats, 512),
         Strings.TableToString(Comms.Peers:toList(), 512))
@@ -254,9 +316,10 @@ function Comms.ValidatePeers(timeout)
     end
 end
 
---- Prints a group message with the given format and arguments.
---- @param msg string: The message format string.
---- @param ... any: Additional arguments to format the message.
+--- Sends msg to the group's DanNet channel via /dgt, scoped to the
+--- current server and group leader to avoid cross-group bleed.
+--- @param msg string The message format string.
+--- @param ... any Format arguments for the message.
 function Comms.PrintGroupMessage(msg, ...)
     local output = msg
     if (... ~= nil) then output = string.format(output, ...) end
@@ -264,9 +327,9 @@ function Comms.PrintGroupMessage(msg, ...)
     mq.cmdf("/dgt group_%s_%s %s", mq.TLO.EverQuest.Server():gsub(" ", ""), mq.TLO.Group.Leader() or "None", output)
 end
 
---- Displays a pop-up message with the given text.
---- @param msg string: The message to be displayed in the pop-up.
---- @param ... any: Additional arguments that may be used within the function.
+--- Shows a /popupecho message with default color 15 for 5 seconds.
+--- @param msg string The message format string.
+--- @param ... any Format arguments for the message.
 function Comms.PopUp(msg, ...)
     local output = msg
     if (... ~= nil) then output = string.format(output, ...) end
@@ -274,9 +337,11 @@ function Comms.PopUp(msg, ...)
     mq.cmdf("/popupecho 15 5 %s", output)
 end
 
---- Displays a pop-up message with the given text.
---- @param msg string: The message to be displayed in the pop-up.
---- @param ... any: Additional arguments that may be used within the function.
+--- Shows a /popupecho message with configurable color and duration.
+--- @param color number The EQ color index for the popup text.
+--- @param time number Display duration in seconds.
+--- @param msg string The message format string.
+--- @param ... any Format arguments for the message.
 function Comms.PopUpColor(color, time, msg, ...)
     local output = msg
     if (... ~= nil) then output = string.format(output, ...) end
@@ -284,10 +349,13 @@ function Comms.PopUpColor(color, time, msg, ...)
     mq.cmdf("/popupecho %d %d %s", color, time, output)
 end
 
---- Handles the announcement message.
---- @param msg string: The message to be announced.
---- @param sendGroup boolean: Whether to send the message to the group.
---- @param sendDan boolean: Whether to send the message to DanNet.
+--- Sends an announcement via /gsay or /rsay (when in a raid and
+--- AnnounceToRaidIfInRaid is set) and/or DanNet group channel,
+--- then logs it at debug level. Color codes are stripped for chat.
+--- @param msg string The message to announce.
+--- @param sendGroup boolean Send via /gsay or /rsay if true.
+--- @param sendDan boolean Send via DanNet group channel if true.
+--- @param AnnounceToRaidIfInRaid boolean Use /rsay when in a raid.
 function Comms.HandleAnnounce(msg, sendGroup, sendDan, AnnounceToRaidIfInRaid)
     if sendGroup then
         local cleanMsg = msg:gsub("\a.", "")
@@ -306,6 +374,12 @@ function Comms.HandleAnnounce(msg, sendGroup, sendDan, AnnounceToRaidIfInRaid)
     Logger.log_debug(msg)
 end
 
+--- Formats a structured chat event string used by HandleAnnounce
+--- and similar callers to produce consistent log/announce messages.
+--- @param event string The event type label (e.g. "Cast", "Burn").
+--- @param target string|nil The target name, or "None" if absent.
+--- @param source string|nil The source/detail string, or "???" if absent.
+--- @return string Formatted string "[event] => target <= {source}".
 function Comms.FormatChatEvent(event, target, source)
     return string.format("[%s] => %s <= {%s}", event or "Unknown", target or "None", source or "???")
 end

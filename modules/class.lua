@@ -508,7 +508,7 @@ function Module:Render()
     ImGui.TableNextColumn()
     Ui.RenderText("State")
     ImGui.TableNextColumn()
-    Ui.RenderColoredText(Globals.Constants.BasicColors.LightYellow, self.CurrentRotation.state)
+    Ui.RenderColoredText(Globals.Constants.BasicColors.LightYellow, tostring(self.CurrentRotation.state))
     ImGui.TableNextColumn()
     ImGui.EndTable()
 

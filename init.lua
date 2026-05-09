@@ -384,7 +384,7 @@ local function Main()
     Config:FlushDB()
     Config.Db:updateTelemetryGraphs()
 
-    if mq.TLO.Zone.ID() ~= Globals.CurZoneId or mq.TLO.Me.Instance() ~= Globals.CurInstance then
+    if mq.TLO.Zone.ID() ~= Globals.CurZoneId or mq.TLO.Me.Instance() ~= Globals.CurInstanceId then
         if notifyZoning then
             Modules:ExecAll("OnZone")
             notifyZoning = false
@@ -399,7 +399,7 @@ local function Main()
         end
         mq.delay(100)
         Globals.CurZoneId = mq.TLO.Zone.ID()
-        Globals.CurInstance = mq.TLO.Me.Instance()
+        Globals.CurInstanceId = mq.TLO.Me.Instance()
         Logger.log_super_verbose("Completed Main loop.")
         return
     end
