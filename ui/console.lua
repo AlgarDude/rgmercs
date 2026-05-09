@@ -47,7 +47,7 @@ function ConsoleUI:DrawConsole(showPopout)
             Ui.RenderText("Debug Level")
             ImGui.TableNextColumn()
             local logLevel = Config:GetSetting('LogLevel')
-            logLevel, _, changed = Ui.RenderOption("Combo", logLevel, 0, false, Globals.Constants.LogLevels)
+            logLevel, _, changed = Ui.RenderOption("Combo", logLevel, "LogLevelComboBox", false, Globals.Constants.LogLevels)
             if changed then
                 Config:SetSetting('LogLevel', logLevel)
             end

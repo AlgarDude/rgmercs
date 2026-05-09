@@ -69,6 +69,10 @@ local CLIP_DL_CH_ALPHA             = 0x3103
 
 local s_drawlist_clips_initialized = false
 
+--- Multiplies the alpha channel of an IM_COL32 packed color by factor.
+---@param col number IM_COL32 packed ABGR color value.
+---@param factor number Multiplier in [0,1] applied to the alpha byte.
+---@return number The color with the reduced alpha channel.
 function Ui.ReduceAlpha(col, factor)
     local a = bit.band(bit.rshift(col, 24), 0xFF)
     a = math.floor(a * factor)
@@ -76,6 +80,7 @@ function Ui.ReduceAlpha(col, factor)
     return bit.bor(bit.band(col, 0x00FFFFFF), bit.lshift(a, 24))
 end
 
+--- Initializes IamClip draw-list animations (pulsing rings) on first call.
 function Ui.InitDrawListClips()
     if s_drawlist_clips_initialized then return end
     s_drawlist_clips_initialized = true
@@ -110,6 +115,9 @@ end
 
 Ui.LoadThemez()
 
+--- Converts a Themez theme (by index) to an RGMercs userTheme table.
+---@param themeName number Index into Ui.Themez.Theme for the theme to import.
+---@return table New userTheme table with color and style entries.
 function Ui.ConvertFromThemez(themeName)
     local newUserTheme = {}
     local themeToImport = Ui.Themez.Theme[themeName]
@@ -140,9 +148,9 @@ function Ui.ConvertFromThemez(themeName)
     return newUserTheme
 end
 
---- Convert an RGMercs userTheme table to a Themez-compatible export table.
---- @param userTheme table The RGMercs theme settings table to convert.
---- @return table
+--- Converts an RGMercs userTheme table to a Themez-compatible export table.
+---@param userTheme table The RGMercs theme settings table to convert.
+---@return table Themez-format table with Name, Color, and Style fields.
 function Ui.ConvertToThemez(userTheme)
     local newThemezTheme = { Name = string.format("RGMercs Export - %s", os.date("%Y-%m-%d %H:%M:%S")), Color = {}, Style = {}, }
 
@@ -200,6 +208,7 @@ end
 
 Ui.LoadMercThemes()
 
+--- Serializes Ui.MercThemes to the rgmercs/themes.lua config file.
 function Ui.SaveThemes()
     mq.pickle(mq.configDir .. '/rgmercs/themes.lua', Ui.MercThemes)
 end
@@ -247,12 +256,20 @@ for _, v in ipairs(preSortedStyles) do
     Ui.ImGuiStyleVarIds[v.Name] = v.Value
 end
 
+--- Resolves an ImGui color ID from a name string or numeric value.
+---@param e string|number Color name or ImGuiCol numeric constant.
+---@return number The numeric ImGuiCol ID.
 function Ui.GetImGuiColorId(e)
     -- check c++ first then the ImGui Lua object
+    ---@diagnostic disable-next-line: return-type-mismatch
     return type(e) == 'string' and (Ui.ImGuiColorVarIds[e] or ImGuiCol[e] or 0) or e
 end
 
+--- Resolves an ImGui style variable ID from a name string or numeric value.
+---@param e string|number Style variable name or ImGuiStyleVar numeric constant.
+---@return number The numeric ImGuiStyleVar ID.
 function Ui.GetImGuiStyleId(e)
+    ---@diagnostic disable-next-line: return-type-mismatch
     return type(e) == 'string' and (Ui.ImGuiStyleVarIds[e] or ImGuiStyleVar[e] or 0) or e
 end
 
@@ -359,6 +376,9 @@ function Ui.RenderList(listName, ordered)
     end
 end
 
+--- Returns the 1-based index of name in Globals.ClassConfigDirs, or 1 if absent.
+---@param name string Config directory name to look up.
+---@return number 1-based index in ClassConfigDirs.
 function Ui.GetClassConfigIDFromName(name)
     for idx, curName in ipairs(Globals.ClassConfigDirs or {}) do
         if curName == name then return idx end
@@ -367,6 +387,7 @@ function Ui.GetClassConfigIDFromName(name)
     return 1
 end
 
+--- Renders a combo box for selecting the active class config directory.
 function Ui.RenderConfigSelector()
     if Globals.ClassConfigDirs ~= nil then
         Ui.RenderText("Config Type:")
@@ -389,6 +410,7 @@ function Ui.RenderConfigSelector()
     end
 end
 
+--- Renders a floating AA overlay window aligned to the in-game AA window.
 function Ui.RenderAAOverlay()
     if not Config:GetSetting('EnableAAOverlay') then return end
 
@@ -593,6 +615,12 @@ function Ui.RenderAAOverlay()
     end
 end
 
+--- Renders text with an animated color-wave gradient; falls back to a
+--- colored Selectable if the coverage-mask draw API is unavailable.
+---@param text string The text to display.
+---@param conColor ImVec4 Base color for the wave gradient.
+---@param clickedAction function? Callback invoked when the item is clicked.
+---@param dontUseWave boolean? If true, skips the wave and uses plain colored text.
 function Ui.RenderColorWaveText(text, conColor, clickedAction, dontUseWave)
     local draw_list = ImGui.GetWindowDrawList()
     ---@diagnostic disable-next-line: undefined-field
@@ -643,6 +671,9 @@ function Ui.RenderColorWaveText(text, conColor, clickedAction, dontUseWave)
     end
 end
 
+--- Dispatches a left/right-click action on a peer in the Mercs Status panel.
+---@param peer string DanNet peer name.
+---@param action number 1 = target spawn, 2 = /foreground, 3 = no-op.
 function Ui.HandleStatusClickAction(peer, action)
     local name = Comms.GetNameFromPeer(peer)
     if name then
@@ -660,6 +691,10 @@ function Ui.HandleStatusClickAction(peer, action)
     end
 end
 
+--- Returns a short string indicating the group/raid slot of peerName.
+--- Returns "F1"–"F6" for group, "Gn" for raid, "X" for ungrouped.
+---@param peerName string Character name to look up.
+---@return string Short status label (e.g. "F2", "G3", "X").
 function Ui.GetGroupstatusText(peerName)
     if peerName == Globals.CurLoadedChar then
         return "F1"
@@ -682,6 +717,8 @@ function Ui.GetGroupstatusText(peerName)
     return "X"
 end
 
+--- Renders the Mercs Status panel with HP/mana/state columns for each peer.
+---@param showPopout boolean? If true, renders a pop-out button at the top.
 function Ui.RenderMercsStatus(showPopout)
     if showPopout then
         if ImGui.SmallButton(Icons.MD_OPEN_IN_NEW) then
@@ -708,7 +745,7 @@ function Ui.RenderMercsStatus(showPopout)
                 return a or "", b or ""
             end,
             render = function(peer, data)
-                if data.Data.Zone ~= mq.TLO.Zone.Name() then
+                if data.Data.ZoneId ~= Globals.CurZoneId or data.Data.InstanceId ~= Globals.CurInstanceId then
                     ImGui.PushStyleColor(ImGuiCol.Text, Colors.ConditionDisabledColor)
                 end
 
@@ -735,7 +772,7 @@ function Ui.RenderMercsStatus(showPopout)
                             Ui.HandleStatusClickAction(peer, Config:GetSetting('StatusRightClickAction'))
                         end
                     end
-                    if data.Data.Zone ~= mq.TLO.Zone.Name() then
+                    if data.Data.ZoneId ~= Globals.CurZoneId or data.Data.InstanceId ~= Globals.CurInstanceId then
                         ImGui.PopStyleColor()
                     end
                 end
@@ -996,8 +1033,8 @@ function Ui.RenderMercsStatus(showPopout)
             flags = ImGuiTableColumnFlags.WidthFixed,
             width = 40.0,
             sort = function(mercs, a, b)
-                local data_a = (mq.TLO.Zone.Name() == mercs[a].Data.Zone and (mq.TLO.Spawn(mercs[a].Data.ID).Distance() or 999) or 999)
-                local data_b = (mq.TLO.Zone.Name() == mercs[b].Data.Zone and (mq.TLO.Spawn(mercs[b].Data.ID).Distance() or 999) or 999)
+                local data_a = (Globals.CurZoneId == mercs[a].Data.ZoneId and Globals.CurInstanceId == mercs[a].Data.InstanceId and (mq.TLO.Spawn(mercs[a].Data.ID).Distance() or 999) or 999)
+                local data_b = (Globals.CurZoneId == mercs[b].Data.ZoneId and Globals.CurInstanceId == mercs[b].Data.InstanceId and (mq.TLO.Spawn(mercs[b].Data.ID).Distance() or 999) or 999)
 
                 if data_a == data_b then
                     return a, b
@@ -1006,7 +1043,7 @@ function Ui.RenderMercsStatus(showPopout)
                 return data_a, data_b
             end,
             render = function(peer, data)
-                local distance = mq.TLO.Zone.Name() == data.Data.Zone and mq.TLO.Spawn(data.Data.ID).Distance() or 999
+                local distance = (Globals.CurZoneId == data.Data.ZoneId and Globals.CurInstanceId == data.Data.InstanceId) and mq.TLO.Spawn(data.Data.ID).Distance() or 999
                 local distString = distance == 999 and "" or string.format("%d", distance)
                 ImGui.PushStyleColor(ImGuiCol.Text,
                     distance == 999 and Colors.ConditionDisabledColor or
@@ -1255,12 +1292,12 @@ function Ui.RenderMercsStatus(showPopout)
             flags = bit32.bor(ImGuiTableColumnFlags.WidthFixed, ImGuiTableColumnFlags.DefaultHide),
             width = 15.0,
             sort = function(_, a, b)
-                local name_a = Comms.GetNameFromPeer(a)
-                local name_b = Comms.GetNameFromPeer(b)
+                local name_a = Comms.GetNameFromPeer(a) or ""
+                local name_b = Comms.GetNameFromPeer(b) or ""
                 return Ui.GetGroupstatusText(name_a), Ui.GetGroupstatusText(name_b)
             end,
             render = function(peer, _)
-                local name = Comms.GetNameFromPeer(peer)
+                local name = Comms.GetNameFromPeer(peer) or ""
                 ImGui.TextColored(Colors.Lavender, Ui.GetGroupstatusText(name))
             end,
         },
@@ -1272,7 +1309,7 @@ function Ui.RenderMercsStatus(showPopout)
                 return a or "", b or ""
             end,
             render = function(peer, data)
-                if data.Data.Zone ~= mq.TLO.Zone.Name() then
+                if data.Data.ZoneId ~= Globals.CurZoneId or data.Data.InstanceId ~= Globals.CurInstanceId then
                     ImGui.PushStyleColor(ImGuiCol.Text, Colors.ConditionDisabledColor)
                 end
 
@@ -1304,7 +1341,7 @@ function Ui.RenderMercsStatus(showPopout)
                             ImGui.TableSetBgColor(ImGuiTableBgTarget.CellBg, IM_COL32(255, 255, 255, 30))
                         end
                     end
-                    if data.Data.Zone ~= mq.TLO.Zone.Name() then
+                    if data.Data.ZoneId ~= Globals.CurZoneId or data.Data.InstanceId ~= Globals.CurInstanceId then
                         ImGui.PopStyleColor()
                     end
                 end
@@ -1374,6 +1411,8 @@ function Ui.RenderMercsStatus(showPopout)
         end)
 end
 
+--- Renders the Force Target / Ignored Target list panel.
+---@param showPopout boolean? If true, renders a pop-out button at the top.
 function Ui.RenderForceTargetList(showPopout)
     if showPopout then
         if ImGui.SmallButton(Icons.MD_OPEN_IN_NEW) then
@@ -1700,6 +1739,13 @@ function Ui.RenderForceTargetList(showPopout)
         end)
 end
 
+--- Generic sortable table helper: sets up columns, calls sortFn with sort
+--- specs, then calls rowFn to emit rows.
+---@param tableName string ImGui table identifier.
+---@param tableColumns table Array of column descriptors with name/flags/width fields.
+---@param tableFlags number ImGuiTableFlags bitmask.
+---@param sortFn function Called with current sort_specs; should sort data.
+---@param rowFn function Called with no args; should emit ImGui table rows.
 function Ui.RenderTableData(tableName, tableColumns, tableFlags, sortFn, rowFn)
     if ImGui.BeginTable(tableName, #tableColumns, tableFlags) then
         for id, data in ipairs(tableColumns) do
@@ -1718,10 +1764,7 @@ function Ui.RenderTableData(tableName, tableColumns, tableFlags, sortFn, rowFn)
     end
 end
 
---- Renders a table of the named creatures of the current zone.
----
---- This function retrieves and displays the name of the current zone in the game.
----
+--- Renders a table of named creatures in the current zone with distance and loc.
 function Ui.RenderZoneNamed()
     Ui.ShowDownNamed, _ = Ui.RenderOptionToggle("ShowDown", "Show Downed Named", Ui.ShowDownNamed)
 
@@ -1767,6 +1810,9 @@ function Ui.RenderZoneNamed()
     end
 end
 
+--- Returns the texture animation to use as background for spell icon.
+---@param spell MQSpell? Spell object to check type.
+---@return any Texture animation (red, yellow, or blue spell background).
 function Ui.GetBGForSpell(spell)
     if spell and spell() then
         if spell.SpellType() == "Detrimental" then
@@ -1781,13 +1827,12 @@ function Ui.GetBGForSpell(spell)
     return bluespellBg
 end
 
---- Draws an inspectable spell icon.
----
---- @param iconID number The ID of the icon to be drawn.
---- @param spell MQSpell The spell data to be used for the icon.
---- @param iconSize number? The size of the icon to be drawn.
---- @param doBlink boolean? Whether the icon should blink.
---- @param borderCol number? Color of an optional border to draw around the icon rect
+--- Draws an inspectable spell icon that opens the spell inspector on click.
+---@param iconID number SpellIcon index to render.
+---@param spell MQSpell Spell object providing type/name for background and inspect.
+---@param iconSize number? Icon width/height in pixels; defaults to ICON_SIZE.
+---@param doBlink boolean? If true, enables blink animation when the spell is active.
+---@param borderCol number? IM_COL32 color for an optional border around the icon.
 function Ui.DrawInspectableSpellIcon(iconID, spell, iconSize, doBlink, borderCol)
     if not iconSize then iconSize = ICON_SIZE end
 
@@ -1824,11 +1869,8 @@ function Ui.DrawInspectableSpellIcon(iconID, spell, iconSize, doBlink, borderCol
     ImGui.PopID()
 end
 
---- Renders the loadout table.
----
---- This function takes a loadout table and renders it in a specific format.
----
---- @param loadoutTable table The table containing loadout information to be rendered.
+--- Renders the spell loadout table (gem, icon, var name, level, rank name).
+---@param loadoutTable table Map of gem slot → { spell, selectedSpellData } entries.
 function Ui.RenderLoadoutTable(loadoutTable)
     if ImGui.BeginTable("Spells", 5, bit32.bor(ImGuiTableFlags.Resizable, ImGuiTableFlags.Borders)) then
         ImGui.TableSetupColumn('Icon', (ImGuiTableColumnFlags.WidthFixed), 20.0)
@@ -1858,9 +1900,7 @@ function Ui.RenderLoadoutTable(loadoutTable)
     end
 end
 
---- Renders the rotation table key.
---- This function is responsible for displaying the key for the rotation table.
---- It does not take any parameters and does not return any value.
+--- Renders a legend table explaining the icons used in the rotation table.
 function Ui.RenderRotationTableKey()
     Ui.RenderText("On the previous check, the...")
     if ImGui.BeginTable("Rotation_table_key", 2, ImGuiTableFlags.Borders) then
@@ -1897,16 +1937,16 @@ function Ui.RenderRotationTableKey()
     end
 end
 
---- Renders a rotation table for a given name.
----
---- @param name string: The name associated with the rotation table.
---- @param rotationTable table: The table containing rotation data.
---- @param resolvedActionMap table: A map of resolved actions.
---- @param rotationState number|nil: The current state of the rotation.
---- @param showFailed boolean: Flag to indicate whether to show failed actions.
---- @param enabledRotationEntries table: The table containing configuration about this rotation enablement
----
---- @return boolean, table, boolean returns showFailed input and current enablement config table and bool if the enablement changed
+--- Renders the rotation table for the named rotation section.
+---@param name string Rotation section name (used as table ID).
+---@param rotationTable table Array of rotation entry descriptors.
+---@param resolvedActionMap table Map of entry name → resolved spell/AA/item.
+---@param rotationState number? Current step index (>0 shows a "Cur" column).
+---@param showFailed boolean Whether to display entries whose conditions failed.
+---@param enabledRotationEntries table Map of entry name → bool (false = skip).
+---@return boolean showFailed The (potentially toggled) showFailed value.
+---@return table enabledRotationEntries Updated enablement map.
+---@return boolean changed True if any enablement setting was toggled this frame.
 function Ui.RenderRotationTable(name, rotationTable, resolvedActionMap, rotationState, showFailed, enabledRotationEntries)
     local enabledRotationEntriesChanged = false
     local showDebugTiming = Config:GetSetting('ShowDebugTiming')
@@ -2076,16 +2116,18 @@ function Ui.RenderRotationTable(name, rotationTable, resolvedActionMap, rotation
     return showFailed, enabledRotationEntries, enabledRotationEntriesChanged
 end
 
----@param id string Label and Id for the toggle button)
----@param value boolean Current value of the toggle button
----@param size? ImVec2|integer -- ImVec2 Size of the toggle button (width, height) or height value if single number and width will default to height * 2.0
----@param on_color? ImVec4 Color for ON state, or number
----@param off_color? ImVec4 ImVec4 Color for the Toggle when Off
----@param knob_color? ImVec4 ImVec4 Color for the Knob
----@param right_label? boolean if true the label will be on the right side of the toggle instead of the left
----@param pulse_on_hover? boolean if true the knob will pulse when hovered
----@param knob_border? boolean if true the knob will have a black border
----@param center_vertically? boolean if true the toggle will be centered vertically in the frame
+--- Renders an animated fancy toggle switch with optional label and color options.
+---@param id string Widget ID and label text.
+---@param label string? Label text (separate from id when using right_label).
+---@param value boolean Current toggle state.
+---@param size ImVec2|number? Toggle size as ImVec2, or height (width = height*2).
+---@param on_color ImVec4? Color when ON; defaults to FrameBgActive.
+---@param off_color ImVec4? Color when OFF; defaults to FrameBg.
+---@param knob_color ImVec4? Knob color; defaults to BrightWhite.
+---@param right_label boolean? If true, renders label to the right of the toggle.
+---@param pulse_on_hover boolean? If true, knob pulses when hovered.
+---@param knob_border boolean? If true, draws a black border around the knob.
+---@param center_vertically boolean? If true, centers the toggle in its row.
 ---@return boolean value
 ---@return boolean clicked
 function Ui.RenderFancyToggle(id, label, value, size, on_color, off_color, knob_color, right_label, pulse_on_hover, knob_border, center_vertically)
@@ -2239,18 +2281,20 @@ end
     * The function can also set the size of the toggle button (width, height) or just height and width will be defaulted to height * 2.0
     * The function can also set the number of points for the star knob (default 5).
     ]]
----@param id string Label and Id for the toggle button)
----@param value boolean Current value of the toggle button
----@param size? ImVec2|integer -- ImVec2 Size of the toggle button (width, height) or height value if single number and width will default to height * 2.0
----@param on_color? ImVec4 Color for ON state, or number
----@param off_color? ImVec4 ImVec4 Color for the Toggle when Off
----@param knob_color? ImVec4 ImVec4 Color for the Knob
----@param right_label? boolean if true the label will be on the right side of the toggle instead of the left
----@param pulse_on_hover? boolean if true the knob will pulse when hovered
----@param knob_border? boolean if true the knob will have a black border
----@param center_vertically? boolean if true the toggle will be centered vertically in the frame
----@return boolean value
----@return boolean clicked
+--- Renders the legacy (non-animated) fancy toggle switch.
+---@param id string Widget ID and label text.
+---@param label string? Label text (separate from id when using right_label).
+---@param value boolean Current toggle state.
+---@param size ImVec2|number? Toggle size as ImVec2, or height (width = height*2).
+---@param on_color ImVec4? Color when ON; defaults to FrameBgActive.
+---@param off_color ImVec4? Color when OFF; defaults to FrameBg.
+---@param knob_color ImVec4? Knob color; defaults to BrightWhite.
+---@param right_label boolean? If true, renders label to the right of the toggle.
+---@param pulse_on_hover boolean? If true, knob pulses when hovered.
+---@param knob_border boolean? If true, draws a black border around the knob.
+---@param center_vertically boolean? If true, centers the toggle in its row.
+---@return boolean value Updated toggle state.
+---@return boolean changed True if the state changed this frame.
 function Ui.RenderFancyToggleOld(id, label, value, size, on_color, off_color, knob_color, right_label, pulse_on_hover, knob_border, center_vertically)
     if not id or value == nil then return false, false end
     -- setup any defaults for mising params
@@ -2354,20 +2398,20 @@ function Ui.RenderFancyToggleOld(id, label, value, size, on_color, off_color, kn
 end
 
 --- Renders a toggle option in the UI.
---- @param id string: The unique identifier for the toggle option.
---- @param text string: The display text for the toggle option.
---- @param on boolean: The current state of the toggle option (true for on, false for off).
---- @param center_vertically boolean?: If true, centers the toggle vertically within its frame.
---- @return boolean: state
---- @return boolean: changed
+---@param id string: The unique identifier for the toggle option.
+---@param text string: The display text for the toggle option.
+---@param on boolean: The current state of the toggle option (true for on, false for off).
+---@param center_vertically boolean?: If true, centers the toggle vertically within its frame.
+---@return boolean: state
+---@return boolean: changed
 function Ui.RenderOptionToggle(id, text, on, center_vertically)
     return Ui.RenderFancyToggle(id, text, on, ImVec2(26, 14), Globals.Constants.Colors.Green, Globals.Constants.Colors.Red, nil, true, true, true, center_vertically)
 end
 
 --- Renders a progress bar.
---- @param pct number The percentage to fill the progress bar (0-100).
---- @param width number The width of the progress bar.
---- @param height number The height of the progress bar.
+---@param pct number The percentage to fill the progress bar (0-100).
+---@param width number The width of the progress bar.
+---@param height number The height of the progress bar.
 function Ui.RenderProgressBar(pct, width, height)
     local style = ImGui.GetStyle()
     local start_x, start_y = ImGui.GetCursorPos()
@@ -2381,6 +2425,8 @@ function Ui.RenderProgressBar(pct, width, height)
     ImGui.SetCursorPos(end_x, end_y)
 end
 
+--- Returns a clamped per-frame delta time from ImGui (0.001–0.1 seconds).
+---@return number Delta time in seconds.
 function Ui.GetDeltaTime()
     local dt = ImGui.GetIO().DeltaTime
     if dt <= 0 then dt = 1.0 / 60.0 end
@@ -2388,6 +2434,17 @@ function Ui.GetDeltaTime()
     return dt
 end
 
+--- Renders an animated fill bar that smoothly tweens toward barPct.
+---@param id string Unique widget ID used for animation state.
+---@param barPct number Current fill percentage (0–100).
+---@param height number Bar height in pixels.
+---@param width number Bar width in pixels; 0 = fill available width.
+---@param colLow ImVec4 Gradient color at the low/left end.
+---@param colHigh ImVec4 Gradient color at the high/right end.
+---@param label string? Optional text label rendered over the bar.
+---@param borderThickness number? Border width in pixels (default 1).
+---@param milestoneTicks number? Number of tick marks to draw (default 10).
+---@return boolean True if the bar was clicked this frame.
 function Ui.RenderAnimatedPercentage(id, barPct, height, width, colLow, colHigh, label, borderThickness, milestoneTicks)
     local targetPct = Math.Clamp(tonumber(barPct) or 0, 0, 100) / 100.0
     local dt = Ui.GetDeltaTime()
@@ -2553,7 +2610,16 @@ function Ui.RenderAnimatedPercentage(id, barPct, height, width, colLow, colHigh,
     return ImGui.IsItemClicked()
 end
 
--- Draw a horizontal gradient HP bar using ImDrawList:AddRectFilledMultiColor.
+--- Renders an animated HP bar; adds a pulsing red glow when burning is true.
+---@param id string Unique widget ID.
+---@param hpPct number HP percentage (0–100).
+---@param height number Bar height in pixels.
+---@param burning boolean? If true, draws a red pulsing border around the bar.
+---@param borderThickness number? Border width in pixels.
+---@param milestoneTicks number? Number of milestone tick marks.
+---@param hpLowOverride ImVec4? Override the low-end gradient color.
+---@param hpHighOverride ImVec4? Override the high-end gradient color.
+---@return boolean True if the bar was clicked this frame.
 function Ui.RenderFancyHPBar(id, hpPct, height, burning, borderThickness, milestoneTicks, hpLowOverride, hpHighOverride)
     local now = Globals.GetTimeSeconds()
     local drawList = ImGui.GetWindowDrawList()
@@ -2583,24 +2649,36 @@ function Ui.RenderFancyHPBar(id, hpPct, height, burning, borderThickness, milest
     return clicked
 end
 
--- Draw a horizontal gradient HP bar using ImDrawList:AddRectFilledMultiColor.
+--- Renders an animated mana bar using the global mana low/high colors.
+---@param id string Unique widget ID.
+---@param hpPct number Mana percentage (0–100).
+---@param height number Bar height in pixels.
+---@param borderThickness number? Border width in pixels.
+---@param milestoneTicks number? Number of milestone tick marks.
+---@return boolean True if the bar was clicked this frame.
 function Ui.RenderFancyManaBar(id, hpPct, height, borderThickness, milestoneTicks)
     return Ui.RenderAnimatedPercentage(id, hpPct, height, 0, Globals.Constants.Colors.ManaLowColor, Globals.Constants.Colors.ManaHighColor, nil, borderThickness, milestoneTicks)
 end
 
+--- Renders an animated progress bar with orange→green gradient and a label.
+---@param id string Unique widget ID.
+---@param pctComplete number Completion percentage (0–100).
+---@param height number Bar height in pixels.
+---@param label string? Optional text label rendered over the bar.
+---@return boolean True if the bar was clicked this frame.
 function Ui.RenderFancyProgressBar(id, pctComplete, height, label)
     return Ui.RenderAnimatedPercentage(id, pctComplete, height, 0, Globals.Constants.Colors.LightOrange, Globals.Constants.Colors.Green, label)
 end
 
 --- Renders a numerical option with a specified range and step.
---- @param id string: The identifier for the option.
---- @param text string: The display text for the option.
---- @param cur number: The current value of the option.
---- @param min number: The minimum value of the option.
---- @param max number: The maximum value of the option.
---- @param step number?: The step value for incrementing/decrementing the option.
---- @return number   # input
---- @return boolean  # changed
+---@param id string: The identifier for the option.
+---@param text string: The display text for the option.
+---@param cur number: The current value of the option.
+---@param min number: The minimum value of the option.
+---@param max number: The maximum value of the option.
+---@param step number?: The step value for incrementing/decrementing the option.
+---@return number   # input
+---@return boolean  # changed
 function Ui.RenderOptionNumber(id, text, cur, min, max, step)
     ImGui.PushID("##num_spin_" .. id)
     ImGui.PushStyleColor(ImGuiCol.ButtonActive, Globals.Constants.Colors.LightGrey)
@@ -2623,6 +2701,13 @@ function Ui.RenderOptionNumber(id, text, cur, min, max, step)
     return input, changed
 end
 
+--- Renders a combo box with an inline search/filter input.
+---@param id string Unique widget ID suffix.
+---@param curIdx number Currently selected 1-based index.
+---@param options string[] Array of option strings.
+---@param hideText string? Items containing this substring are hidden.
+---@return number Updated selected index.
+---@return boolean True if the selection changed this frame.
 function Ui.SearchableCombo(id, curIdx, options, hideText)
     local pressed = false
 
@@ -2656,6 +2741,11 @@ function Ui.SearchableCombo(id, curIdx, options, hideText)
     return curIdx, pressed
 end
 
+--- Renders an invisible button with horizontally scrolling marquee text.
+---@param text string Text to scroll inside the button.
+---@param height number Button height in pixels.
+---@param width number Button width in pixels.
+---@return boolean True if the button was clicked this frame.
 function Ui.MarqueeButton(text, height, width)
     -- Delta time and font scale
     local dt = Ui.GetDeltaTime() -- replace with your delta time function
@@ -2710,6 +2800,16 @@ function Ui.MarqueeButton(text, height, width)
     return ImGui.IsItemClicked()
 end
 
+--- Renders a typed config option widget (Combo, Toggle, Color, number, etc.).
+---@param type string Widget type: "Combo", "Toggle", "Color", "number", "string",
+---   "ClickyItem", "ClickyItemWithConditions", "Custom", "SpellSlot", "ImVec2".
+---@param setting any Current setting value.
+---@param id string Unique widget ID.
+---@param requiresLoadoutChange boolean? If true, a change triggers a loadout reload.
+---@param ... any Extra args depending on type (e.g. options table for Combo).
+---@return any Updated setting value.
+---@return boolean True if the change requires a loadout reload.
+---@return boolean True if any widget was interacted with this frame.
 function Ui.RenderOption(type, setting, id, requiresLoadoutChange, ...)
     local args = { ..., }
     local new_loadout, any_pressed, pressed = false, false, false
@@ -2723,7 +2823,7 @@ function Ui.RenderOption(type, setting, id, requiresLoadoutChange, ...)
         --setting, pressed = ImGui.Combo("", setting, comboOptions)
         setting, pressed = Ui.SearchableCombo(id, setting, comboOptions, hideText)
         ImGui.PopID()
-        new_loadout = ((pressed or false) and (requiresLoadoutChange))
+        new_loadout = ((pressed or false) and (requiresLoadoutChange or false))
         any_pressed = any_pressed or (pressed or false)
     elseif type == "ClickyItem" or type == "ClickyItemWithConditions" then
         -- make a drag and drop target
@@ -2765,7 +2865,7 @@ function Ui.RenderOption(type, setting, id, requiresLoadoutChange, ...)
         Ui.Tooltip(string.format("Drop a new item here to replace\n%s", itemName))
 
         new_loadout = new_loadout or
-            ((pressed or false) and (requiresLoadoutChange))
+            ((pressed or false) and (requiresLoadoutChange or false))
         any_pressed = any_pressed or (pressed or false)
     elseif type == 'Color' then
         local skipDefaultButton = args[1] or false
@@ -2784,8 +2884,8 @@ function Ui.RenderOption(type, setting, id, requiresLoadoutChange, ...)
 
         end
         ImGui.PopID()
-        new_loadout = new_loadout or (pressed and (requiresLoadoutChange))
-        any_pressed = any_pressed or pressed
+        new_loadout = new_loadout or ((pressed or false) and (requiresLoadoutChange or false))
+        any_pressed = any_pressed or (pressed or false)
     elseif type == 'ImVec2' then
         ImGui.PushID("##vec2_setting_" .. id)
         local intArray = { setting.x or 0, setting.y or 0, }
@@ -2793,26 +2893,28 @@ function Ui.RenderOption(type, setting, id, requiresLoadoutChange, ...)
         newSetting, pressed = ImGui.InputInt2("", intArray)
         setting = newSetting and { x = newSetting[1], y = newSetting[2], } or setting
         ImGui.PopID()
-        new_loadout = new_loadout or (pressed and (requiresLoadoutChange))
-        any_pressed = any_pressed or pressed
+        new_loadout = new_loadout or ((pressed or false) and (requiresLoadoutChange or false))
+        any_pressed = any_pressed or (pressed or false)
     elseif type == 'boolean' then
         setting, pressed = Ui.RenderOptionToggle(id, "", setting, true)
-        new_loadout = new_loadout or (pressed and (requiresLoadoutChange))
-        any_pressed = any_pressed or pressed
+        new_loadout = new_loadout or ((pressed or false) and (requiresLoadoutChange or false))
+        any_pressed = any_pressed or (pressed or false)
     elseif type == 'number' then
         setting, pressed = Ui.RenderOptionNumber(id, "", setting, args[1], args[2], args[3])
-        new_loadout = new_loadout or (pressed and (requiresLoadoutChange))
-        any_pressed = any_pressed or pressed
+        new_loadout = new_loadout or ((pressed or false) and (requiresLoadoutChange or false))
+        any_pressed = any_pressed or (pressed or false)
     elseif type == 'string' then -- display only
         ImGui.SetNextItemWidth(-1)
         setting, pressed = ImGui.InputText("##" .. id, setting)
-        any_pressed = any_pressed or pressed
+        any_pressed = any_pressed or (pressed or false)
         Ui.Tooltip(setting)
     end
 
     return setting, new_loadout, any_pressed
 end
 
+--- Renders a small settings gear button that opens the options UI for moduleName.
+---@param moduleName string The module whose settings tab should be highlighted.
 function Ui.RenderSettingsButton(moduleName)
     if ImGui.SmallButton(Icons.MD_SETTINGS) then
         Config:OpenOptionsUIAndHighlightModule(moduleName)
@@ -2820,6 +2922,9 @@ function Ui.RenderSettingsButton(moduleName)
     Ui.Tooltip(string.format("Open the RGMercs Options with %s settings highlighted.", moduleName))
 end
 
+--- Renders aligned pop-out and settings buttons in the top-right of the window.
+---@param moduleName string Module name used for pop-out/settings config keys.
+---@return number Pixel padding consumed on the right side for button layout.
 function Ui.RenderPopAndSettings(moduleName)
     -- The size wont change so I don't want to use CalcTextSize every frame
     local style = ImGui.GetStyle()
@@ -2853,17 +2958,22 @@ function Ui.RenderPopAndSettings(moduleName)
     return paddingNeeded
 end
 
+--- Renders a single theme config row (color var + color picker or style var + value).
+---@param id number 1-based index in the UserTheme table.
+---@param themeElement table Entry with { element, color } or { element, value }.
+---@return boolean True if the element was modified this frame.
+---@return boolean True if the delete button was pressed (element removed).
 function Ui.RenderThemeConfigElement(id, themeElement)
     local setting = themeElement.element
     local any_pressed, delete_pressed = false, false
 
     if themeElement.color ~= nil then
-        local settingNum, _, pressed = Ui.RenderOption("Combo", Ui.GetImGuiColorId(setting) + 1, id, false, Ui.ImGuiColorVars, "<Unused>")
+        local settingNum, _, pressed = Ui.RenderOption("Combo", Ui.GetImGuiColorId(setting) + 1, tostring(id), false, Ui.ImGuiColorVars, "<Unused>")
         any_pressed = any_pressed or (pressed or false)
 
         ImGui.TableNextColumn()
 
-        local settingColor, _, pressed = Ui.RenderOption("Color", themeElement.color, id .. "_color", false, true)
+        local settingColor, _, pressed = Ui.RenderOption("Color", themeElement.color, tostring(id) .. "_color", false, true)
         any_pressed = any_pressed or (pressed or false)
 
         if any_pressed then
@@ -2873,7 +2983,7 @@ function Ui.RenderThemeConfigElement(id, themeElement)
             Config:SetSetting('UserTheme', userConfig)
         end
     else
-        local settingNum, _, pressed = Ui.RenderOption("Combo", Ui.GetImGuiStyleId(setting) + 1, id, false, Ui.ImGuiStyleVars, "<Unused>")
+        local settingNum, _, pressed = Ui.RenderOption("Combo", Ui.GetImGuiStyleId(setting) + 1, tostring(id), false, Ui.ImGuiStyleVars, "<Unused>")
         any_pressed = any_pressed or (pressed or false)
 
         ImGui.TableNextColumn()
@@ -2911,6 +3021,7 @@ function Ui.RenderThemeConfigElement(id, themeElement)
     return any_pressed, delete_pressed
 end
 
+--- Renders the Themez import child window (combo + Import button + refresh).
 function Ui.RenderImportThemez()
     if Ui.Themez == nil then
         return
@@ -2937,6 +3048,11 @@ function Ui.RenderImportThemez()
     ImGui.EndChild()
 end
 
+--- Opens the modal text-input popup and registers a callback for the result.
+---@param title string Popup window title (doubles as ImGui popup ID).
+---@param prompt string? Text displayed above the input field.
+---@param initText string? Initial value pre-filled in the input field.
+---@param callbackFn function? Called with the entered text when Ok is pressed.
 function Ui.OpenModal(title, prompt, initText, callbackFn)
     Ui.ModalCallbackFn = callbackFn
     Ui.ModalText       = initText
@@ -2945,6 +3061,7 @@ function Ui.OpenModal(title, prompt, initText, callbackFn)
     ImGui.OpenPopup(Ui.ModalTitle)
 end
 
+--- Renders the modal popup set by OpenModal; must be called every frame.
 function Ui.RenderPopupModal()
     ImGui.SetNextWindowSize(320, 0, ImGuiCond.Appearing)
     if ImGui.BeginPopupModal(Ui.ModalTitle, nil, bit32.bor(ImGuiWindowFlags.NoTitleBar, ImGuiWindowFlags.NoDecoration, ImGuiWindowFlags.AlwaysAutoResize)) then
@@ -2983,6 +3100,7 @@ function Ui.RenderPopupModal()
     end
 end
 
+--- Renders the RGMercs theme importer child window (load, save, refresh).
 function Ui.RenderImportMercThemes()
     ImGui.BeginChild("##mercs_themes_importer_child", ImVec2(0, 0), bit32.bor(ImGuiChildFlags.AlwaysAutoResize, ImGuiChildFlags.AutoResizeY, ImGuiChildFlags.Borders),
         ImGuiWindowFlags.None)
@@ -3024,6 +3142,8 @@ function Ui.RenderImportMercThemes()
     ImGui.EndChild()
 end
 
+--- Renders the full Theme Config panel (importers + per-element color/style rows).
+---@param searchFilter string? If non-empty, hides the panel unless it matches.
 function Ui.RenderThemeConfig(searchFilter)
     local renderWidth = 325
     local windowWidth = ImGui.GetWindowWidth()
@@ -3151,10 +3271,15 @@ function Ui.RenderThemeConfig(searchFilter)
     end
 end
 
+--- Returns true if searchFilter is empty or matches the "theme" category.
+---@param searchFilter string? Filter string from the options search box.
+---@return boolean True if the Theme Config panel should be displayed.
 function Ui.ThemeConfigMatchesFilter(searchFilter)
-    return (searchFilter or ""):len() == 0 or string.find("theme", searchFilter, 1, true) ~= nil
+    return (searchFilter or ""):len() == 0 or string.find("theme", searchFilter or "", 1, true) ~= nil
 end
 
+--- Renders the RGMercs logo quad, with a wobble/track animation when hovered.
+---@param textureId any MQ texture handle to draw.
 function Ui.RenderLogo(textureId)
     local afConfig = Config:GetSetting('EnableAFUI')
     local draw = ImGui.GetWindowDrawList()
@@ -3213,6 +3338,9 @@ function Ui.RenderLogo(textureId)
     )
 end
 
+--- Renders formatted text via ImGui.Text, reversing it in April Fools mode.
+---@param text string Format string (or plain text if no extra args).
+---@param ... any Format arguments passed to string.format.
 function Ui.RenderText(text, ...)
     -- only format if we have args
     local formattedText = tostring(text)
@@ -3231,6 +3359,10 @@ function Ui.RenderText(text, ...)
     ImGui.Text(formattedText or "")
 end
 
+--- Renders formatted colored text via ImGui.TextColored.
+---@param color ImVec4|number Text color (ImVec4 or IM_COL32).
+---@param text string Format string.
+---@param ... any Format arguments passed to string.format.
 function Ui.RenderColoredText(color, text, ...)
     local formattedText = tostring(text)
     if select('#', ...) > 0 then
@@ -3248,6 +3380,11 @@ function Ui.RenderColoredText(color, text, ...)
     ImGui.TextColored(color or IM_COL32(255, 255, 255, 255), formattedText or "")
 end
 
+--- Renders clickable hyperlink-style text that changes color on hover.
+---@param text string The text to display.
+---@param normalColor ImVec4|ImU32 Text color when not hovered.
+---@param highlightColor ImVec4|ImU32 Text color when hovered.
+---@param callback function? Called when the item is clicked.
 function Ui.RenderHyperText(text, normalColor, highlightColor, callback)
     local version = Modules:ExecModule("Class", "GetVersionString")
     local startingPos = ImGui.GetCursorPosVec()
@@ -3271,8 +3408,8 @@ function Ui.RenderHyperText(text, normalColor, highlightColor, callback)
 end
 
 --- Generates a dynamic tooltip for a given spell action.
---- @param action string The action identifier for the spell.
---- @return string The generated tooltip for the spell.
+---@param action string The action identifier for the spell.
+---@return string The generated tooltip for the spell.
 function Ui.GetDynamicTooltipForSpell(action)
     local resolvedItem = Modules:ExecModule("Class", "GetResolvedActionMapItem", action)
 
@@ -3285,8 +3422,8 @@ function Ui.GetDynamicTooltipForSpell(action)
 end
 
 --- Generates a dynamic tooltip for a given action.
---- @param action string The action for which the tooltip is generated.
---- @return string The generated tooltip for the specified action.
+---@param action string The action for which the tooltip is generated.
+---@return string The generated tooltip for the specified action.
 function Ui.GetDynamicTooltipForAA(action)
     local resolvedItem = mq.TLO.Spell(action)
 
@@ -3294,7 +3431,10 @@ function Ui.GetDynamicTooltipForAA(action)
         resolvedItem.Description() or "None")
 end
 
----@return ImVec4 The color corresponding to the given percentage.
+--- Interpolates across a color scale based on pct (100 = scale[1], 0 = scale[n]).
+---@param pct number Percentage value (0–100).
+---@param scale ImVec4[] Array of colors to interpolate across.
+---@return ImVec4 The interpolated color for the given percentage.
 function Ui.GetPercentageColor(pct, scale)
     local t = 1 - math.max(0, math.min(1, pct / 100.0))
     local n = #scale
@@ -3315,8 +3455,8 @@ function Ui.GetPercentageColor(pct, scale)
 end
 
 --- Get the con color based on the provided color value.
---- @param color string The color value to determine the con color.
---- @return number, number, number, number The corresponding con color in RGBA format
+---@param color string The color value to determine the con color.
+---@return number, number, number, number The corresponding con color in RGBA format
 function Ui.GetConColor(color)
     if color then
         if color:lower() == "dead" then
@@ -3351,16 +3491,18 @@ function Ui.GetConColor(color)
     return 1.0, 1.0, 1.0, 1.0
 end
 
---- @param spawn MQSpawn The spawn object for which to determine the con color.
---- @return number, number, number, number The con color associated with the given spawn in RGBA format.
+--- Returns the EQ con color RGBA components for spawn, or "Dead" color if gone.
+---@param spawn MQSpawn The spawn object for which to determine the con color.
+---@return number, number, number, number The con color associated with the spawn.
 function Ui.GetConColorBySpawn(spawn)
     if not spawn or not spawn or spawn.Dead() then return Ui.GetConColor("Dead") end
 
     return Ui.GetConColor(spawn.ConColor())
 end
 
---- @param spawn MQSpawn The spawn object for which to determine the con color.
---- @return number, number, number, number The con color associated with the given spawn in RGBA format.
+--- Returns the row-highlight RGBA components for spawn based on its con color.
+---@param spawn MQSpawn The spawn object for which to determine the highlight color.
+---@return number, number, number, number The highlight color associated with the spawn.
 function Ui.GetConHighlightBySpawn(spawn)
     if not spawn or not spawn or spawn.Dead() then return Ui.GetConColor("Dead") end
 
@@ -3368,8 +3510,8 @@ function Ui.GetConHighlightBySpawn(spawn)
 end
 
 --- Get the con color based on the provided color value.
---- @param color string The color value to determine the con color.
---- @return number, number, number, number The corresponding con color in RGBA format
+---@param color string The color value to determine the con color.
+---@return number, number, number, number The corresponding con color in RGBA format
 function Ui.GetConHighlight(color)
     if color then
         if color:lower() == "dead" then
@@ -3405,8 +3547,8 @@ function Ui.GetConHighlight(color)
 end
 
 --- Checks if navigation is enabled for a given location.
---- @param loc string The location to check, represented as a string with coordinates.
---- @param navLocOverride string? Nav YXZ string to use for /nav if the loc text is not compatible with the nav command
+---@param loc string The location to check, represented as a string with coordinates.
+---@param navLocOverride string? Nav YXZ string to use for /nav if the loc text is not compatible with the nav command
 function Ui.NavEnabledLoc(loc, navLocOverride)
     ImGui.PushStyleColor(ImGuiCol.Text, Globals.Constants.Colors.Yellow)
     ImGui.PushStyleColor(ImGuiCol.HeaderHovered, Ui.ChangeColorAlpoha(Globals.Constants.Colors.Grey, 0.1))
@@ -3422,8 +3564,9 @@ function Ui.NavEnabledLoc(loc, navLocOverride)
     end
 end
 
---- Generates a tooltip with the given description.
---- @param desc string: The description to be displayed in the tooltip.
+--- Shows a tooltip when the previous item is hovered; supports animated mode.
+---@param desc string|function Tooltip text, or a function returning the text.
+---@param idoverride string? Override the animation ID used for the tooltip.
 function Ui.Tooltip(desc, idoverride)
     if ImGui.IsItemHovered() then
         if type(desc) == "function" then
@@ -3442,6 +3585,9 @@ function Ui.Tooltip(desc, idoverride)
     end
 end
 
+--- Renders an animated tooltip with fade-in and line-wrap, anchored to the item.
+---@param id string|number Unique animation ID for this tooltip.
+---@param desc string|table Tooltip text, or array of { text, color? } line entries.
 function Ui.AnimatedTooltip(id, desc)
     local state = Ui.TempSettings.TooltipAnimationState
     local item_size = ImGui.GetItemRectSizeVec()
@@ -3458,7 +3604,7 @@ function Ui.AnimatedTooltip(id, desc)
         -- generate a reaonsable Id
         id = ImHashStr(string.format("tooltip_%d_%d", math.floor(min.x), math.floor(min.y)))
     else
-        id = ImHashStr(id)
+        id = ImHashStr(tostring(id))
     end
 
     if Config:GetSetting('DrawTooltipDebugBox') then
@@ -3676,8 +3822,8 @@ function Ui.AnimatedTooltip(id, desc)
     end
 end
 
---- Generates a tooltip with the given description.
---- @param lines table: { text = "", color = ImVec4, sameLine = bool }
+--- Shows a tooltip with multiple colored text segments when the item is hovered.
+---@param lines table Array of { text=string, color=ImVec4?, sameLine=bool? } entries.
 function Ui.MultilineTooltipWithColors(lines)
     if ImGui.IsItemHovered() then
         if Config:GetSetting('EnableAnimatedTooltips') then
@@ -3711,8 +3857,10 @@ function Ui.MultilineTooltipWithColors(lines)
     end
 end
 
---- Generates a tooltip with the given description.
---- @param lines table: { text = "", color = ImVec4, sameLine = bool }
+--- Renders a button composed of multiple colored text segments side-by-side.
+---@param lines table Array of { text=string, color=ImVec4? } segments.
+---@param addSpaces boolean? If true, inserts a space between each segment.
+---@return boolean True if the button was clicked this frame.
 function Ui.MultiColorSmallButton(lines, addSpaces)
     local fullText = ""
     for _, line in ipairs(lines) do fullText = fullText .. line.text .. (addSpaces and " " or "") end
@@ -3761,6 +3909,9 @@ function Ui.MultiColorSmallButton(lines, addSpaces)
     return ImGui.IsItemClicked()
 end
 
+--- Renders a non-collapsible TreeNode styled as a CollapsingHeader.
+---@param label string Header label text.
+---@return boolean Always true (header is always expanded).
 function Ui.NonCollapsingHeader(label)
     ImGui.TreeNodeEx(label, bit32.bor(ImGuiTreeNodeFlags.DefaultOpen,
         ImGuiTreeNodeFlags.Framed,
@@ -3773,7 +3924,7 @@ function Ui.NonCollapsingHeader(label)
 end
 
 --- Renders text as strikethrough
---- @param text string The text to be displayed with strikethrough.
+---@param text string The text to be displayed with strikethrough.
 function Ui.StrikeThroughText(text)
     local textSizeVec = ImGui.CalcTextSizeVec(text)
     local cursorScreenPos = ImGui.GetCursorScreenPosVec()
@@ -3784,6 +3935,7 @@ function Ui.StrikeThroughText(text)
     ImGui.PopStyleColor()
 end
 
+--- Checks group/raid MA setup and writes a warning string to Config.TempSettings.
 function Ui.GetAssistWarningString()
     local warningString
     if not Config:GetSetting('UseAssistList') then
@@ -3807,6 +3959,12 @@ function Ui.GetAssistWarningString()
     Config.TempSettings.AssistWarning = warningString
 end
 
+--- Renders an animated button that scales and color-tweens on hover/press.
+---@param id string Unique animation ID for this button.
+---@param text string Label text displayed centered on the button.
+---@param size ImVec2 Button dimensions in pixels.
+---@param callbackFn function? Called immediately when the button is pressed.
+---@return boolean True if the button was pressed this frame.
 function Ui.AnimatedButton(id, text, size, callbackFn)
     local dt = Ui.GetDeltaTime()
     local draw_list = ImGui.GetWindowDrawList()
@@ -3868,6 +4026,11 @@ function Ui.AnimatedButton(id, text, size, callbackFn)
     return pressed
 end
 
+--- Renders an invisible button then overlays text at the same cursor position.
+---@param id string ImGui button ID.
+---@param text string Text to draw over the invisible button area.
+---@param size ImVec2? Button dimensions; defaults to ImVec2(1,1).
+---@param callbackFn function? Called when the button is clicked.
 function Ui.InvisibleWithButtonText(id, text, size, callbackFn)
     local buttonPos = ImGui.GetCursorPosVec()
     if ImGui.InvisibleButton(id, size or ImVec2(1, 1)) then
@@ -3881,6 +4044,8 @@ function Ui.InvisibleWithButtonText(id, text, size, callbackFn)
     Ui.RenderText(text)
 end
 
+--- Iterates all modules and renders any that are popped out into their own windows.
+---@param flags number ImGuiWindowFlags bitmask applied to each popped window.
 function Ui.RenderModulesPopped(flags)
     if not Config:SettingsLoaded() then return end
 
@@ -3906,6 +4071,10 @@ function Ui.RenderModulesPopped(flags)
     end
 end
 
+--- Returns an ImGui window title string with a per-character ID suffix if needed.
+---@param title string Display title for the window.
+---@param idOverride string? Override the ###id portion of the title.
+---@return string Formatted window title string.
 function Ui.GetWindowTitle(title, idOverride)
     if Config:GetSetting('SavePositionPerCharacter') then
         return string.format("%s###%s__%s_%s", title, idOverride or title, Globals.CurServer, Globals.CurLoadedChar)
@@ -3914,10 +4083,17 @@ function Ui.GetWindowTitle(title, idOverride)
     return string.format("%s%s", title, idOverride and ('###' .. idOverride) or "")
 end
 
+--- Converts an ImVec4 (0–1 float components) to an IM_COL32 packed color.
+---@param vec ImVec4 Color with x, y, z, w components in [0,1].
+---@return number IM_COL32 packed ABGR integer.
 function Ui.ImVec4ToColor(vec)
     return IM_COL32(math.floor(vec.x * 255), math.floor(vec.y * 255), math.floor(vec.z * 255), math.floor(vec.w * 255))
 end
 
+--- Returns a copy of color with the alpha channel replaced by newAlpha.
+---@param color ImVec4 Source color.
+---@param newAlpha number New alpha value in [0,1].
+---@return ImVec4 New ImVec4 with the updated alpha.
 function Ui.ChangeColorAlpoha(color, newAlpha)
     return ImVec4(color.x, color.y, color.z, newAlpha)
 end
@@ -3951,6 +4127,9 @@ local function toastLines(message, maxAllowedW)
     return lines, maxW
 end
 
+--- Renders active toast notifications as floating cards; auto-dismisses stale ones.
+---@param states table Array of active toast state objects (modified in-place).
+---@param lingerTime number? Total display duration in seconds (min 2.5).
 function Ui.RenderToastNotifications(states, lingerTime)
     local dt            = math.max(Ui.GetDeltaTime(), 0.01)
     local holdEnd       = 2.3

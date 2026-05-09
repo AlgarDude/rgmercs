@@ -20,8 +20,9 @@ Movement.LastMove.Heading    = mq.TLO.Me.Heading.Degrees()
 Movement.LastMove.Sitting    = mq.TLO.Me.Sitting()
 Movement.LastMove.TimeAtMove = Globals.GetTimeSeconds()
 
---- Sticks the player to the specified target.
---- @param targetId number The ID of the target to stick to.
+--- Sticks the player to targetId using config-driven stick settings,
+--- rate-limited to once per second to avoid spamming.
+---@param targetId number The spawn ID of the target to stick to.
 function Movement:DoStick(targetId)
     if Globals.GetTimeSeconds() - self.LastDoStick < 1 then
         Logger.log_debug(
@@ -41,6 +42,9 @@ function Movement:DoStick(targetId)
     end
 end
 
+--- Issues a /stick command with formatted params if DoAutoStick is enabled.
+---@param params string Format string for the stick parameters.
+---@param ... any Arguments for the format string.
 function Movement:DoStickCmd(params, ...)
     if not Config:GetSetting('DoAutoStick') then return end
     local formatted = params
@@ -50,6 +54,10 @@ function Movement:DoStickCmd(params, ...)
     self.LastDoStickCmd = formatted
 end
 
+--- Issues a /nav command, skipping duplicates that are already active.
+---@param squelch boolean Prepend /squelch to suppress MQ output.
+---@param params string Format string for the nav parameters.
+---@param ... any Arguments for the format string.
 function Movement:DoNav(squelch, params, ...)
     local formatted = params
     if ... ~= nil then formatted = string.format(params, ...) end
@@ -65,35 +73,38 @@ function Movement:DoNav(squelch, params, ...)
     self:StoreLastMove()
 end
 
+--- Returns the last /nav command string that was issued.
+---@return string The last nav command, or "" if none.
 function Movement:GetLastNavCmd()
     return self.LastDoNavCmd
 end
 
--- Gets the last stick timer.
---- @return string The last stick command.
+--- Returns the last /stick command string that was issued.
+---@return string The last stick command, or "" if none.
 function Movement:GetLastStickCmd()
     return self.LastDoStickCmd
 end
 
--- Clears the last stick timer.
+--- Resets the stick timer so the next DoStick call is not rate-limited.
 function Movement:ClearLastStickTimer()
     self.LastDoStick = 0
 end
 
--- Gets the last stick timer.
---- @return number The last stick timer.
+--- Returns the timestamp (seconds) when the last stick command was sent.
+---@return number Seconds since MQ epoch of the last stick.
 function Movement:GetLastStickTimer()
     return self.LastDoStick
 end
 
--- Sets the last stick timer.
---- @param t number The time to set the last stick timer to.
+--- Records t as the timestamp of the most recent stick command.
+---@param t number Timestamp in seconds (from Globals.GetTimeSeconds).
 function Movement:SetLastStickTimer(t)
     self.LastDoStick = t
 end
 
--- Gets the time since last stick a stirng.
---- @return string Formatted time since last stick.
+--- Returns elapsed seconds since the last stick command as a string,
+--- or "N/A" if no stick has been issued yet.
+---@return string Elapsed time string like "5s", or "N/A".
 function Movement:GetTimeSinceLastStick()
     if self.LastDoStickCmd == "" then
         return "N/A"
@@ -102,6 +113,9 @@ function Movement:GetTimeSinceLastStick()
     return string.format("%ds", Globals.GetTimeSeconds() - self.LastDoStick)
 end
 
+--- Returns elapsed seconds since the last nav command as a string,
+--- or "N/A" if no nav has been issued yet.
+---@return string Elapsed time string like "5s", or "N/A".
 function Movement:GetTimeSinceLastNav()
     if self.LastDoNavCmd == "" then
         return "N/A"
@@ -110,6 +124,9 @@ function Movement:GetTimeSinceLastNav()
     return string.format("%ds", Globals.GetTimeSeconds() - self.LastDoNav)
 end
 
+--- Returns elapsed seconds since the last nav command as a number,
+--- or 0 if no nav has been issued.
+---@return number Seconds elapsed since the last nav command.
 function Movement:GetSecondsSinceLastNav()
     if self.LastDoNavCmd == "" then
         return 0
@@ -118,11 +135,12 @@ function Movement:GetSecondsSinceLastNav()
     return Globals.GetTimeSeconds() - self.LastDoNav
 end
 
---- Navigates to a target during combat.
---- @param targetId number The ID of the target to navigate to.
---- @param distance number The distance to maintain from the target.
---- @param bDontStick boolean Whether to avoid sticking to the target.
---- @param bCalledFromInsideEvent? boolean Whether to avoid processing events during navigation.
+--- Navigates to targetId during combat, then optionally sticks. Blocks
+--- until nav or moveto completes, processing events along the way.
+---@param targetId number Spawn ID of the combat target.
+---@param distance number Desired distance to maintain from the target.
+---@param bDontStick boolean If true, skips the final DoStick call.
+---@param bCalledFromInsideEvent boolean? If true, skips mq.doevents during nav.
 function Movement:NavInCombat(targetId, distance, bDontStick, bCalledFromInsideEvent)
     if bCalledFromInsideEvent == nil then bCalledFromInsideEvent = false end
 
@@ -158,10 +176,11 @@ function Movement:NavInCombat(targetId, distance, bDontStick, bCalledFromInsideE
     end
 end
 
---- Navigates around a circle centered on the target with a specified radius.
---- @param target MQTarget The central point around which to navigate.
---- @param radius number The radius of the circle to navigate around.
---- @return boolean True if we were able to successfully navigate around
+--- Finds a navigable, line-of-sight point radius units from target and
+--- navigates there, used for circling mobs that block direct approach.
+---@param target MQSpawn The spawn to circle around.
+---@param radius number Distance from the target to navigate to.
+---@return boolean True if a valid circling loc was found and nav started.
 function Movement:NavAroundCircle(target, radius)
     if not Config:GetSetting('DoAutoEngage') then return false end
     if not target or not target() and not target.Dead() then return false end
@@ -216,6 +235,8 @@ function Movement:NavAroundCircle(target, radius)
     return false
 end
 
+--- Updates the MQ map filter pull and camp radii based on current
+--- config settings for pull mode and camp return.
 function Movement.UpdateMapRadii()
     if Config:GetSetting('DoPull') or Config:GetSetting('ReturnToCamp') then
         if Modules:ExecModule("Pull", "IsPullMode", "Hunt") then
@@ -230,16 +251,22 @@ function Movement.UpdateMapRadii()
     end
 end
 
--- this function considers being in combat as movement so that buff checks only happen in downtime.
+--- Returns seconds since the last "move" event, treating combat state
+--- as movement so buff checks only fire in true downtime.
+---@return number Seconds since the last recorded movement or combat event.
 function Movement:GetTimeSinceLastMove()
     return Globals.GetTimeSeconds() - self.LastMove.TimeAtMove
 end
 
--- this function only considers actual movement, not combat state.
+--- Returns seconds since the last actual position change, ignoring
+--- combat state — useful for detecting true standing still.
+---@return number Seconds since coordinates last changed by more than 1 unit.
 function Movement:GetTimeSinceLastPositionChange()
     return Globals.GetTimeSeconds() - (self.LastMove.TimeAtPositionChange or 0)
 end
 
+--- Snapshots current position, heading, sitting state, and timestamps
+--- if any coordinate or heading changed by more than 1 unit, or if in combat.
 function Movement:StoreLastMove()
     local me = mq.TLO.Me
 

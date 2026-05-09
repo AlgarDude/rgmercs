@@ -16,13 +16,13 @@ local Combat    = { _version = '1.0', _name = "Combat", _author = 'Derple', }
 Combat.__index  = Combat
 
 --- Returns the current live combat state based on XTarget hater count.
---- @return string "Combat" if there are active haters, "Downtime" otherwise.
+---@return string "Combat" if there are active haters, "Downtime" otherwise.
 function Combat.GetCombatState()
     return Targeting.GetXTHaterCount(false) > 0 and "Combat" or "Downtime"
 end
 
 --- Returns the cached combat state from the last main loop frame.
---- @return string "Combat" or "Downtime" as of the last frame.
+---@return string "Combat" or "Downtime" as of the last frame.
 function Combat.GetCachedCombatState()
     return Globals.CurrentState
 end
@@ -96,7 +96,7 @@ function Combat.SetMAToSelf()
 end
 
 --- Engages the target specified by the given autoTargetId.
---- @param autoTargetId number The ID of the target to engage.
+---@param autoTargetId number The ID of the target to engage.
 function Combat.EngageTarget(autoTargetId)
     if not Config:GetSetting('DoAutoEngage') then return end
 
@@ -188,7 +188,7 @@ function Combat.MercAssist()
 end
 
 --- Returns true if the mercenary should engage the current auto target.
---- @return boolean
+---@return boolean
 function Combat.MercEngage()
     local merc = mq.TLO.Me.Mercenary
 
@@ -204,7 +204,7 @@ function Combat.MercEngage()
 end
 
 --- Returns true if combat actions should be performed this frame.
---- @return boolean
+---@return boolean
 function Combat.DoCombatActions()
     if not Movement.LastMove then return false end
     if Globals.AutoTargetID == 0 then return false end
@@ -218,8 +218,8 @@ function Combat.DoCombatActions()
 end
 
 --- Returns true if the spawn is a valid candidate for MA targeting.
---- @param target xtarget The XTarget spawn to validate.
---- @return boolean
+---@param target xtarget The XTarget spawn to validate.
+---@return boolean
 function Combat.ValidMAXTarget(target)
     local spawnId = target.ID() or 0
 
@@ -259,9 +259,9 @@ function Combat.ValidMAXTarget(target)
 end
 
 --- Updates a HP-priority bucket if the spawn is a better candidate than what's currently stored.
---- @param spawn   MQSpawn               The spawn to evaluate.
---- @param bucket  {hp:number,id:number} The bucket to update in place.
---- @param prefLow boolean               True to prefer lower HP%, false to prefer higher.
+---@param spawn   MQSpawn               The spawn to evaluate.
+---@param bucket  {hp:number,id:number} The bucket to update in place.
+---@param prefLow boolean               True to prefer lower HP%, false to prefer higher.
 function Combat.UpdateBucket(spawn, bucket, prefLow)
     local pct    = spawn.PctHPs() or (prefLow and 101 or 0)
     local better = (prefLow and pct < bucket.hp) or (not prefLow and pct > bucket.hp)
@@ -273,9 +273,9 @@ function Combat.UpdateBucket(spawn, bucket, prefLow)
 end
 
 --- Selects the spawn into the bucket according to hpPref, or unconditionally if no HP preference is set.
---- @param hpPref  {prefLow:boolean,prefHigh:boolean} HP targeting preference flags.
---- @param spawn   MQSpawn                            The spawn to evaluate.
---- @param bucket  {hp:number,id:number}              The bucket to update in place.
+---@param hpPref  {prefLow:boolean,prefHigh:boolean} HP targeting preference flags.
+---@param spawn   MQSpawn                            The spawn to evaluate.
+---@param bucket  {hp:number,id:number}              The bucket to update in place.
 function Combat.PickBestSpawn(hpPref, spawn, bucket)
     if hpPref.prefLow or hpPref.prefHigh then
         Combat.UpdateBucket(spawn, bucket, hpPref.prefLow)
@@ -298,12 +298,12 @@ local function processFallbackSpawn(spawn, checkNamed, radius, namedPref, hpPref
 end
 
 --- Scans nearby spawns matching search and updates the primaryTarget bucket as a fallback when XTargets yield nothing.
---- @param search        string                               Spawn search string passed to NearestSpawn.
---- @param checkNamed    boolean                              If true, named status is evaluated for namedPref filtering.
---- @param radius        number                               Max distance to consider a spawn valid.
---- @param namedPref     {prefNamed:boolean,prefTrash:boolean} Named targeting preference flags.
---- @param hpPref        {prefLow:boolean,prefHigh:boolean}   HP targeting preference flags.
---- @param primaryTarget {hp:number,id:number,found:boolean}  Primary target bucket, mutated in place.
+---@param search        string                               Spawn search string passed to NearestSpawn.
+---@param checkNamed    boolean                              If true, named status is evaluated for namedPref filtering.
+---@param radius        number                               Max distance to consider a spawn valid.
+---@param namedPref     {prefNamed:boolean,prefTrash:boolean} Named targeting preference flags.
+---@param hpPref        {prefLow:boolean,prefHigh:boolean}   HP targeting preference flags.
+---@param primaryTarget {hp:number,id:number,found:boolean}  Primary target bucket, mutated in place.
 function Combat.FallbackScan(search, checkNamed, radius, namedPref, hpPref, primaryTarget)
     local count = mq.TLO.SpawnCount(search)()
     Logger.log_verbose("MATargetScan FallbackScan: %s ===> %d", search, count)
@@ -313,16 +313,16 @@ function Combat.FallbackScan(search, checkNamed, radius, namedPref, hpPref, prim
 end
 
 --- Evaluates a single XTarget candidate and updates primaryTarget/fallbackTarget buckets.
---- @param xtSpawn         xtarget                              The XTarget spawn to evaluate.
---- @param radius          number                               Max distance to consider the spawn valid.
---- @param namedPref       {prefNamed:boolean,prefTrash:boolean} Named targeting preference flags.
---- @param hpPref          {prefLow:boolean,prefHigh:boolean}   HP targeting preference flags.
---- @param immediate       boolean                              If true, return the first valid spawn id without bucketing.
---- @param primaryTarget   {hp:number,id:number,found:boolean}  Primary target bucket, mutated in place.
---- @param fallbackTarget  {hp:number,id:number,name:string}    Named fallback bucket, mutated in place.
---- @param aggroScan       boolean                              Cached value of the MAAggroScan setting.
---- @param myLevel         number                               Cached value of Me.Level().
---- @return number|nil                                          Spawn id to target immediately, or nil to continue scanning.
+---@param xtSpawn         xtarget                              The XTarget spawn to evaluate.
+---@param radius          number                               Max distance to consider the spawn valid.
+---@param namedPref       {prefNamed:boolean,prefTrash:boolean} Named targeting preference flags.
+---@param hpPref          {prefLow:boolean,prefHigh:boolean}   HP targeting preference flags.
+---@param immediate       boolean                              If true, return the first valid spawn id without bucketing.
+---@param primaryTarget   {hp:number,id:number,found:boolean}  Primary target bucket, mutated in place.
+---@param fallbackTarget  {hp:number,id:number,name:string}    Named fallback bucket, mutated in place.
+---@param aggroScan       boolean                              Cached value of the MAAggroScan setting.
+---@param myLevel         number                               Cached value of Me.Level().
+---@return number|nil                                          Spawn id to target immediately, or nil to continue scanning.
 function Combat.ProcessXTarget(xtSpawn, radius, namedPref, hpPref, immediate, primaryTarget, fallbackTarget, aggroScan, myLevel)
     if not xtSpawn or not xtSpawn() then return nil end
     if not Combat.ValidMAXTarget(xtSpawn) then
@@ -379,9 +379,9 @@ function Combat.ProcessXTarget(xtSpawn, radius, namedPref, hpPref, immediate, pr
 end
 
 --- Scans XTargets and nearby spawns to select the best auto target based on current preferences.
---- @param radius  number The horizontal radius to scan for targets.
---- @param zradius number The vertical radius to scan for targets.
---- @return number Spawn id of the chosen target, or 0 if none found.
+---@param radius  number The horizontal radius to scan for targets.
+---@param zradius number The vertical radius to scan for targets.
+---@return number Spawn id of the chosen target, or 0 if none found.
 function Combat.MATargetScan(radius, zradius)
     local aggroSearch    = string.format("npc radius %d zradius %d targetable playerstate 4", radius, zradius)
     local aggroSearchPet = string.format("npcpet radius %d zradius %d targetable playerstate 4", radius, zradius)
@@ -449,14 +449,14 @@ function Combat.TankAggroScan()
 end
 
 --- Returns the current target ID of the group or raid main assist.
---- @return number Spawn id of the MA's target, or 0 if none.
+---@return number Spawn id of the MA's target, or 0 if none.
 function Combat.GetGroupOrRaidAssistTargetId()
     -- maintained so as to not cause a breaking change.
     return Core.GetGroupOrRaidAssistTargetId()
 end
 
 --- Finds the best auto target and sets Globals.AutoTargetID, then targets it if DoAutoTarget is enabled.
---- @param validateFn function? Optional validator called with a spawn id; return true to accept, false to reject.
+---@param validateFn function? Optional validator called with a spawn id; return true to accept, false to reject.
 function Combat.FindBestAutoTarget(validateFn)
     Logger.log_verbose("FindAutoTarget()")
 
@@ -613,8 +613,8 @@ end
 --- Validates if it is acceptable to engage with a target based on its ID.
 --- This function performs pre-validation checks to determine if engagement is permissible.
 ---
---- @param targetId number The ID of the target to be validated.
---- @return boolean Returns true if it is acceptable to engage with the target, false otherwise.
+---@param targetId number The ID of the target to be validated.
+---@return boolean Returns true if it is acceptable to engage with the target, false otherwise.
 function Combat.OkToEngagePreValidateId(targetId)
     if not Config:GetSetting('DoAutoEngage') then return false end
     local target = mq.TLO.Spawn(targetId)
@@ -671,8 +671,8 @@ function Combat.OkToEngagePreValidateId(targetId)
 end
 
 --- Determines if it is acceptable to engage a target.
---- @param autoTargetId number The ID of the target to check.
---- @return boolean Returns true if it is okay to engage the target, false otherwise.
+---@param autoTargetId number The ID of the target to check.
+---@return boolean Returns true if it is okay to engage the target, false otherwise.
 function Combat.OkToEngage(autoTargetId)
     if not Config:GetSetting('DoAutoEngage') then return false end
 
@@ -750,8 +750,8 @@ function Combat.OkToEngage(autoTargetId)
 end
 
 --- Sends your pet in to attack.
---- @param targetId number The ID of the target to attack.
---- @param sendSwarm boolean Whether to send a swarm attack or not.
+---@param targetId number The ID of the target to attack.
+---@param sendSwarm boolean Whether to send a swarm attack or not.
 function Combat.PetAttack(targetId, sendSwarm)
     local pet = mq.TLO.Me.Pet
 
@@ -770,15 +770,15 @@ function Combat.PetAttack(targetId, sendSwarm)
 end
 
 --- Returns true if the spawn with the given id is a valid, living combat target.
---- @param targetId number The spawn id to check.
---- @return boolean
+---@param targetId number The spawn id to check.
+---@return boolean
 function Combat.ValidCombatTarget(targetId)
     -- avoid breaking change
     return Core.ValidCombatTarget(targetId)
 end
 
 --- Returns true if camp return logic should run this frame.
---- @return boolean
+---@return boolean
 function Combat.ShouldDoCamp()
     return
         (Targeting.GetXTHaterCount() == 0 and Globals.AutoTargetID == 0) or
@@ -786,8 +786,8 @@ function Combat.ShouldDoCamp()
 end
 
 --- Navigates back to camp if ReturnToCamp is enabled and we are outside the camp radius.
---- @param tempConfig           table    Camp configuration containing AutoCampX/Y/Z, CampZoneId, etc.
---- @param bCalledFromInsideEvent? boolean True if called from within an event handler (skips doevents calls).
+---@param tempConfig           table    Camp configuration containing AutoCampX/Y/Z, CampZoneId, etc.
+---@param bCalledFromInsideEvent? boolean True if called from within an event handler (skips doevents calls).
 function Combat.AutoCampCheck(tempConfig, bCalledFromInsideEvent)
     if not bCalledFromInsideEvent then bCalledFromInsideEvent = false end
 
@@ -855,7 +855,7 @@ function Combat.AutoCampCheck(tempConfig, bCalledFromInsideEvent)
 end
 
 --- Navigates back to camp during combat if ReturnToCamp is enabled and we are outside the camp radius.
---- @param tempConfig table Camp configuration containing AutoCampX/Y/Z and CampZoneId.
+---@param tempConfig table Camp configuration containing AutoCampX/Y/Z and CampZoneId.
 function Combat.CombatCampCheck(tempConfig)
     if not Config:GetSetting('ReturnToCamp') then return end
 
@@ -901,8 +901,8 @@ function Combat.CombatCampCheck(tempConfig)
 end
 
 --- Finds the group member with the lowest mana percentage.
---- @param minMana number The minimum mana percentage to consider.
---- @return number The group member with the lowest mana percentage, or nil if no member meets the criteria.
+---@param minMana number The minimum mana percentage to consider.
+---@return number The group member with the lowest mana percentage, or nil if no member meets the criteria.
 function Combat.FindWorstHurtManaGroupMember(minMana)
     local groupSize = mq.TLO.Group.Members()
     local myMana = mq.TLO.Me.PctMana()
@@ -935,8 +935,8 @@ function Combat.FindWorstHurtManaGroupMember(minMana)
 end
 
 --- Finds the group member with the lowest health percentage (including ourselves or group pets)
---- @param minHPs number The minimum health percentage to consider.
---- @return number The group member with the lowest health percentage, or 0 if no member meets the criteria.
+---@param minHPs number The minimum health percentage to consider.
+---@return number The group member with the lowest health percentage, or 0 if no member meets the criteria.
 function Combat.FindWorstHurtGroupMember(minHPs)
     local groupSize = mq.TLO.Group.Members()
     local myHP = mq.TLO.Me.PctHPs()
@@ -998,8 +998,8 @@ function Combat.FindWorstHurtGroupMember(minHPs)
 end
 
 --- Finds the entity with the worst hurt mana exceeding a minimum threshold.
---- @param minMana number The minimum mana threshold to consider.
---- @return number The spawn id with the worst hurt mana above the specified threshold.
+---@param minMana number The minimum mana threshold to consider.
+---@return number The spawn id with the worst hurt mana above the specified threshold.
 function Combat.FindWorstHurtManaXT(minMana)
     local xtSize = mq.TLO.Me.XTargetSlots()
     local worstId = 0
@@ -1031,8 +1031,8 @@ function Combat.FindWorstHurtManaXT(minMana)
 end
 
 --- Finds the entity with the worst health condition that meets the minimum HP requirement.
---- @param minHPs number The minimum HP threshold to consider.
---- @return number The spawn id with the worst health condition that meets the criteria.
+---@param minHPs number The minimum HP threshold to consider.
+---@return number The spawn id with the worst health condition that meets the criteria.
 function Combat.FindWorstHurtXT(minHPs)
     local xtSize = mq.TLO.Me.XTargetSlots()
     local worstId = 0
@@ -1063,8 +1063,8 @@ function Combat.FindWorstHurtXT(minHPs)
 end
 
 --- Finds the entity with the worst health condition that meets the minimum HP requirement.
---- @param minHPs number The minimum HP threshold to consider.
---- @return number The spawn id with the worst health condition that meets the criteria.
+---@param minHPs number The minimum HP threshold to consider.
+---@return number The spawn id with the worst health condition that meets the criteria.
 function Combat.FindWorstHurtHealList(minHPs)
     local worstId = 0
     local worstPct = minHPs
@@ -1100,8 +1100,8 @@ function Combat.FindWorstHurtHealList(minHPs)
 end
 
 --- Finds the entity with the worst mana condition that meets the minimum Mana requirement.
---- @param minMana number The minimum Mana threshold to consider.
---- @return number The spawn id with the worst mana condition that meets the criteria.
+---@param minMana number The minimum Mana threshold to consider.
+---@return number The spawn id with the worst mana condition that meets the criteria.
 function Combat.FindWorstHurtManaHealList(minMana)
     local worstId = 0
     local worstPct = minMana
@@ -1135,8 +1135,8 @@ function Combat.FindWorstHurtManaHealList(minMana)
 end
 
 --- Returns the spawn id of the group member or heal list target with the lowest mana below minMana.
---- @param minMana number The minimum mana percentage threshold; only targets below this qualify.
---- @return number Spawn id of the worst-off target, or 0 if none qualify.
+---@param minMana number The minimum mana percentage threshold; only targets below this qualify.
+---@return number Spawn id of the worst-off target, or 0 if none qualify.
 function Combat.FindWorstHurtMana(minMana)
     local worstId = Combat.FindWorstHurtManaGroupMember(minMana)
     if worstId == 0 then
@@ -1150,8 +1150,8 @@ function Combat.FindWorstHurtMana(minMana)
 end
 
 --- Returns true if AE taunt conditions are met (enough haters in range, optionally safe to taunt).
---- @param printDebug boolean If true, logs verbose information about each candidate.
---- @return boolean
+---@param printDebug boolean If true, logs verbose information about each candidate.
+---@return boolean
 function Combat.AETauntCheck(printDebug)
     local xtCount = mq.TLO.Me.XTarget() or 0
     if xtCount < Config:GetSetting('AETauntCnt') then return false end
@@ -1175,9 +1175,9 @@ function Combat.AETauntCheck(printDebug)
 end
 
 --- Returns true if AE damage conditions are met (enough haters in range, optionally all mobs are haters).
---- @param printDebug boolean?  If true, logs verbose information when blocked by SafeAEDamage.
---- @param minCount   number?  Minimum hater count required; defaults to the AETargetCnt setting.
---- @return boolean
+---@param printDebug boolean?  If true, logs verbose information when blocked by SafeAEDamage.
+---@param minCount   number?  Minimum hater count required; defaults to the AETargetCnt setting.
+---@return boolean
 function Combat.AETargetCheck(printDebug, minCount)
     if not minCount then minCount = Config:GetSetting('AETargetCnt') end
 

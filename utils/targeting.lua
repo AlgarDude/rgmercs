@@ -15,36 +15,38 @@ Targeting.ForceNamed        = false
 Targeting.ForceBurnTargetID = 0
 Targeting.SafeTargetCache   = {}
 
---- Returns true if the spawn is considered a named mob by the Named module.
---- @param spawn MQSpawn The spawn to check.
---- @return boolean
+--- Returns true if spawn qualifies as a named mob per the Named module,
+--- ignoring spawns below the NamedMinLevel config setting.
+---@param spawn MQSpawn The spawn to check.
+---@return boolean True if the spawn is a named mob.
 function Targeting.IsNamed(spawn)
     if not spawn or not spawn() then return false end
     if (spawn.Level() or 0) < Config:GetSetting("NamedMinLevel") then return false end
     return Modules:ExecModule("Named", "IsNamed", spawn) or false
 end
 
---- Sets the target.
---- @param targetId number The ID of the target to be set.
---- @param ignoreBuffPopulation boolean? Wait to return until buffs are populated Default: false
+--- Thin wrapper around Core.SetTarget; exists to avoid a breaking API change.
+---@param targetId number Spawn ID to target.
+---@param ignoreBuffPopulation boolean? If true, don't wait for buff population.
 function Targeting.SetTarget(targetId, ignoreBuffPopulation)
     -- avoid breaking change.
     return Core.SetTarget(targetId, ignoreBuffPopulation)
 end
 
---- Returns the current auto target spawn.
---- @return MQSpawn The spawn with id Globals.AutoTargetID.
+--- Returns the spawn object for the current auto target ID.
+---@return MQSpawn The spawn with id Globals.AutoTargetID.
 function Targeting.GetAutoTarget()
     return mq.TLO.Spawn(string.format("id %d", Globals.AutoTargetID))
 end
 
---- Returns the current aggro target spawn.
---- @return MQSpawn The spawn with id Globals.AggroTargetID.
+--- Returns the spawn object for the current aggro target ID.
+---@return MQSpawn The spawn with id Globals.AggroTargetID.
 function Targeting.GetAggroTarget()
     return mq.TLO.Spawn(string.format("id %d", Globals.AggroTargetID))
 end
 
---- Clears the auto target, resets aggro/force/combat IDs, stops stick, and clears the in-game target.
+--- Resets AutoTargetID, AggroTargetID, ForceCombatID, stops stick, and
+--- clears the in-game target. No-op when DoAutoTarget is disabled.
 function Targeting.ClearTarget()
     if Config:GetSetting('DoAutoTarget') then
         Logger.log_debug("Clearing Target")
@@ -60,17 +62,17 @@ function Targeting.ClearTarget()
     end
 end
 
---- Retrieves the ID of the given target.
---- @param target MQTarget? The target whose ID is to be retrieved.
---- @return number The ID of the target.
+--- Returns the spawn ID of target, or the current in-game target if nil.
+---@param target MQTarget? The target to query; defaults to mq.TLO.Target.
+---@return number The spawn ID, or 0 if no target.
 function Targeting.GetTargetID(target)
     return (target and target.ID() or (mq.TLO.Target.ID() or 0))
 end
 
---- Checks if the target's body type matches the specified type.
---- @param target MQTarget|MQSpawn The target whose body type is to be checked.
---- @param type string The body type to check against.
---- @return boolean True if the target's body type matches the specified type, false otherwise.
+--- Returns true if the target's body type name matches type (case-insensitive).
+---@param target MQTarget|MQSpawn The spawn to test; defaults to current target.
+---@param type string Body type name to compare against.
+---@return boolean True if body type matches.
 function Targeting.TargetBodyIs(target, type)
     if not target then target = mq.TLO.Target end
     if not target or not target() then return false end
@@ -79,11 +81,10 @@ function Targeting.TargetBodyIs(target, type)
     return targetBody:lower() == type:lower()
 end
 
---- Checks if the target's class is in the provided class table.
----
---- @param classTable string|table The string or table of strings containing class names to check against.
---- @param target MQTarget The class name of the target to check.
---- @return boolean True if the target's class is in the class table, false otherwise.
+--- Returns true if target's class short name is in classTable (string or array).
+---@param classTable string|table Class short name or array of them to check.
+---@param target MQTarget The spawn to test; defaults to current target.
+---@return boolean True if the target's class matches any entry in classTable.
 function Targeting.TargetClassIs(classTable, target)
     local classSet = type(classTable) == 'table' and Set.new(classTable) or Set.new({ classTable, })
 
@@ -93,38 +94,37 @@ function Targeting.TargetClassIs(classTable, target)
     return classSet:contains(target.Class.ShortName() or "None")
 end
 
---- Retrieves the level of the specified target.
----
---- @param target MQTarget? The target whose level is to be retrieved.
---- @return number The level of the target.
+--- Returns the level of target, or the current in-game target level if nil.
+---@param target MQTarget? Target to query; defaults to mq.TLO.Target.
+---@return number The spawn's level, or 0 if no target.
 function Targeting.GetTargetLevel(target)
     return (target and target.Level() or (mq.TLO.Target.Level() or 0))
 end
 
---- Calculates the distance to the specified target.
---- @param target MQSpawn|MQTarget|string|nil? The target entity whose distance is to be calculated.
---- @return number The distance to the target.
+--- Returns the 3D distance to target, or current target distance if nil.
+---@param target MQSpawn|MQTarget|string|nil? Target to measure; defaults to current target.
+---@return number Distance in EQ units, or 9999 if no target.
 function Targeting.GetTargetDistance(target)
     return (target and target.Distance3D() or (mq.TLO.Target.Distance3D() or 9999))
 end
 
---- Calculates the vertical distance (Z-axis) to the specified target.
---- @param target MQTarget|MQSpawn? The target entity to measure the distance to.
---- @return number The vertical distance to the target.
+--- Returns the vertical (Z-axis) distance to target, or current target if nil.
+---@param target MQTarget|MQSpawn? Target to measure; defaults to current target.
+---@return number Z-axis distance in EQ units, or 9999 if no target.
 function Targeting.GetTargetDistanceZ(target)
     return (target and target.DistanceZ() or (mq.TLO.Target.DistanceZ() or 9999))
 end
 
---- Gets the maximum range to the specified target.
---- @param target MQSpawn|nil The target entity to measure the range to.
---- @return number The maximum range to the target.
+--- Returns the maximum range from the player to target, or current target if nil.
+---@param target MQSpawn? Target to measure; defaults to current target.
+---@return number MaxRangeTo in EQ units, or 15 if no target.
 function Targeting.GetTargetMaxRangeTo(target)
     return (target and target.MaxRangeTo() or (mq.TLO.Target.MaxRangeTo() or 15))
 end
 
---- Retrieves the percentage of hit points (HP) remaining for the specified target.
---- @param target MQTarget|MQSpawn? The target entity whose HP percentage is to be retrieved.
---- @return number The percentage of HP remaining for the target.
+--- Returns the HP percentage of target, or the current in-game target if nil.
+---@param target MQTarget|MQSpawn? Target to query; defaults to current target.
+---@return number HP percentage 0–100, or 0 if no valid target.
 function Targeting.GetTargetPctHPs(target)
     local useTarget = target
     if not useTarget then useTarget = mq.TLO.Target end
@@ -133,32 +133,32 @@ function Targeting.GetTargetPctHPs(target)
     return useTarget.PctHPs() or 0
 end
 
---- Returns the height of the target.
---- @param target MQTarget|MQSpawn? The target entity
---- @return number The distance to the target.
+--- Returns the model height of target, or the current in-game target if nil.
+---@param target MQTarget|MQSpawn? Target to query; defaults to current target.
+---@return number Height in EQ units, or 0 if no target.
 function Targeting.GetTargetHeight(target)
     return (target and target.Height() or (mq.TLO.Target.Height() or 0))
 end
 
---- Returns the HP percentage of the current auto target, or 0 if none.
---- @return number
+--- Returns the HP percentage of the current auto target, or 0 if no auto target.
+---@return number HP percentage 0–100, or 0 if no auto target.
 function Targeting.GetAutoTargetPctHPs()
     local autoTarget = Targeting.GetAutoTarget()
     if not autoTarget or not autoTarget() then return 0 end
     return autoTarget.PctHPs() or 0
 end
 
---- Returns the level of the current auto target, or 0 if none.
---- @return number
+--- Returns the level of the current auto target, or 0 if no auto target.
+---@return number The auto target's level, or 0.
 function Targeting.GetAutoTargetLevel()
     local autoTarget = Targeting.GetAutoTarget()
     if not autoTarget or not autoTarget() then return 0 end
     return autoTarget.Level() or 0
 end
 
---- Checks if the specified target is dead.
---- @param target MQTarget The name or identifier of the target to check.
---- @return boolean Returns true if the target is dead, false otherwise.
+--- Returns true if target is dead or does not exist.
+---@param target MQTarget The spawn to check; defaults to current target.
+---@return boolean True if dead or no valid target.
 function Targeting.GetTargetDead(target)
     local useTarget = target
     if not useTarget then useTarget = mq.TLO.Target end
@@ -167,9 +167,9 @@ function Targeting.GetTargetDead(target)
     return useTarget.Dead()
 end
 
---- Checks if the specified target is in Line Of Sight.
---- @param target MQTarget The name or identifier of the target to check.
---- @return boolean Returns true if the target is in LoS, false otherwise.
+--- Returns true if the target is in line of sight.
+---@param target MQTarget The spawn to check; defaults to current target.
+---@return boolean True if the target is in LoS, false if not or no target.
 function Targeting.GetTargetLOS(target)
     local useTarget = target
     if not useTarget then useTarget = mq.TLO.Target end
@@ -178,10 +178,11 @@ function Targeting.GetTargetLOS(target)
     return useTarget.LineOfSight()
 end
 
---- Returns the max distance from this spawn for you to hit it.
---- @param target MQTarget The name or identifier of the target to check.
---- @param failHigh boolean Return 999 for an invalid target, otherwise return 0.
---- @return number Returns The max distance to hit this target
+--- Returns the max melee range to target. When target is invalid,
+--- returns 999 if failHigh is true, otherwise 0.
+---@param target MQTarget The spawn to measure; defaults to current target.
+---@param failHigh boolean Return 999 on invalid target instead of 0.
+---@return number MaxRangeTo in EQ units, or 999/0 if invalid.
 function Targeting.GetMaxMeleeRange(target, failHigh)
     local useTarget = target
     if not useTarget then useTarget = mq.TLO.Target end
@@ -192,28 +193,29 @@ function Targeting.GetMaxMeleeRange(target, failHigh)
     return useTarget.MaxRangeTo() or (failHigh and 999 or 0)
 end
 
---- Retrieves the name of the given target.
---- @param target MQTarget? The target whose name is to be retrieved.
---- @return string The name of the target.
+--- Returns the raw name of target, or current target's name if nil.
+---@param target MQTarget? Target to query; defaults to current target.
+---@return string The spawn name, or "" if no target.
 function Targeting.GetTargetName(target)
     return (target and target.Name() or (mq.TLO.Target.Name() or ""))
 end
 
---- Retrieves the clean name of the given target.
---- @param target MQTarget|MQSpawn? The target from which to extract the clean name.
---- @return string The clean name of the target.
+--- Returns the clean (surname-stripped) name of target, or current target if nil.
+---@param target MQTarget|MQSpawn? Target to query; defaults to current target.
+---@return string The clean name, or "" if no target.
 function Targeting.GetTargetCleanName(target)
     return (target and target.Name() or (mq.TLO.Target.CleanName() or ""))
 end
 
---- Retrieves the aggro percentage of the current target.
---- @return number The aggro percentage of the current target.
+--- Returns the aggro percentage the player has on the current in-game target.
+---@return number Aggro percentage 0–100, or 0 if no target.
 function Targeting.GetTargetAggroPct()
     return (mq.TLO.Target.PctAggro() or 0)
 end
 
---- Retrieves the aggro percentage of the current autotarget.
---- @return number The aggro percentage of the current autotarget.
+--- Returns the aggro percentage the player has on AutoTargetID, checking
+--- the current target and all XTargets to find it.
+---@return number Aggro percentage 0–100, or 0 if AutoTargetID is 0 or not found.
 function Targeting.GetAutoTargetAggroPct()
     if Globals.AutoTargetID == 0 then return 0 end
 
@@ -234,9 +236,9 @@ function Targeting.GetAutoTargetAggroPct()
     return 0
 end
 
---- Determines the type of the given target.
---- @param target MQSpawn|MQTarget|groupmember? The target whose type is to be determined.
---- @return string The type of the target as a string.
+--- Returns the spawn type string of target (e.g. "PC", "NPC"), or "" if nil.
+---@param target MQSpawn|MQTarget|groupmember? Target to query; defaults to current target.
+---@return string The spawn type string, or "" if no target.
 function Targeting.GetTargetType(target)
     local useTarget = target
     if not useTarget then useTarget = mq.TLO.Target end
@@ -245,22 +247,23 @@ function Targeting.GetTargetType(target)
     return (useTarget.Type() or "")
 end
 
---- Checks if the target is of the specified type.
---- @param type string The type to check against the target.
---- @param target MQSpawn|groupmember|MQTarget? The target to be checked.
---- @return boolean Returns true if the target is of the specified type, false otherwise.
+--- Returns true if target's type matches type (case-insensitive).
+---@param type string Spawn type to compare, e.g. "NPC", "PC".
+---@param target MQSpawn|groupmember|MQTarget? Target to test; defaults to current target.
+---@return boolean True if types match.
 function Targeting.TargetIsType(type, target)
     return Targeting.GetTargetType(target):lower() == type:lower()
 end
 
---- @param target MQTarget|nil
---- @return boolean
+--- Returns the aggressive flag of target, or the current in-game target if nil.
+---@param target MQTarget? Target to query; defaults to current target.
+---@return boolean True if the spawn is flagged aggressive.
 function Targeting.GetTargetAggressive(target)
     return (target and target.Aggressive() or (mq.TLO.Target.Aggressive() or false))
 end
 
---- Retrieves the percentage by which the target is slowed.
---- @return number The percentage by which the target is slowed.
+--- Returns the slow percentage on the current in-game target, or 0 if not slowed.
+---@return number Slow percentage, or 0 if target is not slowed or has no target.
 function Targeting.GetTargetSlowedPct()
     -- no valid target
     if mq.TLO.Target and not mq.TLO.Target.Slowed() then return 0 end
@@ -268,14 +271,15 @@ function Targeting.GetTargetSlowedPct()
     return (mq.TLO.Target.Slowed.SlowPct() or 0)
 end
 
---- Determines if the player is facing the target.
---- @return boolean True if the player is facing the target, false otherwise.
+--- Returns true if the player's heading is within 20 degrees of the target.
+---@return boolean True if facing the current target.
 function Targeting.FacingTarget()
     return math.abs((mq.TLO.Target.HeadingTo.DegreesCCW() or mq.TLO.Me.Heading.DegreesCCW()) - mq.TLO.Me.Heading.DegreesCCW()) <= 20
 end
 
---- Returns the highest aggro percentage across the current target and all XTargets.
---- @return number
+--- Returns the highest aggro percentage the player has across the current
+--- target and all aggressive or force-targeted XTarget entries.
+---@return number Highest aggro percentage 0–100.
 function Targeting.GetHighestAggroPct()
     local target     = mq.TLO.Target
     local me         = mq.TLO.Me
@@ -295,9 +299,10 @@ function Targeting.GetHighestAggroPct()
     return highestPct
 end
 
---- Checks if the player has aggro based on a given percentage.
---- @param pct number The percentage threshold to determine if the player has aggro.
---- @return boolean Returns true if the player has aggro above the given percentage, false otherwise.
+--- Returns true if any aggressive XTarget (or the current target) shows
+--- the player at or above pct aggro.
+---@param pct number Aggro threshold to test against (0–100).
+---@return boolean True if any tracked mob shows player aggro ≥ pct.
 function Targeting.IHaveAggro(pct)
     local target = mq.TLO.Target
     local me     = mq.TLO.Me
@@ -317,9 +322,9 @@ function Targeting.IHaveAggro(pct)
     return false
 end
 
---- Returns a Set of spawn ids that are currently hating us on XTarget.
---- @param printDebug boolean? If true, logs each counted hater.
---- @return table
+--- Returns a Set of spawn IDs currently hating the player on XTarget.
+---@param printDebug boolean? If true, logs each hater found.
+---@return table Set of hater spawn IDs.
 function Targeting.GetXTHaterIDsSet(printDebug)
     local xtCount = mq.TLO.Me.XTarget() or 0
     local uniqHaters = Set.new({})
@@ -337,24 +342,24 @@ function Targeting.GetXTHaterIDsSet(printDebug)
     return uniqHaters
 end
 
---- Returns a list of spawn ids that are currently hating us on XTarget.
---- @param printDebug boolean? If true, logs each counted hater.
---- @return number[]
+--- Returns an array of spawn IDs currently hating the player on XTarget.
+---@param printDebug boolean? If true, logs each hater found.
+---@return number[] Array of hater spawn IDs.
 function Targeting.GetXTHaterIDs(printDebug)
     return Targeting.GetXTHaterIDsSet(printDebug):toList()
 end
 
---- Returns the count of spawns currently hating us on XTarget.
---- @param printDebug boolean? If true, logs each counted hater.
---- @return number
+--- Returns the number of spawns currently hating the player on XTarget.
+---@param printDebug boolean? If true, logs each hater counted.
+---@return number Count of current XTarget haters.
 function Targeting.GetXTHaterCount(printDebug)
     return #Targeting.GetXTHaterIDs(printDebug)
 end
 
---- Returns true if the current XTarget hater list contains any id not in t (new hater appeared).
---- @param t          number[] Previously known hater id list.
---- @param printDebug boolean?  If true, logs each checked hater.
---- @return boolean
+--- Returns true if any current XTarget hater ID is not in t (new hater appeared).
+---@param t number[] Previously known hater ID list to compare against.
+---@param printDebug boolean? If true, logs each comparison.
+---@return boolean True if a new hater appeared since t was captured.
 function Targeting.DiffXTHaterIDs(t, printDebug)
     local oldHaterSet = Set.new(t)
     local curHaters   = Targeting.GetXTHaterIDs(printDebug)
@@ -369,10 +374,10 @@ function Targeting.DiffXTHaterIDs(t, printDebug)
     return false
 end
 
---- Returns true if either list has an id the other does not (any hater gained or lost).
---- @param t          number[] Previously known hater id list.
---- @param printDebug boolean?  If true, logs each checked hater.
---- @return boolean
+--- Returns true if either list has an ID the other doesn't (any hater gained or lost).
+---@param t number[] Previously known hater ID list to compare against.
+---@param printDebug boolean? If true, logs each comparison.
+---@return boolean True if the hater list changed in either direction.
 function Targeting.CrossDiffXTHaterIDs(t, printDebug)
     local oldHaterSet  = Set.new(t)
     local curHatersSet = Targeting.GetXTHaterIDsSet(printDebug)
@@ -393,10 +398,11 @@ function Targeting.CrossDiffXTHaterIDs(t, printDebug)
     return false
 end
 
---- Checks if the given spawn is an XTHater.
---- @param spawnId number The ID of the spawn to check.
---- @param autoHater boolean? required to be an autohater
---- @return boolean True if the spawn is an XTHater, false otherwise.
+--- Returns true if spawnId is in the XTarget list. When autoHater is true,
+--- only counts entries whose TargetType is "auto hater".
+---@param spawnId number Spawn ID to look for in XTarget slots.
+---@param autoHater boolean? If true, require the slot to be an auto hater.
+---@return boolean True if the spawn is found in XTarget (and meets autoHater if set).
 function Targeting.IsSpawnXTHater(spawnId, autoHater)
     local xtCount = mq.TLO.Me.XTarget() or 0
 
@@ -417,9 +423,9 @@ function Targeting.IsSpawnXTHater(spawnId, autoHater)
     return false
 end
 
---- Adds an XT by its name to the specified slot.
---- @param slot number The slot number where the XT should be added.
---- @param name string The name of the XT to be added.
+--- Sets XTarget slot to the spawn named name if the slot doesn't already hold it.
+---@param slot number XTarget slot index (1–20).
+---@param name string Exact spawn name to target.
 function Targeting.AddXTByName(slot, name)
     if not name then return end
     local spawnToAdd = mq.TLO.Spawn("=" .. name)
@@ -428,9 +434,9 @@ function Targeting.AddXTByName(slot, name)
     end
 end
 
---- Adds an item to a slot by its ID.
---- @param slot number The slot number where the item should be added.
---- @param id number The ID of the item to be added.
+--- Sets XTarget slot to the spawn with the given ID if not already set.
+---@param slot number XTarget slot index (1–20).
+---@param id number Spawn ID to target in the slot.
 function Targeting.AddXTByID(slot, id)
     local spawnToAdd = mq.TLO.Spawn(id)
     if spawnToAdd and spawnToAdd() and spawnToAdd.Type() and mq.TLO.Me.XTarget(slot).ID() ~= spawnToAdd.ID() then
@@ -442,19 +448,20 @@ function Targeting.AddXTByID(slot, id)
     end
 end
 
---- Resets the specified XT slot.
---- @param slot number The slot number to reset.
+--- Clears XTarget slot by setting it to Empty Target then back to autohater.
+---@param slot number XTarget slot index to reset (1–20).
 function Targeting.ResetXTSlot(slot)
     Core.DoCmd("/xtarget set %d ET", slot)
     mq.delay(500, function() return (mq.TLO.Me.XTarget(slot).TargetType():lower() or "empty target") == "empty target" end)
     Core.DoCmd("/xtarget set %d autohater", slot)
 end
 
---- Checks if a given spawn is fighting a stranger within a specified radius.
----
---- @param spawn MQSpawn The spawn object to check.
---- @param radius number The radius within which to check for strangers.
---- @return boolean Returns true if the spawn is fighting a stranger within the specified radius, false otherwise.
+--- Returns true if any PC/pet/merc within radius is assisting spawn but is
+--- not in our group, raid, guild, or DanNet — meaning attacking them would
+--- grief another player.
+---@param spawn MQSpawn The spawn to check for cross-player fighting.
+---@param radius number Search radius in EQ units.
+---@return boolean True if an unfamiliar player is fighting spawn.
 function Targeting.IsSpawnFightingStranger(spawn, radius)
     local searchTypes = { "PC", "PCPET", "MERCENARY", }
 
@@ -494,10 +501,11 @@ function Targeting.IsSpawnFightingStranger(spawn, radius)
     return false
 end
 
---- Checks if the given name is considered safe within the provided table.
---- @param spawnType string Type of spawn pc/pcpet/merc/etc.
---- @param name string The name to check for safety.
---- @return boolean Returns true if the name is safe, false otherwise.
+--- Returns true if name is a "safe" player: DanNet peer, group, raid, guild,
+--- or on the AssistList config. Prevents accidentally engaging friendly players.
+---@param spawnType string Spawn type for guild check query, e.g. "pc".
+---@param name string Character name to verify.
+---@return boolean True if the name belongs to a friendly player.
 function Targeting.IsSafeName(spawnType, name)
     Logger.log_verbose("IsSafeName(%s)", name)
     if mq.TLO.DanNet(name)() then
@@ -532,21 +540,23 @@ function Targeting.IsSafeName(spawnType, name)
     return false
 end
 
---- Clears the safe target cache so IsSpawnFightingStranger re-evaluates all spawns.
+--- Resets SafeTargetCache so IsSpawnFightingStranger re-evaluates each spawn
+--- from scratch on the next call.
 function Targeting.ClearSafeTargetCache()
     Targeting.SafeTargetCache = {}
 end
 
---- Returns true if the given spawn is a member of our group.
---- @param target MQSpawn
---- @return boolean
+--- Returns true if target is a member of the player's current group.
+---@param target MQSpawn The spawn to check.
+---@return boolean True if target is in the group.
 function Targeting.GroupedWithTarget(target)
     local targetName = target.CleanName() or "None"
     return mq.TLO.Group.Member(targetName)() and true or false
 end
 
---- Sets the force burn target to the given id (or current target if 0), and announces it.
---- @param targetId number Spawn id to force burn on.
+--- Marks targetId (or current target if 0) as the force-burn target and
+--- announces it to group/raid per config settings.
+---@param targetId number Spawn ID to force burn; 0 uses the current target.
 function Targeting.SetForceBurn(targetId)
     if Targeting.ForceBurnTargetID == tonumber(targetId) then
         Logger.log_debug("Force Burn already set to %d. Ignoring request.", Targeting.ForceBurnTargetID)
@@ -562,49 +572,50 @@ function Targeting.SetForceBurn(targetId)
         Config:GetSetting('AnnounceToRaidIfInRaid'))
 end
 
---- Returns true if the spawn is the current main assist.
---- @param target MQSpawn
---- @return boolean
+--- Returns true if target's ID matches the configured main assist.
+---@param target MQSpawn Spawn to compare against the main assist.
+---@return boolean True if target is the main assist.
 function Targeting.TargetIsMA(target)
     if not (target and target()) then return false end
     return target.ID() == Core.GetMainAssistId()
 end
 
---- Returns true if the spawn's class is in the RGCasters set.
---- @param target MQSpawn
---- @return boolean
+--- Returns true if target's class short name is in the RGCasters set.
+---@param target MQSpawn Spawn to check.
+---@return boolean True if the spawn is a caster class.
 function Targeting.TargetIsACaster(target)
     if not (target and target()) then return false end
     return Config.Constants.RGCasters:contains(target.Class.ShortName())
 end
 
---- Returns true if the spawn's class is in the RGMelee set.
---- @param target MQSpawn
---- @return boolean
+--- Returns true if target's class short name is in the RGMelee set.
+---@param target MQSpawn Spawn to check.
+---@return boolean True if the spawn is a melee class.
 function Targeting.TargetIsAMelee(target)
     if not (target and target()) then return false end
     return Config.Constants.RGMelee:contains(target.Class.ShortName())
 end
 
---- Returns true if the spawn's class is in the RGTank set.
---- @param target MQSpawn
---- @return boolean
+--- Returns true if target's class short name is in the RGTank set.
+---@param target MQSpawn Spawn to check.
+---@return boolean True if the spawn is a tank class.
 function Targeting.TargetIsATank(target)
     if not (target and target()) then return false end
     return Config.Constants.RGTank:contains(target.Class.ShortName())
 end
 
---- Returns true if the spawn is ourselves.
---- @param target MQSpawn
---- @return boolean
+--- Returns true if target's ID matches the player's own spawn ID.
+---@param target MQSpawn Spawn to compare against self.
+---@return boolean True if target is the player.
 function Targeting.TargetIsMyself(target)
     if not (target and target()) then return false end
     return target.ID() == mq.TLO.Me.ID()
 end
 
---- Returns true if the target's HP% is at or above the low HP threshold (named or normal).
---- @param target MQSpawn|MQTarget?
---- @return boolean
+--- Returns true if target's HP% is at or above the low-HP threshold
+--- (uses NamedLowHP for named mobs, MobLowHP otherwise).
+---@param target MQSpawn|MQTarget? Target to check; defaults to auto target.
+---@return boolean True if HP is at or above the threshold.
 function Targeting.MobNotLowHP(target)
     if not target then target = Targeting.GetAutoTarget() or mq.TLO.Target end
     if not (target and target()) then return false end
@@ -613,9 +624,10 @@ function Targeting.MobNotLowHP(target)
     return Targeting.GetTargetPctHPs(target) >= threshold
 end
 
---- Returns true if the target's HP% is below the low HP threshold (named or normal).
---- @param target MQSpawn|MQTarget?
---- @return boolean
+--- Returns true if target's HP% is below the low-HP threshold
+--- (uses NamedLowHP for named mobs, MobLowHP otherwise).
+---@param target MQSpawn|MQTarget? Target to check; defaults to auto target.
+---@return boolean True if HP is below the threshold.
 function Targeting.MobHasLowHP(target)
     if not target then target = Targeting.GetAutoTarget() or mq.TLO.Target end
     if not (target and target()) then return false end
@@ -624,55 +636,57 @@ function Targeting.MobHasLowHP(target)
     return threshold > Targeting.GetTargetPctHPs(target)
 end
 
---- Returns true if the target's HP% is below the BigHealPoint setting.
---- @param target MQSpawn|groupmember
---- @return boolean
+--- Returns true if target's HP% is below the BigHealPoint config threshold.
+---@param target MQSpawn|groupmember Spawn or group member to check.
+---@return boolean True if a big heal is needed.
 function Targeting.BigHealsNeeded(target)
     return (target.PctHPs() or 999) < Config:GetSetting('BigHealPoint')
 end
 
---- Returns true if the target's HP% is below the MainHealPoint setting.
---- @param target MQSpawn|groupmember
---- @return boolean
+--- Returns true if target's HP% is below the MainHealPoint config threshold.
+---@param target MQSpawn|groupmember Spawn or group member to check.
+---@return boolean True if a main heal is needed.
 function Targeting.MainHealsNeeded(target)
     return (target.PctHPs() or 999) < Config:GetSetting('MainHealPoint')
 end
 
---- Returns true if the target's HP% is below the LightHealPoint setting.
---- @param target MQSpawn|groupmember
---- @return boolean
+--- Returns true if target's HP% is below the LightHealPoint config threshold.
+---@param target MQSpawn|groupmember Spawn or group member to check.
+---@return boolean True if a light heal is needed.
 function Targeting.LightHealsNeeded(target)
     return (target.PctHPs() or 999) < Config:GetSetting('LightHealPoint')
 end
 
---- Returns true if enough group members are below GroupHealPoint to warrant a group heal.
---- @return boolean
+--- Returns true if at least GroupInjureCnt members are below GroupHealPoint.
+---@return boolean True if a group heal is warranted.
 function Targeting.GroupHealsNeeded()
     return (mq.TLO.Group.Injured(Config:GetSetting('GroupHealPoint'))() or 0) >= Config:GetSetting('GroupInjureCnt')
 end
 
---- Returns true if enough group members are below BigHealPoint to warrant a big group heal.
---- @return boolean
+--- Returns true if at least GroupInjureCnt members are below BigHealPoint.
+---@return boolean True if a big group heal is warranted.
 function Targeting.BigGroupHealsNeeded()
     return (mq.TLO.Group.Injured(Config:GetSetting('BigHealPoint'))() or 0) >= Config:GetSetting('GroupInjureCnt')
 end
 
---- Returns a single-element list with the AutoTargetID if it matches the current target, else empty.
---- @return number[]
+--- Returns {AutoTargetID} if AutoTargetID matches the in-game target, else {}.
+--- Used by rotation conditions that require being on the right target.
+---@return number[] Single-element array or empty array.
 function Targeting.CheckForAutoTargetID()
     return mq.TLO.Target.ID() == Globals.AutoTargetID and { Globals.AutoTargetID, } or {}
 end
 
---- Returns a single-element list with AggroTargetID if it is set, else empty.
---- @return number[]
+--- Returns {AggroTargetID} if AggroTargetID is non-zero, else {}.
+---@return number[] Single-element array or empty array.
 function Targeting.CheckForAggroTargetID()
     return (Globals.AggroTargetID or 0) > 0 and { Globals.AggroTargetID, } or {}
 end
 
---- Returns true if the target is within the spell's range.
---- @param spell  MQSpell               The spell to check range for.
---- @param target MQSpawn|MQTarget|string|nil?     The target to measure distance to; defaults to current target.
---- @return boolean
+--- Returns true if target is within the spell's effective range (MyRange,
+--- AERange, or 250 as fallback).
+---@param spell MQSpell The spell to check range for.
+---@param target MQSpawn|MQTarget|string|nil? Target to measure; defaults to current target.
+---@return boolean True if the target is in range.
 function Targeting.InSpellRange(spell, target)
     if not spell or not spell() then return false end
     if not target then target = mq.TLO.Target() end
@@ -683,38 +697,42 @@ function Targeting.InSpellRange(spell, target)
     return distance <= range
 end
 
---- This function evaluates the current aggro level and allows actions based on the result.
---- @return boolean True if you have less aggro than your aggro threshold setting or have disabled aggro throttling, false otherwise
+--- Returns true if it is safe to perform actions from an aggro standpoint —
+--- either aggro throttling is off, the player is the tank, or aggro is below MobMaxAggro.
+---@return boolean True if aggro is within acceptable limits.
 function Targeting.AggroCheckOkay()
     if not mq.TLO.Group() or (mq.TLO.Group.MainTank.ID() or 0) == mq.TLO.Me.ID() or Core.IsTanking() then return true end
     return (mq.TLO.Target.PctAggro() or 0) < Config:GetSetting('MobMaxAggro') or not Config:GetSetting('AggroThrottling')
 end
 
---- Returns true if the auto target exists and is not stunned.
---- @return boolean
+--- Returns true if the auto target exists and is not currently stunned.
+---@return boolean True if there is a valid auto target and it is not stunned.
 function Targeting.TargetNotStunned()
     local autoTarget = Targeting.GetAutoTarget()
     if not autoTarget or not autoTarget() then return false end
     return not autoTarget.Stunned()
 end
 
---- Returns true if we have an auto target and our aggro on it is below 100%.
---- @return boolean
+--- Returns true if there is an auto target on the current in-game target
+--- and the player's aggro percentage is below 100.
+---@return boolean True if aggro is not maxed on the auto target.
 function Targeting.LostAutoTargetAggro()
     if Globals.AutoTargetID == 0 or mq.TLO.Target.ID() ~= Globals.AutoTargetID then return false end
     return mq.TLO.Me.PctAggro() < 100
 end
 
---- Returns true if hate tools should be used: aggro below 100%, secondary aggro high, or target is named.
---- @return boolean
+--- Returns true if hate tools should fire: aggro below 100%, secondary
+--- aggro above 60%, or the auto target is a named mob.
+---@return boolean True if hate generation is appropriate this frame.
 function Targeting.HateToolsNeeded()
     if Globals.AutoTargetID == 0 or mq.TLO.Target.ID() ~= Globals.AutoTargetID then return false end
     return mq.TLO.Me.PctAggro() < 100 or (mq.TLO.Target.SecondaryPctAggro() or 0) > 60 or Globals.AutoTargetIsNamed
 end
 
---- Returns true if the spawn's surname marks it as a temporary pet (e.g. "'s Pet", "Doppelganger").
---- @param spawn MQSpawn The spawn to check.
---- @return boolean
+--- Returns true if spawn's surname contains "'s Pet", "`s Pet", or "Doppelganger",
+--- indicating it is a temporary summoned pet rather than a proper mob.
+---@param spawn MQSpawn The spawn to inspect.
+---@return boolean True if the spawn appears to be a temporary pet.
 function Targeting.IsTempPet(spawn)
     if not spawn() then return false end
     local surname = spawn.Surname()

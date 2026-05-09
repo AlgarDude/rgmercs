@@ -1952,7 +1952,7 @@ function Module:GiveTime()
             self.TempSettings.ClickyState[clicky.itemName].itemFound = item() ~= nil
 
             Logger.log_verbose("\ayClicky: \awLooking for clicky item: \am%s \awfound: %s", clicky.itemName, Strings.BoolToColorString(item() ~= nil))
-            if item and item.Clicky then
+            if item and item() and item.Clicky then
                 if not moving or (item.Clicky.CastTime() or -1) == 0 then
                     if clicky.combat_state == "Any" or clicky.combat_state == combat_state then
                         local condTarget = nil
@@ -2003,7 +2003,9 @@ function Module:GiveTime()
                                 buffCheckPassed = target and Casting.DetItemCheck(clicky.itemName, target)
                             elseif clicky.target == "Mercs Peer" then
                                 targetPeer = Comms.GetPeerHeartbeatByName(clicky.mercs_peer_name or "")
-                                local peerFound = (targetPeer and targetPeer.Data and targetPeer.Data.ID and (targetPeer.Data.Zone or "") == mq.TLO.Zone.Name()) or false
+                                local peerFound = (targetPeer and targetPeer.Data
+                                    and targetPeer.Data.ZoneId == Globals.CurZoneId
+                                    and targetPeer.Data.InstanceId == Globals.CurInstanceId) or false
                                 Logger.log_verbose("\ayClicky: \awChecking Mercs Peer Target: \am%s\aw found: %s", clicky.mercs_peer_name or "",
                                     Strings.BoolToColorString(peerFound))
                                 if peerFound then
@@ -2034,7 +2036,7 @@ function Module:GiveTime()
                                 end
                             end
 
-                            local readyCheckPassed = Casting.ItemReady(item())
+                            local readyCheckPassed = Casting.ItemReady(item.Name())
 
                             if buffCheckPassed and distanceCheckPassed and readyCheckPassed then
                                 Logger.log_verbose("\ayClicky: \awItem \am%s\aw Clicky Spell: \at%s\ag!", item.Name(), item.Clicky.Spell.RankName.Name())

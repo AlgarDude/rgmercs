@@ -13,12 +13,10 @@ local Modules    = require("utils.modules")
 local Rotation   = { _version = '1.0', _name = "Rotation", _author = 'Derple', }
 Rotation.__index = Rotation
 
---- Get the best item from a given table.
----
---- This function evaluates the items in the provided table and returns the best item based on predefined criteria.
----
---- @param t table The table containing items to evaluate.
---- @return any The best item from the table.
+--- Returns the first item name from t whose item is in the player's inventory,
+--- or nil if none are found.
+---@param t table Array of item name strings to search.
+---@return string|nil The first found item name, or nil if none available.
 function Rotation.GetBestItem(t)
     local selectedItem = nil
 
@@ -38,12 +36,10 @@ function Rotation.GetBestItem(t)
     return selectedItem
 end
 
---- Get the first available purchased AA from a list.
----
---- This function iterates through a list of AA names and returns the first one the character has purchased.
----
---- @param aaList table The list of AA names to evaluate.
---- @return string|nil The first available AA name, or nil if none are purchased.
+--- Returns the first AA name in aaList that the character has purchased,
+--- or nil if none are available.
+---@param aaList table Array of AA name strings to evaluate.
+---@return string|nil The first purchasable AA, or nil if none found.
 function Rotation.GetBestAA(aaList)
     local selectedAA = nil
 
@@ -63,13 +59,11 @@ function Rotation.GetBestAA(aaList)
     return selectedAA
 end
 
---- Get the best spell from a list of spells.
----
---- This function iterates through a list of spells and determines the best spell based on certain criteria.
----
---- @param spellList table A list of spells to evaluate.
---- @param alreadyResolvedMap table A map of spells that have already been resolved.
---- @return MQSpell|nil The best spell from the list.
+--- Returns the highest-level known spell from spellList that is in the
+--- spellbook or combat ability list and has not already been resolved.
+---@param spellList table Array of spell name strings to evaluate.
+---@param alreadyResolvedMap table Map of already-resolved spells to skip.
+---@return MQSpell|nil The best usable spell, or nil if none qualify.
 function Rotation.GetBestSpell(spellList, alreadyResolvedMap)
     local highestLevel = 0
     local selectedSpell = nil
@@ -114,15 +108,15 @@ function Rotation.GetBestSpell(spellList, alreadyResolvedMap)
     return selectedSpell
 end
 
---- Executes an entry action for a given caller.
----
---- @param caller any The entity or object that is calling the function.
---- @param entry any The entry action to be executed.
---- @param targetId any The ID of the target for the action.
---- @param resolvedActionMap table A table containing resolved actions.
---- @param bAllowMem boolean A flag indicating whether memory actions are allowed.
---- @return boolean success True if exec of entry was successful, false otherwise.
---- @return boolean|nil isGroup True if the entry's action is a group-affecting target type.
+--- Executes a single rotation entry (spell/song/disc/AA/item/etc.) on targetId,
+--- skipping mezzed targets when AllowMezBreak is off.
+---@param caller any The class module calling the rotation (for PreActivate).
+---@param entry table Rotation entry with type, name, and optional flags.
+---@param targetId number Spawn ID to cast/use on.
+---@param resolvedActionMap table Map of entry name → resolved spell/item/AA.
+---@param bAllowMem boolean If true, gem-memming is allowed to ready the spell.
+---@return boolean True if the entry was used successfully.
+---@return boolean|nil True if the action targeted a group-type target.
 function Rotation.ExecEntry(caller, entry, targetId, resolvedActionMap, bAllowMem)
     local ret = false
     local isGroup = nil
@@ -239,11 +233,11 @@ function Rotation.ExecEntry(caller, entry, targetId, resolvedActionMap, bAllowMe
     return ret, isGroup
 end
 
---- Retrieves the argument for the entry condition from the specified map.
----
---- @param map table The table containing the entry conditions.
---- @param entry table RotationEntry object from class config.
---- @return any The argument associated with the entry condition.
+--- Resolves the condition argument for entry from resolvedActionMap —
+--- returns a spell for spell/song/disc types, an item/AA name otherwise.
+---@param map table ResolvedActionMap built by ResolveActions.
+---@param entry table Rotation entry from the class config.
+---@return any The resolved spell, item name, or AA name for condition checks.
 function Rotation.GetEntryConditionArg(map, entry)
     local condArg
     local entryType = entry.type:lower()
@@ -262,13 +256,14 @@ function Rotation.GetEntryConditionArg(map, entry)
     return condArg
 end
 
---- Tests a condition for a given entry.
----
---- @param caller any The entity calling this function.
---- @param resolvedActionMap table The map of resolved actions.
---- @param entry table The RotationEntry to test the condition for.
---- @param targetId any The ID of the target.
---- @return boolean, boolean Returns bool for both check pass and active pass
+--- Evaluates entry.cond and entry.active_cond for the given target,
+--- returning separate pass and active booleans.
+---@param caller any Class module instance (passed to condition functions).
+---@param resolvedActionMap table Map of entry name → resolved action.
+---@param entry table Rotation entry to evaluate.
+---@param targetId number Spawn ID used to build the target arg for conditions.
+---@return boolean pass True if entry.cond passed (or no condition).
+---@return boolean active True if entry.active_cond passed.
 function Rotation.TestConditionForEntry(caller, resolvedActionMap, entry, targetId)
     local condArg = Rotation.GetEntryConditionArg(resolvedActionMap, entry)
     local condTarg = mq.TLO.Spawn(targetId)
@@ -297,19 +292,21 @@ function Rotation.TestConditionForEntry(caller, resolvedActionMap, entry, target
     return pass, active
 end
 
---- Executes a rotation of actions based on the provided parameters.
----
---- @param caller any The entity calling this function.
---- @param rotationTable table The table containing the rotation actions.
---- @param targetTable table A list of target IDs to process for each entry.
---- @param resolvedActionMap table A map of resolved actions.
---- @param steps number The number of steps in the rotation.
---- @param start_step number The step to start the rotation from.
---- @param bAllowMem boolean Flag to allow memory usage.
---- @param bDoFullRotation boolean? Flag to perform a full rotation.
---- @param fnRotationCond function? A function to determine rotation conditions.
---- @param enabledRotationEntries table A list of enabled rotation entries.
---- @return number, boolean
+--- Iterates rotationTable from start_step, testing conditions and executing
+--- entries against targetTable until steps successful casts or end of table.
+--- Restores the UseGem spell after combat if LastGemRemem is configured.
+---@param caller any Class module instance passed to condition/exec functions.
+---@param rotationTable table Array of rotation entries from the class config.
+---@param targetTable table Array of spawn IDs to target for each entry.
+---@param resolvedActionMap table Map of entry name → resolved spell/item/AA.
+---@param steps number Max successful casts per call; 0 = unlimited.
+---@param start_step number Rotation index to begin from this call.
+---@param bAllowMem boolean If true, allows spell gem memorization.
+---@param bDoFullRotation boolean? If true, always restart from step 1.
+---@param fnRotationCond function? Re-checked each step; rotation stops on false.
+---@param enabledRotationEntries table Map of entry name → bool (false = skip).
+---@return number nextStep The index to resume from on the next call.
+---@return boolean anySuccess True if at least one entry executed successfully.
 function Rotation.Run(caller, rotationTable, targetTable, resolvedActionMap, steps, start_step, bAllowMem, bDoFullRotation, fnRotationCond, enabledRotationEntries)
     local oldSpellInSlot = mq.TLO.Me.Gem(Casting.UseGem)
     local loadoutSpell   = (Modules.ModuleList.Class.SpellLoadOut[Casting.UseGem] and Modules.ModuleList.Class.SpellLoadOut[Casting.UseGem].spell)
@@ -445,10 +442,12 @@ function Rotation.Run(caller, rotationTable, targetTable, resolvedActionMap, ste
     return lastStepIdx, anySuccess
 end
 
---- Maps available actions, including item, ability, and AA sets.
---- @param itemSets table A list of item sets to be equipped.
---- @param abilitySets table A list of ability sets to be configured.
---- @param aaSets table|nil A list of AA sets to resolve to the first purchased AA.
+--- Builds and returns a resolvedActionMap by calling GetBestItem, GetBestSpell,
+--- and GetBestAA for each entry in itemSets, abilitySets, and aaSets.
+---@param itemSets table Map of set name → array of item names.
+---@param abilitySets table Map of set name → array of spell names.
+---@param aaSets table|nil Map of set name → array of AA names.
+---@return table Map of set name → resolved spell/item/AA.
 function Rotation.ResolveActions(itemSets, abilitySets, aaSets)
     local resolvedActionMap = {}
 
@@ -478,9 +477,12 @@ function Rotation.ResolveActions(itemSets, abilitySets, aaSets)
     return resolvedActionMap
 end
 
---- Sets the spell gem loadout for a caller.
---- @param caller any The entity that is calling the function.
---- @param spellList table An array of spell lists to be checked and have gems loaded from.
+--- Evaluates each list in spellList in order, selects the first whose
+--- condition passes, and assigns spells to gems by priority within that list.
+---@param caller any Class module instance passed to list/spell conditions.
+---@param spellList table Array of {name, cond, spells} list descriptors.
+---@return table spellLoadOut Map of gem number → {selectedSpellData, spell}.
+---@return string listName Name of the selected list, or an error string.
 function Rotation.SetSpellLoadOutByPriority(caller, spellList)
     local spellLoadOut = {}
     local spellsToLoad = {}
@@ -537,9 +539,11 @@ function Rotation.SetSpellLoadOutByPriority(caller, spellList)
     return spellLoadOut, listName
 end
 
---- Sets the spell gem loadout for a caller.
---- @param caller any The entity that is calling the function.
---- @param spellGemList table A list of spell gems to be set.
+--- Assigns spells to specific gem slots per spellGemList, respecting each
+--- gem's cond and supporting CollapseGems to pack spells into sequential slots.
+---@param caller any Class module instance passed to gem/spell conditions.
+---@param spellGemList table Array of {gem, cond, spells} gem descriptors.
+---@return table spellLoadOut Map of gem number → {selectedSpellData, spell}.
 function Rotation.SetSpellLoadOutByGem(caller, spellGemList)
     local spellLoadOut = {}
     local spellsToLoad = {}
@@ -610,8 +614,9 @@ function Rotation.SetSpellLoadOutByGem(caller, spellGemList)
     return spellLoadOut
 end
 
---- Loads a spell loadout for the Character.
---- @param spellLoadOut table The spell loadout to be loaded.
+--- Memorizes each spell in spellLoadOut into its assigned gem slot if the
+--- slot doesn't already hold the correct spell.
+---@param spellLoadOut table Map of gem number → {selectedSpellData, spell}.
 function Rotation.LoadSpellLoadOut(spellLoadOut)
     local selectedRank = ""
 
@@ -624,13 +629,14 @@ function Rotation.LoadSpellLoadOut(spellLoadOut)
     end
 end
 
---- Finds missing spells from a given spell list.
----
---- @param varName string: The name of the variable to check for missing spells.
---- @param spellList table: A table containing the list of spells to check.
---- @param alreadyMissingSpells table: A table to store spells that are already missing.
---- @param highestOnly boolean: A flag indicating whether to only consider the highest level spells.
---- @return table: A table containing the missing spells.
+--- Appends entries for spells in spellList that are not in the spellbook
+--- to alreadyMissingSpells. When highestOnly is true, only the highest-level
+--- spell in the list is checked.
+---@param varName string Set name label used in the returned entry's selectedSpellData.
+---@param spellList table Array of spell name strings to check.
+---@param alreadyMissingSpells table Accumulator array to append missing spell entries to.
+---@param highestOnly boolean If true, only reports the highest-level missing spell.
+---@return table The updated alreadyMissingSpells array.
 function Rotation.FindMissingSpells(varName, spellList, alreadyMissingSpells, highestOnly)
     local tmpTable = {}
     for _, spellName in ipairs(spellList or {}) do
@@ -671,11 +677,11 @@ function Rotation.FindMissingSpells(varName, spellList, alreadyMissingSpells, hi
     return alreadyMissingSpells
 end
 
---- Finds all missing spells from the given ability sets.
----
---- @param abilitySets table A table containing sets of abilities to check.
---- @param highestOnly boolean If true, only the highest level missing spells will be returned.
---- @return table A table containing the missing spells.
+--- Iterates all sets in abilitySets and collects missing spells by calling
+--- FindMissingSpells for each one.
+---@param abilitySets table Map of set name → spell name array.
+---@param highestOnly boolean If true, only report the highest-level missing per set.
+---@return table Array of missing spell entries from all ability sets.
 function Rotation.FindAllMissingSpells(abilitySets, highestOnly)
     local missingSpellList = {}
 
@@ -686,6 +692,11 @@ function Rotation.FindAllMissingSpells(abilitySets, highestOnly)
     return missingSpellList
 end
 
+--- Calls entry.pre_activate(caller, condArg) if the entry defines it,
+--- allowing the class to prepare state before an action fires.
+---@param caller any Class module instance.
+---@param resolvedActionMap table Map of entry name → resolved action.
+---@param entry table Rotation entry that may define pre_activate.
 function Rotation.RunPreActivate(caller, resolvedActionMap, entry)
     if entry.pre_activate then
         Logger.log_verbose("Running pre-activate for %s.", entry.name)

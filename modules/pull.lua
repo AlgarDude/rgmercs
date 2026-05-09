@@ -1684,7 +1684,7 @@ function Module:CheckPeersForPull(resourceResumePct, resourcePausePct, campData)
                 return false, string.format("%s Low End", name)
             end
 
-            if data.ZoneShortName and data.ZoneShortName ~= mq.TLO.Zone.ShortName() then
+            if data.ZoneId ~= Globals.CurZoneId or data.InstanceId ~= Globals.CurInstanceId then
                 Comms.HandleAnnounce(Comms.FormatChatEvent("Pull", name, "Not in Zone - Holding pulls!"),
                     Config:GetSetting('PullAnnounceGroup'), Config:GetSetting('PullAnnounce'), Config:GetSetting('AnnounceToRaidIfInRaid'))
                 return false, string.format("%s Out of Zone", name)
