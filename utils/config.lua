@@ -2473,6 +2473,16 @@ Config.DefaultConfig                                     = {
         end,
     },
 
+    ['DisableClassTheme']                = {
+        DisplayName = "Disable Class Themes",
+        Group = "General",
+        Header = "Interface",
+        Category = "User Theme",
+        Index = 39,
+        Tooltip = "Disable class themes and use the default ImGui style.",
+        Default = false,
+        Type = "Custom",
+    },
     ['UserThemeOverrideClassTheme']      = {
         DisplayName = "Override Class Theme",
         Group = "General",
