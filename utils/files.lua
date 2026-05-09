@@ -20,7 +20,7 @@ end
 
 --- Recursively creates every component of path, like `mkdir -p`.
 ---@param path string The full directory path to create.
----@return boolean|nil True on success; nil + error string on failure.
+---@return boolean|nil, string? True on success; nil + error string on failure.
 function Files.make_p(path)
     local sep = package.config:sub(1, 1)
 
