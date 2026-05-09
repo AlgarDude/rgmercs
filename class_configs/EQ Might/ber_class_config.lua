@@ -15,6 +15,27 @@ return {
     ['Modes']         = {
         'DPS',
     },
+    ['Themes']        = {
+        ['DPS'] = {
+            { element = ImGuiCol.TitleBgActive,    color = { r = 0.55, g = 0.05, b = 0.05, a = 0.8, }, },
+            { element = ImGuiCol.TableHeaderBg,    color = { r = 0.55, g = 0.05, b = 0.05, a = 0.8, }, },
+            { element = ImGuiCol.Tab,              color = { r = 0.22, g = 0.02, b = 0.02, a = 0.8, }, },
+            { element = ImGuiCol.TabSelected,      color = { r = 0.55, g = 0.05, b = 0.05, a = 0.8, }, },
+            { element = ImGuiCol.TabHovered,       color = { r = 0.55, g = 0.05, b = 0.05, a = 1.0, }, },
+            { element = ImGuiCol.Header,           color = { r = 0.22, g = 0.02, b = 0.02, a = 0.8, }, },
+            { element = ImGuiCol.HeaderActive,     color = { r = 0.55, g = 0.05, b = 0.05, a = 0.8, }, },
+            { element = ImGuiCol.HeaderHovered,    color = { r = 0.55, g = 0.05, b = 0.05, a = 1.0, }, },
+            { element = ImGuiCol.FrameBgHovered,   color = { r = 0.55, g = 0.05, b = 0.05, a = 0.7, }, },
+            { element = ImGuiCol.Button,           color = { r = 0.36, g = 0.03, b = 0.03, a = 0.8, }, },
+            { element = ImGuiCol.ButtonActive,     color = { r = 0.55, g = 0.05, b = 0.05, a = 0.8, }, },
+            { element = ImGuiCol.ButtonHovered,    color = { r = 0.55, g = 0.05, b = 0.05, a = 1.0, }, },
+            { element = ImGuiCol.TextSelectedBg,   color = { r = 0.55, g = 0.05, b = 0.05, a = 0.1, }, },
+            { element = ImGuiCol.FrameBg,          color = { r = 0.22, g = 0.02, b = 0.02, a = 0.8, }, },
+            { element = ImGuiCol.SliderGrab,       color = { r = 1.00, g = 0.35, b = 0.05, a = 0.8, }, },
+            { element = ImGuiCol.SliderGrabActive, color = { r = 1.00, g = 0.35, b = 0.05, a = 0.9, }, },
+            { element = ImGuiCol.FrameBgActive,    color = { r = 0.55, g = 0.05, b = 0.05, a = 1.0, }, },
+        },
+    },
     ['ItemSets']      = {
         ['RezStaff'] = {
             "Legendary Fabled Staff of Forbidden Rites",
