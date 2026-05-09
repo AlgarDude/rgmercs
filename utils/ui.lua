@@ -3155,9 +3155,13 @@ function Ui.RenderThemeConfig(searchFilter)
     end
 
     local overrideClass, changed = Ui.RenderOptionToggle("OverrideClassTheme", "Override Class Theme Colors", Config:GetSetting('UserThemeOverrideClassTheme'), true)
-
     if changed then
         Config:SetSetting('UserThemeOverrideClassTheme', overrideClass)
+    end
+
+    local disableClass, changed = Ui.RenderOptionToggle("DisableClassTheme", "Disable Class Theme Colors", Config:GetSetting('DisableClassTheme'), true)
+    if changed then
+        Config:SetSetting('DisableClassTheme', disableClass)
     end
 
     ImGui.NewLine()
