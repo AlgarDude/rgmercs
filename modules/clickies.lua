@@ -2031,7 +2031,7 @@ function Module:GiveTime()
                                 end
 
                                 if Targeting.GetTargetDistance(target) > spellRange then
-                                    Logger.log_debug("\ayClicky: \arTried to use item on targetId %s they are too far away!!", target and target.DisplayName() or "None")
+                                    Logger.log_verbose("\ayClicky: \arTried to use item on targetId %s they are too far away!!", target and target.DisplayName() or "None")
                                     distanceCheckPassed = false
                                 end
                             end
