@@ -576,6 +576,7 @@ Config.DefaultConfig                                     = {
         Index = 1,
         Tooltip = "Enable the summoning and buffing of pets.",
         Default = true,
+        RequiresLoadoutChange = true,
         ConfigType = "Normal",
     },
 
