@@ -815,6 +815,10 @@ function OptionsUI:RenderCurrentTab()
 end
 
 function OptionsUI:ValidateSelectedPeer()
+    if self.selectedCharacter == Comms.GetPeerName() then
+        return
+    end
+
     if self.selectedCharacter == nil or self.selectedCharacter == "" then
         Logger.log_error("\ayOptionsUI: \awSelected peer is invalid. Defaulting back to local character.")
         self.selectedCharacter = Comms.GetPeerName()
