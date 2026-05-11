@@ -1309,6 +1309,7 @@ local _ClassConfig = {
             Category = "AE",
             Index = 101,
             Tooltip = "Use Vainglorious Shout (Conal DD/Resist Debuff) ***WILL BREAK MEZ***",
+            RequiresLoadoutChange = true,
             Default = false,
         },
 

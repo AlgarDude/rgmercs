@@ -1081,6 +1081,7 @@ return {
             Category = "Group",
             Index = 103,
             Tooltip = "Do Haste Spells",
+            RequiresLoadoutChange = true,
             Default = false,
         },
         --Combat

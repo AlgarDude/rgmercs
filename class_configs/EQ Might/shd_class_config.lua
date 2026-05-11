@@ -1417,6 +1417,7 @@ local _ClassConfig = {
             Category = "Hate Tools",
             Index = 102,
             Tooltip = "Use Explosions of Hatred and Spite.",
+            RequiresLoadoutChange = true,
             Default = true,
             ConfigType = "Advanced",
             FAQ = "Why do we treat the Explosions the same? One is targeted, one is PBAE",

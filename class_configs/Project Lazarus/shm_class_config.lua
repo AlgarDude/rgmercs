@@ -1514,6 +1514,7 @@ local _ClassConfig = {
             Index = 103,
             Tooltip = "Use your Regen buff (single target will be used until the group version is available).",
             Default = true,
+            RequiresLoadoutChange = true,
             FAQ = "Why am I spamming my Group Regen buff?",
             Answer = "Certain Shaman and Druid group regen buffs report cross-stacking. You should deselect the option on one of the PCs if they are grouped together.",
         },
@@ -1525,6 +1526,7 @@ local _ClassConfig = {
             Index = 104,
             Tooltip = "Do Haste Spells/AAs",
             Default = true,
+            RequiresLoadoutChange = true,
             ConfigType = "Advanced",
         },
         ['DoArcanumWeave']      = {

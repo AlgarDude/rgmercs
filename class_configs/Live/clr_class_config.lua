@@ -1633,6 +1633,7 @@ local _ClassConfig = {
             Index = 103,
             Tooltip = "Use your melee damage absorb (Vie) line.",
             Default = true,
+            RequiresLoadoutChange = true,
             FAQ = "Why am I using the Vie and Shining buffs together when the melee guard does not stack?",
             Answer = "We will always use the Shining line on the tank, but if selected, we will also use the Vie Buff on the Group.\n" ..
                 "Before we have the Shining Buff, we will use our single-target Vie buff only on the tank.",
