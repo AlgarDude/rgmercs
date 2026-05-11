@@ -969,6 +969,7 @@ local _ClassConfig = {
             Category = "Group",
             Index = 103,
             Tooltip = "Use your Melee Damage absorb (Vie) line.",
+            RequiresLoadoutChange = true,
             Default = true,
         },
         ['UseAura']           = {

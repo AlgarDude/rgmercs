@@ -1877,6 +1877,7 @@ _ClassConfig    = {
             Category = "Direct",
             Index = 102,
             Tooltip = "Memorize and use your anti-summoned mob nuke line ('x the Unnatural').",
+            RequiresLoadoutChange = true,
             Default = false,
         },
         ['DoChestClick']   = {

@@ -1940,6 +1940,7 @@ local _ClassConfig = {
             Category = "Other Recovery",
             Index = 107,
             Tooltip = "Use Canni AA and Spells in combat",
+            RequiresLoadoutChange = true,
             Default = true,
             ConfigType = "Advanced",
         },

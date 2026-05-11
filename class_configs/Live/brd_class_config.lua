@@ -2180,6 +2180,7 @@ local _ClassConfig = {
             Header = "Damage",
             Category = "AE",
             Index = 101,
+            RequiresLoadoutChange = true,
             Tooltip = "When to use Vainglorious Shout.",
             Type = "Combo",
             ComboOptions = { 'Never', 'Burns Only', 'All Combat', },

@@ -1202,6 +1202,7 @@ return {
             Category = "Hate Tools",
             Index = 101,
             Tooltip = "Use Beacon of the Righteous to regain AE aggro in Tank Mode.",
+            RequiresLoadoutChange = true,
             Default = true,
             ConfigType = "Advanced",
         },

@@ -1560,7 +1560,7 @@ local _ClassConfig = {
             cond = function(self, gem) return mq.TLO.Me.NumGems() >= gem end,
             spells = {
                 { name = "ArrowOpener", cond = function(self) return Config:GetSetting('DoOpener') end, },
-                { name = "SnareSpells", cond = function(self) return not Casting.DetAACheck(219) and Config:GetSetting('DoSnare') end, },
+                { name = "SnareSpells", cond = function(self) return not Casting.DetAACheck(mq.TLO.Me.AltAbility(219).Name()) and Config:GetSetting('DoSnare') end, },
             },
         },
         {
@@ -1777,6 +1777,7 @@ local _ClassConfig = {
             Header = "Buffs",
             Category = "Group",
             Tooltip = "Enable casting of Regen spells.",
+            RequiresLoadoutChange = true,
             Default = true,
         },
         ['DoRunSpeed']         = {
@@ -1793,6 +1794,7 @@ local _ClassConfig = {
             Header = "Buffs",
             Category = "Self",
             Tooltip = "Use Ranger Mask Spell",
+            RequiresLoadoutChange = true,
             Default = false,
         },
         ['DoFireFist']         = {
@@ -1801,6 +1803,7 @@ local _ClassConfig = {
             Header = "Buffs",
             Category = "Self",
             Tooltip = "Use Ranger FireFist Line of Spells",
+            RequiresLoadoutChange = true,
             Default = true,
         },
         ['DoAoE']              = {

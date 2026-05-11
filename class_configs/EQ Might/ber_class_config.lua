@@ -437,6 +437,7 @@ return {
             Index = 102,
             Tooltip = "Use the EQM Custom 'Healing Will/Determination' Disc to heal yourself in emergencies.",
             Default = false,
+            RequiresLoadoutChange = true,
             ConfigType = "Advanced",
         },
     },

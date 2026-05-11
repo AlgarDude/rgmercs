@@ -2004,6 +2004,7 @@ local _ClassConfig = {
             Category = "Hate Tools",
             Index = 101,
             Tooltip = "Use AE Taunt AA.",
+            RequiresLoadoutChange = true,
             Default = true,
             ConfigType = "Advanced",
         },

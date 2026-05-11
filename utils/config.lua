@@ -770,6 +770,7 @@ Config.DefaultConfig                                     = {
             "The tank will continue to engage the AutoTarget, but will periodically change to the Aggro Target to use abilities found in the HateTools(AggroTarget) rotation.\n" ..
             "If this tank is the MA, they will continue to broadcast the AutoTarget to any assisting RGMercs peer.",
         Default = true,
+        RequiresLoadoutChange = true,
         ConfigType = "Advanced",
         Warning = function()
             if Config:GetSetting('MAAggroScan') and Config:GetSetting('TankAggroScan') then
