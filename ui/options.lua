@@ -581,7 +581,7 @@ function OptionsUI:RenderCategorySettings(category)
                                 { text = "",             color = tooltipColor, },
                                 { text = "Variable: ",   color = Globals.Constants.Colors.LightBlue, padAfter = 4, },
                                 { text = settingName,    color = Globals.Constants.Colors.Orange,    sameLine = true, },
-                                { text = "Default: ",    color = Globals.Constants.Colors.LightBlue, padAfter = 4, },
+                                { text = "Default: ",    color = Globals.Constants.Colors.LightBlue, },
                                 {
                                     text = tostring(defaultValue),
                                     render = settingDefaults.Type == "Color" and
@@ -596,7 +596,16 @@ function OptionsUI:RenderCategorySettings(category)
                                         end or nil,
                                     color = Globals.Constants.Colors.Orange,
                                     sameLine = true,
+                                    padAfter = 4,
                                 },
+
+                                settingDefaults.Max and
+                                {
+                                    text = " [" .. string.format("%d", settingDefaults.Min) .. " - " .. string.format("%d", settingDefaults.Max) .. "]",
+                                    color = Globals.Constants
+                                        .Colors.LightGreen,
+                                    sameLine = true,
+                                } or nil,
                             })
 
                         if hasWarning then
