@@ -515,7 +515,14 @@ function Targeting.IsSafeName(spawnType, name)
 
     for _, n in ipairs(Config:GetSetting('AssistList')) do
         if name == n then
-            Logger.log_verbose("IsSafeName(%s): OA Safe", name)
+            Logger.log_verbose("IsSafeName(%s): AssistList Safe", name)
+            return true
+        end
+    end
+
+    for _, n in ipairs(Config:GetSetting('HealList')) do
+        if name == n then
+            Logger.log_verbose("IsSafeName(%s): HealList Safe", name)
             return true
         end
     end
