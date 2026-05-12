@@ -838,7 +838,7 @@ function Combat.AutoCampCheck(tempConfig, bCalledFromInsideEvent)
                 end
             end
         else
-            Core.DoCmd("/moveto loc %d %d|on", tempConfig.AutoCampY, tempConfig.AutoCampX)
+            Movement:MoveToLoc(tempConfig.AutoCampY, tempConfig.AutoCampX)
             while mq.TLO.MoveTo.Moving() and not mq.TLO.MoveTo.Stopped() do
                 mq.delay(10)
                 if not bCalledFromInsideEvent then
@@ -886,7 +886,7 @@ function Combat.CombatCampCheck(tempConfig)
                 Events.DoEvents()
             end
         else
-            Core.DoCmd("/moveto loc %d %d|on", tempConfig.AutoCampY, tempConfig.AutoCampX)
+            Movement:MoveToLoc(tempConfig.AutoCampY, tempConfig.AutoCampX)
             while mq.TLO.MoveTo.Moving() and not mq.TLO.MoveTo.Stopped() do
                 mq.delay(10)
                 mq.doevents()
