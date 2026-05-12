@@ -12,6 +12,8 @@ Movement.LastDoStick         = 0
 Movement.LastDoStickCmd      = ""
 Movement.LastDoNav           = 0
 Movement.LastDoNavCmd        = ""
+Movement.LastMoveTo          = 0
+Movement.LastMoveToCmd       = ""
 Movement.LastMove            = {}
 Movement.LastMove.X          = mq.TLO.Me.X()
 Movement.LastMove.Y          = mq.TLO.Me.Y()
@@ -19,6 +21,7 @@ Movement.LastMove.Z          = mq.TLO.Me.Z()
 Movement.LastMove.Heading    = mq.TLO.Me.Heading.Degrees()
 Movement.LastMove.Sitting    = mq.TLO.Me.Sitting()
 Movement.LastMove.TimeAtMove = Globals.GetTimeSeconds()
+Movement.MoveToActive        = false
 
 --- Sticks the player to targetId using config-driven stick settings,
 --- rate-limited to once per second to avoid spamming.
@@ -39,6 +42,31 @@ function Movement:DoStick(targetId)
             local stickDist = (mq.TLO.Spawn(targetId).Height() or 5) > 15 and 20 or 10
             self:DoStickCmd("%d id %d behindonce moveback uw", stickDist, targetId)
         end
+    end
+end
+
+function Movement:MoveToLoc(locX, locY)
+    local cmd = string.format("loc %d %d|on", locX, locY)
+    Core.DoCmd("/squelch /moveto " .. cmd)
+    self.LastMoveTo = Globals.GetTimeSeconds()
+    self.LastMoveToCmd = cmd
+    self.MoveToActive = true
+end
+
+function Movement:MoveToSpawnId(spawnId, distance)
+    local cmd = string.format("id %d uw mdist %d", spawnId, distance)
+    Core.DoCmd("/squelch /moveto " .. cmd)
+    self.LastMoveTo = Globals.GetTimeSeconds()
+    self.LastMoveToCmd = cmd
+    self.MoveToActive = true
+end
+
+function Movement:StopMoveTo()
+    if self.MoveToActive then
+        Core.DoCmd("/squelch /moveto stop")
+        self.LastMoveTo = Globals.GetTimeSeconds()
+        self.LastMoveToCmd = "stop"
+        self.MoveToActive = false
     end
 end
 
@@ -161,7 +189,8 @@ function Movement:NavInCombat(targetId, distance, bDontStick, bCalledFromInsideE
             end
         end
     else
-        Core.DoCmd("/moveto id %d uw mdist %d", targetId, distance)
+        Movement:MoveToSpawnId(targetId, distance)
+
         while mq.TLO.MoveTo.Moving() and not mq.TLO.MoveUtils.Stuck() do
             mq.delay(100)
             if not bCalledFromInsideEvent then
