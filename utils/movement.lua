@@ -12,6 +12,7 @@ Movement.LastDoStick         = 0
 Movement.LastDoStickCmd      = ""
 Movement.LastDoNav           = 0
 Movement.LastDoNavCmd        = ""
+Movement.LastDoNavTracer     = ""
 Movement.LastMoveTo          = 0
 Movement.LastMoveToCmd       = ""
 Movement.LastMove            = {}
@@ -95,16 +96,19 @@ function Movement:DoNav(squelch, params, ...)
         return
     end
 
+    local callerTracer = Logger.getCallStack(true) or ""
+
     Core.DoCmd("%s/nav %s", squelch and "/squelch " or "", formatted)
     self.LastDoNav = Globals.GetTimeSeconds()
+    self.LastDoNavTracer = callerTracer
     self.LastDoNavCmd = formatted
     self:StoreLastMove()
 end
 
 --- Returns the last /nav command string that was issued.
----@return string The last nav command, or "" if none.
+---@return string, string The last nav command, or "" if none and the last nav call's caller info for debugging.
 function Movement:GetLastNavCmd()
-    return self.LastDoNavCmd
+    return self.LastDoNavCmd, self.LastDoNavTracer
 end
 
 --- Returns the last /stick command string that was issued.
