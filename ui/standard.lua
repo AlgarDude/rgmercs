@@ -345,9 +345,10 @@ function StandardUI:RenderMainWindow(imgui_style, openGUI, flags)
                     Ui.RenderText(">")
                     ImGui.TableNextColumn()
                     Ui.RenderText("Last Nav")
+                    local lastNav, lastNavTracer = Movement:GetLastNavCmd()
                     ImGui.TableNextColumn()
                     if mq.TLO.Navigation.MeshLoaded() then
-                        Ui.RenderColoredText(Globals.Constants.Colors.ConditionPassColor, "%s ", Movement:GetLastNavCmd() or "N/A")
+                        Ui.RenderColoredText(Globals.Constants.Colors.ConditionPassColor, "%s ", lastNav or "N/A")
                     else
                         Ui.RenderColoredText(Globals.GetAlternatingColor(), "%s ", "Mesh Not Loaded")
                     end
@@ -357,8 +358,16 @@ function StandardUI:RenderMainWindow(imgui_style, openGUI, flags)
                     Ui.RenderColoredText(Globals.Constants.Colors.LightBlue, "%s", Movement:GetTimeSinceLastNav() or "0s")
                     ImGui.SameLine()
                     Ui.RenderText(">")
-                    ImGui.PopStyleVar(1)
+                    ImGui.TableNextColumn()
+                    Ui.RenderText("Last Nav Trace")
+                    ImGui.TableNextColumn()
+                    if mq.TLO.Navigation.MeshLoaded() then
+                        Ui.RenderColoredText(Globals.Constants.Colors.BrightWhite, "%s ", lastNavTracer or "N/A")
+                    else
+                        Ui.RenderColoredText(Globals.GetAlternatingColor(), "%s ", "N/A")
+                    end
 
+                    ImGui.PopStyleVar(1)
                     ImGui.EndTable()
 
                     ImGui.NewLine()

@@ -92,10 +92,11 @@ local function openLogFile()
 	end
 end
 
-local function getCallStack()
+---@param plainOutput? bool The log message with color codes stripped.
+function actions.getCallStack(plainOutput)
 	local info = debug.getinfo(4, "Snl")
 
-	local callerTracer = string.format(" \aw(\ao%s\aw::\ao%s()\aw:\ao%d\ax\aw)",
+	local callerTracer = string.format(plainOutput == true and "%s::%s():%d" or " \aw(\ao%s\aw::\ao%s()\aw:\ao%d\ax\aw)",
 		info and info.short_src and info.short_src:match("[^\\^/]*.lua$") or "unknown_file", info and info.name or "unknown_func", info and info.currentline or 0)
 
 	return callerTracer
@@ -130,7 +131,7 @@ local function log(logLevel, output, ...)
 
 	if currentLogLevel < logLevels[logLevel].level then return end
 
-	local callerTracer = enableTracer and getCallStack() or ""
+	local callerTracer = enableTracer and actions.getCallStack() or ""
 
 	local now = string.format("%.03f", Globals.GetTimeMS() / 1000)
 
