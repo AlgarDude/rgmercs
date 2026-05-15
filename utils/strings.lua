@@ -164,6 +164,125 @@ function Strings.TableToString(t, maxLen)
     return dumpTable(t, 0, 0, maxLen)
 end
 
+-- Parses values produced by dumpTable: numbers/booleans coerced, otherwise string.
+-- TableToString writes strings unquoted (via tostring) so this is best-effort.
+local function coerceValue(raw)
+    if raw == "" then return "" end
+    local num = tonumber(raw)
+    if num ~= nil then return num end
+    if raw == "true" then return true end
+    if raw == "false" then return false end
+    if raw == "nil" then return nil end
+    return raw
+end
+
+-- Parse from src starting at position pos. Returns parsed table, next pos
+-- after the closing '}'. Errors via error() on malformed input.
+local function parseTable(src, pos)
+    local result = {}
+    local autoIdx = 1
+
+    -- skip leading '{' and whitespace
+    if src:sub(pos, pos) ~= '{' then
+        error(string.format("expected '{' at position %d, got '%s'", pos, src:sub(pos, pos)))
+    end
+    pos = pos + 1
+
+    while true do
+        -- skip whitespace
+        local _, ws = src:find("^%s*", pos)
+        pos = (ws or pos - 1) + 1
+
+        local ch = src:sub(pos, pos)
+        if ch == '' then
+            error("unexpected end of input while parsing table")
+        end
+        if ch == '}' then
+            return result, pos + 1
+        end
+
+        -- detect optional key: either "[" key "]" "=" value, or bare value (array-style)
+        local key
+        if ch == '[' then
+            -- find matching ']' allowing quoted strings inside
+            local keyEnd
+            if src:sub(pos + 1, pos + 1) == '"' then
+                -- ["..."]
+                local quoteClose = src:find('"%s*%]%s*=', pos + 2)
+                if not quoteClose then
+                    error(string.format("malformed string key starting at position %d", pos))
+                end
+                key = src:sub(pos + 2, quoteClose - 1)
+                keyEnd = src:find('=', quoteClose, true)
+            else
+                -- [n]
+                local closeBracket = src:find('%]%s*=', pos + 1)
+                if not closeBracket then
+                    error(string.format("malformed numeric key starting at position %d", pos))
+                end
+                local keyRaw = src:sub(pos + 1, closeBracket - 1):gsub("^%s+", ""):gsub("%s+$", "")
+                key = tonumber(keyRaw) or keyRaw
+                keyEnd = src:find('=', closeBracket, true)
+            end
+            pos = keyEnd + 1
+            -- skip whitespace after '='
+            local _, ws2 = src:find("^%s*", pos)
+            pos = (ws2 or pos - 1) + 1
+        else
+            -- positional value, no key
+            key = autoIdx
+            autoIdx = autoIdx + 1
+        end
+
+        -- parse value
+        local valCh = src:sub(pos, pos)
+        if valCh == '{' then
+            local subTable, nextPos = parseTable(src, pos)
+            result[key] = subTable
+            pos = nextPos
+        else
+            -- bare value: read until ',' or '}' at this nesting level
+            local valEnd = pos
+            while valEnd <= #src do
+                local c = src:sub(valEnd, valEnd)
+                if c == ',' or c == '}' then break end
+                valEnd = valEnd + 1
+            end
+            local raw = src:sub(pos, valEnd - 1):gsub("^%s+", ""):gsub("%s+$", "")
+            -- skip truncation markers
+            if raw ~= "..." and raw ~= "" then
+                result[key] = coerceValue(raw)
+            end
+            pos = valEnd
+        end
+
+        -- skip ',' if present
+        local _, ws3 = src:find("^%s*", pos)
+        pos = (ws3 or pos - 1) + 1
+        if src:sub(pos, pos) == ',' then
+            pos = pos + 1
+        end
+    end
+end
+
+--- Parses a string produced by Strings.TableToString back into a table.
+--- Numbers and booleans are coerced; all other unquoted values become strings.
+--- Truncated tables (`...}`) parse as much as possible and stop.
+--- Returns nil + error message on malformed input.
+---@param s string: The serialised table string.
+---@return table|nil result, string|nil err
+function Strings.TableFromString(s)
+    if type(s) ~= "string" then return nil, "input must be a string" end
+    local trimmed = s:gsub("^%s+", ""):gsub("%s+$", "")
+    if trimmed == "" or trimmed == "{}" then return {} end
+    if trimmed:sub(1, 1) ~= '{' then return nil, "input must start with '{'" end
+
+    local ok, result = pcall(parseTable, trimmed, 1)
+    ---@diagnostic disable-next-line: return-type-mismatch
+    if not ok then return nil, result end
+    return result
+end
+
 --- Pads a string to a specified length with a given character.
 ---
 ---@param string string The original string to be padded.

@@ -1,7 +1,7 @@
 local Modules           = require("utils.modules")
 local Config            = require('utils.config')
 local Globals           = require("utils.globals")
-
+local Strings           = require("utils.strings")
 local mq                = require 'mq'
 
 ---@class RGMercsModuleType
@@ -35,6 +35,25 @@ local rgMercsMainType   = mq.DataType.new('RGMercsMain', {
         MA = function(_, self)
             return 'string', Globals.MainAssist or "None"
         end,
+        Globals = function(param, self)
+            if not param or param:len() == 0 or Globals[param] == nil then
+                return 'string', "nil"
+            end
+
+            if type(Globals[param]) == "boolean" then
+                return 'bool', Globals[param]
+            end
+
+            if type(Globals[param]) == "number" then
+                return 'number', Globals[param]
+            end
+
+            if type(Globals[param]) == "table" then
+                return 'string', Strings.TableToString(Globals[param], 4096)
+            end
+
+            return 'string', Globals[param] or "nil"
+        end,
         Config = function(param, self)
             if not Globals.SubmodulesLoaded then
                 return 'string', "Submodules not loaded yet, please wait..."
@@ -44,7 +63,24 @@ local rgMercsMainType   = mq.DataType.new('RGMercsMain', {
                 return 'string', "false"
             end
 
-            return 'string', Config:GetSetting(param)
+            local value = Config:GetSetting(param)
+            if value == nil then
+                return 'string', "nil"
+            end
+
+            if type(value) == "boolean" then
+                return 'bool', value
+            end
+
+            if type(value) == "number" then
+                return 'number', value
+            end
+
+            if type(value) == "table" then
+                return 'string', Strings.TableToString(value, 4096)
+            end
+
+            return 'string', value
         end,
         State = function(_, self)
             return 'string', Globals.PauseMain and "Paused" or "Running"

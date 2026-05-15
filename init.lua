@@ -384,6 +384,8 @@ local function Main()
     Config:FlushDB()
     Config.Db:updateTelemetryGraphs()
 
+    Comms.HeartbeatWatchdog()
+
     if mq.TLO.Zone.ID() ~= Globals.CurZoneId or mq.TLO.Me.Instance() ~= Globals.CurInstanceId then
         if notifyZoning then
             Modules:ExecAll("OnZone")
@@ -592,10 +594,12 @@ end
 
 -- Global Messaging callback
 ---@diagnostic disable-next-line: unused-local
-local script_actor = Comms.Actors.register(function(message)
+local script_actor = Comms.Actors.register('RGMercs', function(message)
     local msg = message()
-    if msg.From == Comms.GetPeerName() then return end
-    if msg.Script ~= Comms.ScriptName then return end
+
+    if msg.Script ~= Comms.ScriptName then
+        return
+    end
 
     Logger.log_super_verbose("\ayGot Event from(\am%s\ay) module(\at%s\ay) event(\at%s\ay)", msg.From,
         msg.Module,
