@@ -61,7 +61,14 @@ end
 --- @param event string The event type to broadcast.
 --- @param data table? The data payload for the event.
 function Comms.BroadcastMessage(module, event, data)
-    Comms.Actors.send({
+    Comms.Actors.send({ mailbox = 'RGMercs', script = 'rgmercs', }, {
+        From = Comms.GetPeerName(),
+        Script = Comms.ScriptName,
+        Module = module,
+        Event = event,
+        Data = data,
+    })
+    Comms.Actors.send({ mailbox = 'RGMercs-Heartbeat', script = 'rgmercs/heartbeat', }, {
         From = Comms.GetPeerName(),
         Script = Comms.ScriptName,
         Module = module,
@@ -79,7 +86,7 @@ end
 --- @param data table? The data payload for the event.
 function Comms.SendMessage(peer, module, event, data)
     local char, server = Comms.GetNameAndServerFromPeer(peer)
-    Comms.Actors.send({ server = server, character = char, }, {
+    Comms.Actors.send({ mailbox = 'RGMercs', script = 'rgmercs', server = server, character = char, }, {
         From = Comms.GetPeerName(),
         Script = Comms.ScriptName,
         Module = module,
@@ -131,14 +138,19 @@ end
 --- position, etc.) to all peers at most once per second, then
 --- updates own entry in PeersHeartbeats. forceSend bypasses the
 --- throttle.
---- @param assist string|nil The current assist target name.
---- @param chase string|nil The current chase target name.
 --- @param forceSend boolean|nil Skip the 1-second throttle if true.
-function Comms.SendHeartbeat(assist, chase, forceSend)
-    if not forceSend and Globals.GetTimeSeconds() - Comms.LastHeartbeat < 1 then return end
+function Comms.SendHeartbeat(forceSend)
+    if not forceSend and Globals.GetTimeSeconds() - Comms.LastHeartbeat < 1 then
+        return
+    end
+
+    ---@diagnostic disable-next-line: undefined-field
+    local RGMercs = mq.TLO.RGMercs
+
     local useMana = Globals.Constants.RGCasters:contains(mq.TLO.Me.Class.ShortName())
     local useEnd = Globals.Constants.RGMelee:contains(mq.TLO.Me.Class.ShortName())
-    local curAutoTarget = mq.TLO.Spawn(string.format("id %d", Globals.AutoTargetID))
+    local autoTargetID = RGMercs and RGMercs.Globals("AutoTargetID")() or mq.TLO.Target.ID()
+    local curAutoTarget = mq.TLO.Spawn(string.format("id %d", autoTargetID))
 
     Comms.LastHeartbeat = Globals.GetTimeSeconds()
     local heartBeat = {
@@ -166,11 +178,11 @@ function Comms.SendHeartbeat(assist, chase, forceSend)
         Endurance     = useEnd and mq.TLO.Me.PctEndurance() or nil,
         Target        = mq.TLO.Target.DisplayName() or "None",
         TargetID      = mq.TLO.Target.ID() or 0,
-        AutoTargetID  = Globals.AutoTargetID,
-        ForceTargetID = Globals.ForceTargetID,
-        TargetIsNamed = Globals.AutoTargetIsNamed,
+        AutoTargetID  = autoTargetID,
+        ForceTargetID = RGMercs and RGMercs.Globals("ForceTargetID")() or 0,         --Globals.ForceTargetID,
+        TargetIsNamed = RGMercs and RGMercs.Globals("AutoTargetIsNamed")() or false, --Globals.AutoTargetIsNamed,
         Casting       = mq.TLO.Me.Casting.ID() ~= 0 and mq.TLO.Me.Casting.RankName() or "None",
-        Burning       = Globals.LastBurnCheck,
+        Burning       = RGMercs and RGMercs.Globals("LastBurnCheck")() or false,     --Globals.LastBurnCheck,
         PetID         = mq.TLO.Me.Pet.ID() or 0,
         PetHPs        = mq.TLO.Me.Pet.ID() ~= 0 and (mq.TLO.Me.Pet.Dead() and 0 or mq.TLO.Me.Pet.PctHPs()) or 0,
         PetLevel      = mq.TLO.Me.Pet.ID() ~= 0 and mq.TLO.Me.Pet.Level() or 0,
@@ -182,9 +194,9 @@ function Comms.SendHeartbeat(assist, chase, forceSend)
         SpentAA       = mq.TLO.Me.AAPointsSpent(),
         TotalAA       = mq.TLO.Me.AAPointsTotal(),
         PctExp        = mq.TLO.Me.PctExp(),
-        Assist        = assist,
-        State         = Globals.PauseMain and "Paused" or Globals.CurrentState,
-        Chase         = chase,
+        Assist        = RGMercs and RGMercs.Globals("MainAssist")() or "Standalone", --Globals.MainAssist,
+        State         = RGMercs and (RGMercs.Globals("PauseMain")() and "Paused" or RGMercs and RGMercs.Globals("CurrentState")() or "Running") or "Standalone",
+        Chase         = RGMercs and (RGMercs.Config('ChaseOn')() and RGMercs.Config('ChaseTarget')() or "Chase Off") or "Standalone",
         Invis         = mq.TLO.Me.Invis(),
         FreeInventory = mq.TLO.Me.FreeInventory(3)(),
         Buffs         = Globals.CurrentBuffs,
@@ -200,8 +212,6 @@ function Comms.SendHeartbeat(assist, chase, forceSend)
         Toasts        = Comms.OutgoingToasts,
     }
     Comms.BroadcastMessage("RGMercs", "Heartbeat", heartBeat)
-    -- update our own heartbeat too
-    Comms.UpdatePeerHeartbeat(Comms.GetPeerName(), heartBeat)
 
     Comms.OutgoingToasts = {}
 end
@@ -313,6 +323,12 @@ function Comms.ValidatePeers(timeout)
             Comms.PeersHeartbeats[peer] = nil
             Comms.PeersToServerNameMap[peer] = nil
         end
+    end
+end
+
+function Comms.HeartbeatWatchdog()
+    if mq.TLO.Lua.Script('rgmercs/heartbeat').Status() ~= 'RUNNING' then
+        mq.cmd("/lua run rgmercs/heartbeat directed")
     end
 end
 

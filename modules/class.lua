@@ -1848,19 +1848,4 @@ function Module:GetLastCombatModeChangeTime()
     return self.TempSettings.CombatModeChangeTime
 end
 
-function Module:OnTargetChange(targetId)
-    Logger.log_debug("OnTargetChange(): TargetID changed to %d", targetId)
-    if Core.IAmMA() then
-        Events.SendHeartbeat(true)
-    end
-end
-
-function Module:OnForceTargetChange(forceTargetId)
-    Logger.log_debug("OnForceTargetChange(): ForceTargetID changed to %d", Globals.ForceTargetID)
-
-    if Core.IAmMA() then
-        Events.SendHeartbeat(true)
-    end
-end
-
 return Module

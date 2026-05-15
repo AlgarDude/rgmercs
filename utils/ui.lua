@@ -1018,6 +1018,7 @@ function Ui.RenderMercsStatus(showPopout)
                 return data_a.Data.Endurance or 0, data_b.Data.Endurance or 0
             end,
             render = function(peer, data)
+                if data.Data.Endurance == nil then return end
                 local pctEnd = math.ceil(data.Data.Endurance or 0)
                 if Config:GetSetting('StatusUseBars') then
                     Ui.RenderAnimatedPercentage("MercsStatusEnduranceBar" .. peer, pctEnd, ImGui.GetTextLineHeight(), 0, Colors.LightRed,

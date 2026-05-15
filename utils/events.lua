@@ -48,16 +48,7 @@ end
 
 --- Sends the periodic heartbeat and dispatches DoEvents to all modules.
 function Events.DoEvents()
-    Events.SendHeartbeat(false)
-
     Modules:ExecAll("DoEvents")
-end
-
---- Forwards a heartbeat to Comms with the current assist target and
---- chase state derived from active config settings.
----@param forceSend boolean True to bypass the normal send interval.
-function Events.SendHeartbeat(forceSend)
-    Comms.SendHeartbeat(Globals.MainAssist, Config:GetSetting('ChaseOn') and Config:GetSetting('ChaseTarget') or "Chase Off", forceSend)
 end
 
 return Events
