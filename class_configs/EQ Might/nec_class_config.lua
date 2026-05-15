@@ -171,6 +171,8 @@ local _ClassConfig = {
             "Pyre of Mori",
             "Night Fire",
             "Funeral Pyre of Kelador",
+            "Pyrocruor",
+            "Ignite Blood",
         },
         ['FireDot3'] = {
             "Pyre of the Fallen",
@@ -195,6 +197,7 @@ local _ClassConfig = {
             "Ancient: Curse of Mori", -- Timer 5
             "Dark Nightmare",         -- Timer 4
             "Horror",
+            "Imprecation",
         },
         ['PlagueDot'] = {
             "Sevaran's Rot",
@@ -220,6 +223,15 @@ local _ClassConfig = {
             "Chilling Embrace",
             "Venom of the Snake",
             "Poison Bolt",
+        },
+        ['PoisonDot2'] = {
+            -- "Chaos Venom", this is worse than corath venom
+            "Corath Venom",
+            "Blood of Thule",
+            "Virulent Bolt",
+            "Envenomed Bolt",
+            "Chilling Embrace",
+            "Venom of the Snake",
         },
         ['SnareDot'] = {
             "Desecrating Darkness",
@@ -588,6 +600,7 @@ local _ClassConfig = {
             {
                 name = "FireDot",
                 type = "Spell",
+                load_cond = function() return Config:GetSetting('DoFireDot') > 1 end,
                 cond = function(self, spell, target)
                     return Casting.DotSpellCheck(spell, target)
                 end,
@@ -595,6 +608,7 @@ local _ClassConfig = {
             {
                 name = "CurseDot",
                 type = "Spell",
+                load_cond = function() return Config:GetSetting('DoCurseDot') > 1 end,
                 cond = function(self, spell, target)
                     return Casting.DotSpellCheck(spell, target)
                 end,
@@ -602,6 +616,7 @@ local _ClassConfig = {
             {
                 name = "PoisonDot",
                 type = "Spell",
+                load_cond = function() return Config:GetSetting('DoPoisonDot') > 1 end,
                 cond = function(self, spell, target)
                     return Casting.DotSpellCheck(spell, target)
                 end,
@@ -625,6 +640,7 @@ local _ClassConfig = {
             {
                 name = "PlagueDot",
                 type = "Spell",
+                load_cond = function() return Config:GetSetting('DoPlagueDot') end,
                 cond = function(self, spell, target)
                     return Casting.DotSpellCheck(spell, target)
                 end,
@@ -632,6 +648,15 @@ local _ClassConfig = {
             {
                 name = "FireDot2",
                 type = "Spell",
+                load_cond = function() return Config:GetSetting('DoFireDot') > 2 end,
+                cond = function(self, spell, target)
+                    return Casting.DotSpellCheck(spell, target)
+                end,
+            },
+            {
+                name = "PoisonDot2",
+                type = "Spell",
+                load_cond = function() return Config:GetSetting('DoPoisonDot') > 2 end,
                 cond = function(self, spell, target)
                     return Casting.DotSpellCheck(spell, target)
                 end,
@@ -639,6 +664,7 @@ local _ClassConfig = {
             {
                 name = "CurseDot2",
                 type = "Spell",
+                load_cond = function() return Config:GetSetting('DoCurseDot') > 2 end,
                 cond = function(self, spell, target)
                     return Casting.DotSpellCheck(spell, target)
                 end,
@@ -646,6 +672,7 @@ local _ClassConfig = {
             {
                 name = "DurationTap",
                 type = "Spell",
+                load_cond = function(self) return Config:GetSetting('DoDurationTap') end,
                 cond = function(self, spell, target)
                     return Casting.DotSpellCheck(spell, target)
                 end,
@@ -653,6 +680,7 @@ local _ClassConfig = {
             {
                 name = "FireDot3",
                 type = "Spell",
+                load_cond = function() return Config:GetSetting('DoFireDot') > 3 end,
                 cond = function(self, spell, target)
                     return Casting.DotSpellCheck(spell, target)
                 end,
@@ -900,14 +928,15 @@ local _ClassConfig = {
                 { name = "ScentDebuff",  cond = function(self) return Config:GetSetting('ScentDebuffUse') == 2 and not self.Helpers.GetScentItem end, },
                 { name = "ScentDebuff2", cond = function(self) return Config:GetSetting('ScentDebuffUse') == 3 end, },
                 { name = "PoisonNuke", },
-                { name = "FireDot", },
-                { name = "FireDot2", },
-                { name = "FireDot3", },
-                { name = "CurseDot", },
-                { name = "CurseDot2", },
-                { name = "PoisonDot", },
-                { name = "DurationTap", },
-                { name = "PlagueDot", },
+                { name = "FireDot",      cond = function(self) return Config:GetSetting('DoFireDot') > 1 end, },
+                { name = "FireDot2",     cond = function(self) return Config:GetSetting('DoFireDot') > 2 end, },
+                { name = "FireDot3",     cond = function(self) return Config:GetSetting('DoFireDot') > 3 end, },
+                { name = "CurseDot",     cond = function(self) return Config:GetSetting('DoCurseDot') > 1 end, },
+                { name = "CurseDot2",    cond = function(self) return Config:GetSetting('DoCurseDot') > 2 end, },
+                { name = "PoisonDot",    cond = function(self) return Config:GetSetting('DoPoisonDot') > 1 end, },
+                { name = "PoisonDot2",   cond = function(self) return Config:GetSetting('DoPoisonDot') > 2 end, },
+                { name = "DurationTap",  cond = function(self) return Config:GetSetting('DoDurationTap') end, },
+                { name = "PlagueDot",    cond = function(self) return Config:GetSetting('DoPlagueDot') end, },
                 { name = "LichSpell",    cond = function(self) return Config:GetSetting('DoLich') end, },
                 { name = "OrbNuke",      cond = function(self) return Config:GetSetting('DoOrbNuke') end, },
                 { name = "LifeTap",      cond = function(self) return Config:GetSetting('DoLifetap') end, },
@@ -1020,6 +1049,68 @@ local _ClassConfig = {
         },
 
         --Combat
+        ['DoFireDot']         = {
+            DisplayName = "Do Fire DoTs",
+            Group = "Abilities",
+            Header = "Damage",
+            Category = "Over Time",
+            Index = 101,
+            Tooltip = "Select the number of fire dots to use. Third tier not used until it resolves to Funeral Pyre or better.",
+            RequiresLoadoutChange = true,
+            Type = "Combo",
+            ComboOptions = { "Disabled", "Current Tier", "Current + Last Tier", "Three Tiers", },
+            Default = 4,
+            Min = 1,
+            Max = 4,
+        },
+        ['DoPoisonDot']       = {
+            DisplayName = "Do Poison DoTs",
+            Group = "Abilities",
+            Header = "Damage",
+            Category = "Over Time",
+            Index = 102,
+            Tooltip = "Select the number of poison dots to use.",
+            RequiresLoadoutChange = true,
+            Type = "Combo",
+            ComboOptions = { "Disabled", "Current Tier", "Current + Last Tier", },
+            Default = 3,
+            Min = 1,
+            Max = 3,
+        },
+        ['DoCurseDot']        = {
+            DisplayName = "Do Curse DoTs",
+            Group = "Abilities",
+            Header = "Damage",
+            Category = "Over Time",
+            Index = 103,
+            Tooltip = "Select the number of Curse (Magic) dots to use.",
+            RequiresLoadoutChange = true,
+            Type = "Combo",
+            ComboOptions = { "Disabled", "Current Tier", "Current + Last Tier", },
+            Default = 3,
+            Min = 1,
+            Max = 3,
+        },
+        ['DoDurationTap']     = {
+            DisplayName = "Do Duration Tap",
+            Group = "Abilities",
+            Header = "Damage",
+            Category = "Over Time",
+            Index = 104,
+            Tooltip = "Use your duration tap line of dots.",
+            RequiresLoadoutChange = true,
+            Default = true,
+        },
+        ['DoPlagueDot']       = {
+            DisplayName = "Do Plague Dot",
+            Group = "Abilities",
+            Header = "Damage",
+            Category = "Over Time",
+            Index = 104,
+            Tooltip = "Use your plague (disease) line of dots.",
+            RequiresLoadoutChange = true,
+            Default = true,
+        },
         ['DoLifetap']         = {
             DisplayName = "Do Lifetap",
             Group = "Abilities",
