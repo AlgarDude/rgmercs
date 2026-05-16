@@ -193,6 +193,18 @@ Binds.Handlers    = {
             Config:ListMoveUp(name, "AssistList")
         end,
     },
+    ['assisttop'] = {
+        usage = "/rgl assisttop (<Name> or <List#>)",
+        about = "Moves (<Name> or <List#>) to the top of the Assist List. If no name is entered, your target's name is used.",
+        handler = function(name)
+            if not name then name = mq.TLO.Target.CleanName() end
+            if not name then
+                Logger.log_error("/rgl assisttop - no name given and no valid target exists!")
+                return
+            end
+            Config:ListMoveTop(name, "AssistList")
+        end,
+    },
     ['assistdown'] = {
         usage = "/rgl assistdown (<Name> or <List#>)",
         about = "Moves (<Name> or <List#>) one position down on the Assist List. If no name is entered, your target's name is used.",
