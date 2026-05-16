@@ -784,6 +784,20 @@ function OptionsUI:RenderDBManagement()
             end
         end
 
+        ImGui.TableNextRow()
+        ImGui.TableNextColumn()
+        ImGui.TableNextColumn()
+        ImGui.BeginDisabled(not canCopy)
+        if ImGui.Button(Icons.FA_ARROW_DOWN .. " Copy Selected Settings##dbcopy") then
+            self.dbOpenCopyPopup = true
+        end
+        if sameChar and sameClass then
+            if ImGui.IsItemHovered(ImGuiHoveredFlags.AllowWhenDisabled) then
+                ImGui.SetTooltip("Cannot copy: source and destination are the same character and class.")
+            end
+        end
+        ImGui.EndDisabled()
+
         -- Copy destination row
         ImGui.TableNextRow()
         ImGui.TableNextColumn()
@@ -797,23 +811,19 @@ function OptionsUI:RenderDBManagement()
         ImGui.SetNextItemWidth(-1)
         local newToClass, toClassChanged = Ui.SearchableCombo("dbtoclass", self.dbToClassIdx, Globals.Constants.AllClasses)
         if toClassChanged then self.dbToClassIdx = newToClass end
-        ImGui.TableNextColumn()
-        if not canCopy then ImGui.BeginDisabled() end
-        if ImGui.Button(Icons.FA_ARROW_DOWN .. " Copy Selected Settings##dbcopy") then
-            self.dbOpenCopyPopup = true
-        end
-        if not canCopy then ImGui.EndDisabled() end
-        if sameChar and sameClass then
-            ImGui.SameLine()
-            ImGui.TextDisabled("(same char+class)")
-        end
 
         ImGui.EndTable()
     end
 
-    if self.dbOpenResetPopup then ImGui.OpenPopup("DBResetConfirm##DBMgmt"); self.dbOpenResetPopup = false end
-    if self.dbOpenDeletePopup then ImGui.OpenPopup("DBDeleteConfirm##DBMgmt"); self.dbOpenDeletePopup = false end
-    if self.dbOpenCopyPopup then ImGui.OpenPopup("DBCopyConfirm##DBMgmt"); self.dbOpenCopyPopup = false end
+    if self.dbOpenResetPopup then
+        ImGui.OpenPopup("DBResetConfirm##DBMgmt"); self.dbOpenResetPopup = false
+    end
+    if self.dbOpenDeletePopup then
+        ImGui.OpenPopup("DBDeleteConfirm##DBMgmt"); self.dbOpenDeletePopup = false
+    end
+    if self.dbOpenCopyPopup then
+        ImGui.OpenPopup("DBCopyConfirm##DBMgmt"); self.dbOpenCopyPopup = false
+    end
 
     ImGui.SetNextWindowSize(ImVec2(460, 0), ImGuiCond.Appearing)
     if ImGui.BeginPopup("DBResetConfirm##DBMgmt") then
