@@ -129,7 +129,7 @@ function TargetUI:RenderContent()
                     if buff and buff() and buff.ID() ~= 0 then
                         local borderCol = (buff.CasterName() == mq.TLO.Me.Name()) and Colors.Yellow:ToImU32() or nil
                         local doBlink = (math.floor((buff.Duration.TotalSeconds() or 0)) < blinkAtTime)
-                        Ui.DrawInspectableSpellIcon(buff.SpellIcon(), buff, iconSize, doBlink, borderCol)
+                        Ui.DrawInspectableSpellIcon(buff, iconSize, doBlink, borderCol)
                         self:RenderTooltipForBuff(buff, target.ID(), showBuffName, showBuffDescription, showBuffCaster)
 
                         if i == 1 or i % buffsPerRow ~= 0 then
