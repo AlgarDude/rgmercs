@@ -242,9 +242,12 @@ function Core.GetMainAssistTargetID()
             assistTarget = mq.TLO.Spawn(forceTargId)
             Logger.log_verbose("\atGetMainAssistTargetID\aw() \ayFindAutoTarget Assist's Forced Target via Actors :: %s (%s). Ignoring mob aggressiveness.",
                 assistTarget.CleanName() or "None", forceTargId)
-            if heartbeat.Data.TargetIsNamed then
-                Globals.AutoTargetIsNamed = true
-                assistTargetIsNamed = true
+            if heartbeat.Data.TargetIsNamed == nil then
+                Globals.AutoTargetIsNamed = Modules:ExecModule("Named", "IsNamed", assistTarget) or false
+                assistTargetIsNamed = Globals.AutoTargetIsNamed
+            else
+                Globals.AutoTargetIsNamed = heartbeat.Data.TargetIsNamed
+                assistTargetIsNamed = heartbeat.Data.TargetIsNamed
             end
         else
             -- reset force combat ID if the MA is no longer forcing that target
@@ -257,9 +260,12 @@ function Core.GetMainAssistTargetID()
                 assistTarget = mq.TLO.Spawn(targetID)
                 Logger.log_verbose("\atGetMainAssistTargetID\aw() \ayFindAutoTarget Assist's Target via Actors :: %s (%s)",
                     assistTarget.CleanName() or "None", targetID)
-                if heartbeat.Data.TargetIsNamed then
-                    Globals.AutoTargetIsNamed = true
-                    assistTargetIsNamed = true
+                if heartbeat.Data.TargetIsNamed == nil then
+                    Globals.AutoTargetIsNamed = Modules:ExecModule("Named", "IsNamed", assistTarget) or false
+                    assistTargetIsNamed = Globals.AutoTargetIsNamed
+                else
+                    Globals.AutoTargetIsNamed = heartbeat.Data.TargetIsNamed
+                    assistTargetIsNamed = heartbeat.Data.TargetIsNamed
                 end
             end
         end
