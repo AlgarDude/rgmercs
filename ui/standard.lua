@@ -25,7 +25,15 @@ function StandardUI:renderModulesTabs()
     for _, name in ipairs(Modules:GetModuleOrderedNames()) do
         if Modules:ExecModule(name, "ShouldRender") and not Config:GetSetting(name .. "_Popped", true) then
             if ImGui.BeginTabItem(name) then
+                ImGui.BeginChild("##RGMercsMainBody", ImVec2(0, 0), bit32.bor(ImGuiChildFlags.None), bit32.bor(ImGuiWindowFlags.None))
                 Modules:ExecModule(name, "Render")
+                ImGui.Separator()
+                if not Config:GetSetting('PopOutConsole') then
+                    if ImGui.CollapsingHeader("Console") then
+                        ConsoleUI:DrawConsole(true)
+                    end
+                end
+                ImGui.EndChild()
                 ImGui.EndTabItem()
             end
         end
@@ -295,8 +303,6 @@ function StandardUI:RenderMainWindow(imgui_style, openGUI, flags)
 
             ImGui.Separator()
 
-            ImGui.BeginChild("##RGMercsMainBody", ImVec2(0, 0), bit32.bor(ImGuiChildFlags.None), bit32.bor(ImGuiWindowFlags.None))
-
             ImGui.NewLine()
 
             if ImGui.BeginTabBar("RGMercsTabs", ImGuiTabBarFlags.Reorderable) then
@@ -406,15 +412,6 @@ function StandardUI:RenderMainWindow(imgui_style, openGUI, flags)
 
                 ImGui.EndTabBar();
             end
-
-            ImGui.Separator()
-            if not Config:GetSetting('PopOutConsole') then
-                if ImGui.CollapsingHeader("Console") then
-                    ConsoleUI:DrawConsole(true)
-                end
-            end
-
-            ImGui.EndChild()
         end
 
         Ui.RenderToastNotifications(Logger.ToastStates, 6.0)
