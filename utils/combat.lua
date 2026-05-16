@@ -11,6 +11,7 @@ local Set       = require('mq.set')
 local Strings   = require("utils.strings")
 local Movement  = require("utils.movement")
 local Events    = require("utils.events")
+local DanNet    = require('lib.dannet.helpers')
 
 local Combat    = { _version = '1.0', _name = "Combat", _author = 'Derple', }
 Combat.__index  = Combat
@@ -455,6 +456,89 @@ function Combat.GetGroupOrRaidAssistTargetId()
     return Core.GetGroupOrRaidAssistTargetId()
 end
 
+--- Resolves the MA's current target via actors heartbeat, DanNet, group/raid
+--- TLO, or target-of-target fallback; also updates ForceCombatID/AutoTargetIsNamed.
+---@return number targetId The spawn ID of the MA's current target, or 0.
+---@return boolean targetIsNamed True if the MA's target was flagged as named.
+function Combat.GetMainAssistTargetID()
+    local assistId = 0
+    local heartbeat = Comms.GetPeerHeartbeatByName(Globals.MainAssist)
+    local assistTarget = nil
+    local assistTargetIsNamed = false
+
+    -- if the MA has a force target, use it, and also force combat on this target (don't check aggressiveness on the MA's force target)
+    if heartbeat and heartbeat.Data then
+        local forceTargId = tonumber(heartbeat.Data.ForceTargetID) or 0
+        if forceTargId > 0 then
+            Globals.ForceCombatID = forceTargId
+            assistId = forceTargId
+            assistTarget = mq.TLO.Spawn(forceTargId)
+            Logger.log_verbose("\atGetMainAssistTargetID\aw() \ayFindAutoTarget Assist's Forced Target via Actors :: %s (%s). Ignoring mob aggressiveness.",
+                assistTarget.CleanName() or "None", forceTargId)
+            if heartbeat.Data.TargetIsNamed == nil then
+                Globals.AutoTargetIsNamed = Modules:ExecModule("Named", "IsNamed", assistTarget) or false
+                assistTargetIsNamed = Globals.AutoTargetIsNamed
+            else
+                Globals.AutoTargetIsNamed = heartbeat.Data.TargetIsNamed
+                assistTargetIsNamed = heartbeat.Data.TargetIsNamed
+            end
+        else
+            -- reset force combat ID if the MA is no longer forcing that target
+            Globals.ForceCombatID = 0
+            local paused = heartbeat.Data.State == "Paused"
+            local rawTarget = paused and heartbeat.Data.TargetID or heartbeat.Data.AutoTargetID
+            local targetID = tonumber(rawTarget) or 0
+            if targetID > 0 then
+                assistId = targetID
+                assistTarget = mq.TLO.Spawn(targetID)
+                Logger.log_verbose("\atGetMainAssistTargetID\aw() \ayFindAutoTarget Assist's Target via Actors :: %s (%s)",
+                    assistTarget.CleanName() or "None", targetID)
+                if heartbeat.Data.TargetIsNamed == nil then
+                    Globals.AutoTargetIsNamed = Modules:ExecModule("Named", "IsNamed", assistTarget) or false
+                    assistTargetIsNamed = Globals.AutoTargetIsNamed
+                else
+                    Globals.AutoTargetIsNamed = heartbeat.Data.TargetIsNamed
+                    assistTargetIsNamed = heartbeat.Data.TargetIsNamed
+                end
+            end
+        end
+        -- check if the MA is a dannet peer
+    elseif mq.TLO.DanNet(Globals.MainAssist)() then
+        local queryResult = DanNet.query(Globals.MainAssist, "Target.ID", 1000)
+        if queryResult then
+            assistId = tonumber(queryResult) or 0
+            assistTarget = mq.TLO.Spawn(queryResult)
+            Logger.log_verbose("\atGetMainAssistTargetID\aw() \ayFindAutoTarget Assist's Target via DanNet :: %s (%s)",
+                assistTarget.CleanName() or "None", queryResult)
+        end
+        -- Check for the Group/Raid Assist Target via TLO. Don't do this if we are using assist list, the assumption is we don't *want* to assist the group/raid
+    elseif not Config:GetSetting('UseAssistList') then
+        assistId = Core.GetGroupOrRaidAssistTargetId()
+        assistTarget = mq.TLO.Spawn(assistId)
+        Logger.log_verbose("\atGetMainAssistTargetID\aw() \ayFindAutoTarget Assist's Target via Group/Raid TLO :: %s (%s)",
+            assistTarget.CleanName() or "None", assistId)
+    else
+        -- if we cant get a target any other way, just stay on our current one if its valid, rather then constantly retargeting an MA.
+        if Core.ValidCombatTarget(Globals.AutoTargetID) then
+            assistId = Globals.AutoTargetID
+        else
+            -- otherwise, manually target the MA to get their target of target. this is a last-ditch fallback. it would be much better to let a mercs toon be the MA.
+            -- compromise here is to leave all mercs toons assisting a mercs MA, but the mercs MA setting an outsider to the MA, so we aren't all targeting randomly.
+            local assistSpawn = Core.GetMainAssistSpawn()
+            if assistSpawn and assistSpawn() then
+                Core.SetTarget(assistSpawn.ID(), true)
+
+                assistTarget = mq.TLO.Me.TargetOfTarget
+                assistId = assistTarget.ID() or 0
+                Logger.log_verbose("\atGetMainAssistTargetID\aw() \ayFindAutoTarget Assist's Target via TargetOfTarget :: %s ",
+                    assistTarget.CleanName() or "None")
+            end
+        end
+    end
+
+    return assistId, assistTargetIsNamed
+end
+
 --- Finds the best auto target and sets Globals.AutoTargetID, then targets it if DoAutoTarget is enabled.
 ---@param validateFn function? Optional validator called with a spawn id; return true to accept, false to reject.
 function Combat.FindBestAutoTarget(validateFn)
@@ -570,7 +654,7 @@ function Combat.FindBestAutoTarget(validateFn)
             -- Only change if the group main assist target is an NPC ID that doesn't match the current autotargetid. This prevents us from
             -- swapping to non-NPCs if the  MA is trying to heal/buff a friendly or themselves.
 
-            assistId, assistTargetIsNamed = Core.GetMainAssistTargetID()
+            assistId, assistTargetIsNamed = Combat.GetMainAssistTargetID()
         end
 
         if assistId > 0 and (validateFn == nil or validateFn(assistId)) then
