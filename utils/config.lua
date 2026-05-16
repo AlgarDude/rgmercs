@@ -3726,6 +3726,24 @@ function Config:ListMoveUp(id, listName)
     self:SetSetting(listName, list)
 end
 
+function Config:ListMoveTop(id, listName)
+    if type(id) == 'string' then
+        id = self:ConvertListNameToID(id, listName)
+    end
+
+    if id < 2 then return end
+    local list = self:GetSetting(listName)
+
+    if id > #list then return end
+
+    local newId = 1
+
+    list[newId], list[id] = list[id], list[newId]
+
+    Logger.log_info("\ax%s: \ag%s\ax has been\ag moved to the top of the list!", listName, self:GetSetting(listName)[1])
+    self:SetSetting(listName, list)
+end
+
 --- Moves the PC at the given index down.
 --- @param id number The index of the PC to move.
 --- @param listName string: The list to adjust.
