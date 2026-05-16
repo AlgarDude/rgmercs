@@ -482,7 +482,7 @@ function Combat.FindBestAutoTarget(validateFn)
 
     local target = mq.TLO.Target
     local targetValidated = false
-    local assistTargetIsNamed = false
+    local assistTargetIsNamed = nil
 
     -- Now handle normal situations where we need to choose a target because we don't have one.
     if Core.IAmMA() then
@@ -583,7 +583,11 @@ function Combat.FindBestAutoTarget(validateFn)
     end
 
     if Globals.AutoTargetID > 0 then
-        Globals.AutoTargetIsNamed = assistTargetIsNamed or Targeting.IsNamed(mq.TLO.Spawn(Globals.AutoTargetID))
+        if assistTargetIsNamed ~= nil then
+            Globals.AutoTargetIsNamed = assistTargetIsNamed
+        else
+            Globals.AutoTargetIsNamed = Targeting.IsNamed(mq.TLO.Spawn(Globals.AutoTargetID))
+        end
     end
 
     Logger.log_verbose("FindAutoTarget(): FoundTargetID(%d) - Named(%s), myTargetId(%d)", Globals.AutoTargetID or 0, Strings.BoolToColorString(Globals.AutoTargetIsNamed),
