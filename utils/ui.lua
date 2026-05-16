@@ -459,7 +459,7 @@ function Ui.RenderAAOverlay()
                         end,
                         render = function(entry)
                             if entry.AA.Spell.Name() then
-                                Ui.DrawInspectableSpellIcon(entry.AA.Spell.SpellIcon() or 0, entry.AA.Spell)
+                                Ui.DrawInspectableSpellIcon(entry.AA.Spell)
                             else
                                 Ui.RenderText(" " .. Icons.MD_DO_NOT_DISTURB)
                             end
@@ -1366,6 +1366,29 @@ function Ui.RenderMercsStatus(showPopout)
                 ImGui.PopStyleColor()
             end,
         },
+        {
+            name = 'Buffs',
+            flags = bit32.bor(ImGuiTableColumnFlags.WidthFixed, ImGuiTableColumnFlags.DefaultHide, ImGuiTableColumnFlags.NoSort),
+            width = 150.0,
+            render = function(peer, data)
+                for _, buffId in ipairs(data.Data.Buffs or {}) do
+                    local buff = mq.TLO.Spell(buffId)
+                    if buff and buff() then
+                        Ui.DrawInspectableSpellIcon(buff, ImGui.GetTextLineHeight(), false)
+                        if ImGui.IsItemHovered() then
+                            Ui.MultilineTooltipWithColors(
+                                {
+                                    { text = "Name: ",                                          color = Colors.White,     padAfter = 4, },
+                                    { text = buff.RankName.Name(),                              color = Colors.LightBlue, sameLine = true, },
+                                    { text = "Description: ",                                   color = Colors.White,     padAfter = 4, },
+                                    { text = buff.Description() or "No description available.", color = Colors.LightBlue, },
+                                })
+                        end
+                    end
+                    ImGui.SameLine()
+                end
+            end,
+        },
     }
 
     Ui.RenderTableData("MercStatusTable", tableColumns,
@@ -1402,9 +1425,11 @@ function Ui.RenderMercsStatus(showPopout)
                 local data = mercs[peer]
                 if data and data.Data then
                     ImGui.PushID(string.format("##table_entry_%s", peer))
-                    for _, colData in ipairs(tableColumns) do
+                    for idx, colData in ipairs(tableColumns) do
                         ImGui.TableNextColumn()
-                        colData.render(peer, data)
+                        if ImGui.TableSetColumnIndex(idx - 1) then
+                            colData.render(peer, data)
+                        end
                     end
                     ImGui.PopID()
                 end
@@ -1829,14 +1854,14 @@ function Ui.GetBGForSpell(spell)
 end
 
 --- Draws an inspectable spell icon that opens the spell inspector on click.
----@param iconID number SpellIcon index to render.
 ---@param spell MQSpell Spell object providing type/name for background and inspect.
 ---@param iconSize number? Icon width/height in pixels; defaults to ICON_SIZE.
 ---@param doBlink boolean? If true, enables blink animation when the spell is active.
 ---@param borderCol number? IM_COL32 color for an optional border around the icon.
-function Ui.DrawInspectableSpellIcon(iconID, spell, iconSize, doBlink, borderCol)
+function Ui.DrawInspectableSpellIcon(spell, iconSize, doBlink, borderCol)
     if not iconSize then iconSize = ICON_SIZE end
 
+    local iconID = spell.SpellIcon()
     local alpha = 1.0
     if doBlink then
         local animId = ImHashStr(tostring(iconID) .. (spell.Name() or "?") .. "_blink")
@@ -1883,7 +1908,7 @@ function Ui.RenderLoadoutTable(loadoutTable)
 
         for gem, loadoutData in pairs(loadoutTable) do
             ImGui.TableNextColumn()
-            Ui.DrawInspectableSpellIcon(loadoutData.spell.SpellIcon(), loadoutData.spell)
+            Ui.DrawInspectableSpellIcon(loadoutData.spell)
             ImGui.TableNextColumn()
             Ui.RenderText(tostring(gem))
             ImGui.TableNextColumn()
