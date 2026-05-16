@@ -75,7 +75,6 @@ local rgMercsMainType   = mq.DataType.new('RGMercsMain', {
             end
 
             if type(value) == "number" then
-                printf("%s %s %s", tostring(param), tostring(value), type(value))
                 return 'int', value
             end
 
