@@ -23,13 +23,11 @@ local function getCurrentZoneKey()
 end
 
 local function getMapFolder()
-    local override = Config:GetSetting('SafePullMapFolder', true)
-    if override and override ~= '' then
-        return tostring(override)
-    end
+    local customFolder = Config:GetSetting('CustomMapsFolder', true)
+
     local eqPath = mq.TLO.EverQuest.Path() or ''
     if eqPath == '' then return '' end
-    return string.format('%s/maps/Brewall', eqPath)
+    return string.format('%s/maps/%s', eqPath, customFolder)
 end
 
 local function parseBrewallMapLine(line)
@@ -108,19 +106,6 @@ local function getEditorBounds()
     local minX, maxX = myX - halfRange, myX + halfRange
     local minY, maxY = myY - halfRange, myY + halfRange
 
-    local function includePoint(point)
-        if not point or not point.x or not point.y then return end
-        local px = -(tonumber(point.x) or 0)
-        local py = tonumber(point.y) or 0
-        if px < minX then minX = px end
-        if px > maxX then maxX = px end
-        if py < minY then minY = py end
-        if py > maxY then maxY = py end
-    end
-
-    for _, point in ipairs(Config:GetSetting('SafePullAreaPoints', true) or {}) do includePoint(point) end
-    for _, point in ipairs(Config:GetSetting('PullRoutePoints', true) or {}) do includePoint(point) end
-
     local padding = 40
     minX, maxX = minX - padding, maxX + padding
     minY, maxY = minY - padding, maxY + padding
@@ -129,15 +114,6 @@ local function getEditorBounds()
     if math.abs(maxY - minY) < 50 then minY, maxY = myY - 25, myY + 25 end
 
     return minX, maxX, minY, maxY
-end
-
-local function normalizeRoutePointIndex()
-    local points = Config:GetSetting('PullRoutePoints', true) or {}
-    local idx = Config:GetSetting('PullRoutePointIndex', true) or 1
-    if #points <= 0 then return 1 end
-    if idx < 1 then return 1 end
-    if idx > #points then return #points end
-    return idx
 end
 
 -- Public API
@@ -258,19 +234,18 @@ function MapUI:RenderCanvas(canvasWidth, canvasHeight)
     drawList:AddTriangleFilled(tip, baseMid, tailR, shadeColor)
     drawList:AddTriangle(tip, tailL, tailR, outlineColor, 1.0)
 
-    local routePoints = Config:GetSetting('PullRoutePoints', true) or {}
-    if #routePoints > 0 then
-        local routeScreenPoints = {}
-        local activeIdx = normalizeRoutePointIndex()
-        for idx, point in ipairs(routePoints) do
+    local farmWayPoints = (Config:GetSetting('FarmWayPoints', true) or {})[mq.TLO.Zone.ShortName() or ""] or {}
+    if #farmWayPoints > 0 then
+        local wpScreenPoints = {}
+        local wpColor = ImGui.GetColorU32(ImVec4(0.30, 1.00, 0.45, 1.0))
+        for idx, point in ipairs(farmWayPoints) do
             local sx, sy = worldToScreen(-(point.x or 0), point.y or 0)
-            table.insert(routeScreenPoints, ImVec2(sx, sy))
-            local pointColor = idx == activeIdx and ImVec4(1.0, 0.85, 0.2, 1.0) or ImVec4(0.95, 0.65, 0.2, 1.0)
-            drawList:AddCircleFilled(ImVec2(sx, sy), 4, ImGui.GetColorU32(pointColor), 12)
-            drawList:AddText(ImVec2(sx + 6, sy - 8), ImGui.GetColorU32(pointColor), tostring(point.label or idx))
+            table.insert(wpScreenPoints, ImVec2(sx, sy))
+            drawList:AddCircleFilled(ImVec2(sx, sy), 4, wpColor, 12)
+            drawList:AddText(ImVec2(sx + 6, sy - 8), wpColor, tostring(idx))
         end
-        if #routeScreenPoints >= 2 then
-            drawList:AddPolyline(routeScreenPoints, ImGui.GetColorU32(ImVec4(0.95, 0.65, 0.2, 0.8)), 0, 2.0)
+        if #wpScreenPoints >= 2 then
+            drawList:AddPolyline(wpScreenPoints, wpColor, 0, 2.0)
         end
     end
 

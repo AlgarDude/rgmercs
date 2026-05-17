@@ -15,26 +15,16 @@ Module.DefaultConfig   = {
         Type = "Custom",
         Default = false,
     },
-    ['SafePullMapFolder'] = {
-        DisplayName = "Safe Pull Map Folder",
+    ['CustomMapsFolder'] = {
+        DisplayName = "Custom Map Folder",
         Category = "Map",
-        Tooltip = "Override path to the EverQuest map folder used for canvas line data. Leave blank to autodetect Brewall maps under your EQ install.",
+        Tooltip = "Override path to the EverQuest map folder used for canvas line data. Leave blank to use default maps under your EQ install.",
         Default = "",
     },
     ['SafePullAreaPoints'] = {
         DisplayName = "Safe Pull Area Vertices",
         Type = "Custom",
         Default = {},
-    },
-    ['PullRoutePoints'] = {
-        DisplayName = "Pull Route Points",
-        Type = "Custom",
-        Default = {},
-    },
-    ['PullRoutePointIndex'] = {
-        DisplayName = "Pull Route Point Index",
-        Type = "Custom",
-        Default = 1,
     },
     ['TargetRadius'] = {
         DisplayName = "Map Target Radius",
