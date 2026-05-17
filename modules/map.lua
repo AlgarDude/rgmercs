@@ -2,7 +2,7 @@ local ImGui    = require('ImGui')
 local MapUI    = require("ui.map")
 local Base     = require("modules.base")
 
-local Module   = { _version = '1.0', _name = "Map", _author = 'Algar', }
+local Module   = { _version = '1.0', _name = "Map", _author = 'Derple', }
 Module.__index = Module
 setmetatable(Module, { __index = Base, })
 

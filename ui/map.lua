@@ -3,7 +3,7 @@ local ImGui          = require('ImGui')
 local Config         = require('utils.config')
 local Ui             = require('utils.ui')
 
-local MapUI          = { _version = '1.0', _name = "MapUI", _author = 'Algar', }
+local MapUI          = { _version = '1.0', _name = "MapUI", _author = 'Derple', }
 MapUI.__index        = MapUI
 
 -- Module State
