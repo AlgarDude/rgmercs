@@ -76,6 +76,17 @@ function Module:Render()
     if ImGui.SmallButton("Reset View") then
         MapUI:ResetView()
     end
+    ImGui.SameLine()
+    local adding = MapUI:IsAddWaypointMode()
+    if adding then
+        ImGui.PushStyleColor(ImGuiCol.Button, ImVec4(0.30, 0.70, 0.30, 1.0))
+    end
+    if ImGui.SmallButton(adding and "Adding Waypoints (click map)" or "Add Waypoints") then
+        MapUI:SetAddWaypointMode(not adding)
+    end
+    if adding then
+        ImGui.PopStyleColor()
+    end
 
     local availX, availY = ImGui.GetContentRegionAvail()
     local canvasW = math.max(200, availX - 8)
