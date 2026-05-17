@@ -1,20 +1,23 @@
-local mq             = require('mq')
-local ImGui          = require('ImGui')
-local Config         = require('utils.config')
-local Ui             = require('utils.ui')
+local mq              = require('mq')
+local ImGui           = require('ImGui')
+local Config          = require('utils.config')
+local Ui              = require('utils.ui')
+local Modules         = require('utils.modules')
+local Icons           = require('mq.ICONS')
 
-local MapUI          = { _version = '1.0', _name = "MapUI", _author = 'Derple', }
-MapUI.__index        = MapUI
+local MapUI           = { _version = '1.0', _name = "MapUI", _author = 'Derple', }
+MapUI.__index         = MapUI
 
 -- Module State
 
-local mapLinesZone   = ''
-local mapLinesFolder = ''
-local mapLines       = {}
-local editMode       = false
-local zoom           = 1.0
-local panX           = 0
-local panY           = 0
+local mapLinesZone    = ''
+local mapLinesFolder  = ''
+local mapLines        = {}
+local editMode        = false
+local addWaypointMode = false
+local zoom            = 1.0
+local panX            = 0
+local panY            = 0
 
 -- Helpers
 
@@ -134,6 +137,10 @@ function MapUI:IsEditMode() return editMode end
 
 function MapUI:SetEditMode(v) editMode = v and true or false end
 
+function MapUI:IsAddWaypointMode() return addWaypointMode end
+
+function MapUI:SetAddWaypointMode(v) addWaypointMode = v and true or false end
+
 function MapUI:GetZoom() return zoom end
 
 function MapUI:SetZoom(v) zoom = tonumber(v) or 1.0 end
@@ -192,6 +199,15 @@ function MapUI:RenderCanvas(canvasWidth, canvasHeight)
         panY = panY + (io.MouseDelta and io.MouseDelta.y or 0)
         originX = canvasX + (canvasWidth * 0.5) + panX
         originY = canvasY + (canvasHeight * 0.5) + panY
+    end
+
+    if addWaypointMode and isHovered and ImGui.IsMouseClicked(ImGuiMouseButton.Left) then
+        local displayX, displayY = screenToWorld(mouseX, mouseY)
+        local zoneKey = mq.TLO.Zone.ShortName() or ""
+        local farmWayPoints = Config:GetSetting('FarmWayPoints') or {}
+        farmWayPoints[zoneKey] = farmWayPoints[zoneKey] or {}
+        table.insert(farmWayPoints[zoneKey], { x = -displayX, y = displayY, z = me.Z() or 0, })
+        Config:SetSetting('FarmWayPoints', farmWayPoints)
     end
 
     local viewMinX, viewMaxY = screenToWorld(canvasX, canvasY)
@@ -266,6 +282,16 @@ function MapUI:RenderCanvas(canvasWidth, canvasHeight)
 
     local spawnRadius = math.max(Config:GetSetting('TargetRadius'), 100)
     local npcsMaxRenderCount = math.max(Config:GetSetting('MaxMapNPCsToRender'), 40)
+    local allowedNames = {}
+    for _, name in ipairs((Config:GetSetting('PullAllowList', true) or {})[mq.TLO.Zone.ShortName() or ""] or {}) do
+        allowedNames[name] = true
+    end
+    local deniedNames = {}
+    for _, name in ipairs((Config:GetSetting('PullDenyList', true) or {})[mq.TLO.Zone.ShortName() or ""] or {}) do
+        deniedNames[name] = true
+    end
+    local allowColor = ImGui.GetColorU32(ImVec4(0.30, 1.00, 0.45, 1.0))
+    local denyColor = ImGui.GetColorU32(ImVec4(1.00, 0.55, 0.10, 1.0))
     local hoveredSpawn = nil
     local hoveredInside = false
     for i = 1, npcsMaxRenderCount do
@@ -276,7 +302,24 @@ function MapUI:RenderCanvas(canvasWidth, canvasHeight)
             local inside = isSpawnInsideSafeArea(spawn)
             local r, g, b = Ui.GetConColorBySpawn(spawn)
             local alpha = inside and 0.9 or 0.55
-            drawList:AddCircleFilled(ImVec2(sx, sy), 3, ImGui.GetColorU32(ImVec4(r, g, b, alpha)), 10)
+            local isNamed = Modules:ExecModule("Named", "IsNamed", spawn)
+            if isNamed then
+                local starPts = {}
+                for k = 0, 9 do
+                    local angle = -math.pi / 2 + k * math.pi / 5
+                    local radius = (k % 2 == 0) and 4 or 1.6
+                    table.insert(starPts, ImVec2(sx + math.cos(angle) * radius, sy + math.sin(angle) * radius))
+                end
+                drawList:AddConvexPolyFilled(starPts, allowColor)
+            else
+                drawList:AddCircleFilled(ImVec2(sx, sy), 3, ImGui.GetColorU32(ImVec4(r, g, b, alpha)), 10)
+            end
+            if allowedNames[spawn.CleanName()] then
+                drawList:AddCircle(ImVec2(sx, sy), 6, allowColor, 12, 1.5)
+            elseif deniedNames[spawn.CleanName()] then
+                drawList:AddLine(ImVec2(sx - 5, sy - 5), ImVec2(sx + 5, sy + 5), denyColor, 1.5)
+                drawList:AddLine(ImVec2(sx - 5, sy + 5), ImVec2(sx + 5, sy - 5), denyColor, 1.5)
+            end
             drawList:AddText(ImVec2(sx + 5, sy - 7), ImGui.GetColorU32(ImVec4(r, g, b, alpha)),
                 spawn.CleanName() or spawn.Name() or '?')
             if isHovered and not hoveredSpawn then
@@ -289,6 +332,15 @@ function MapUI:RenderCanvas(canvasWidth, canvasHeight)
         end
     end
 
+    if hoveredSpawn and ImGui.IsMouseReleased(ImGuiMouseButton.Right) then
+        local dragVec = ImGui.GetMouseDragDelta(ImGuiMouseButton.Right)
+        ---@diagnostic disable-next-line: undefined-field
+        local dragDx, dragDy = dragVec.x or 0, dragVec.y or 0
+        if dragDx * dragDx + dragDy * dragDy < 16 then
+            mq.cmdf('/target id %d', hoveredSpawn.ID() or 0)
+        end
+    end
+
     if isHovered then
         if hoveredSpawn then
             ImGui.SetTooltip('%s\nLevel %d %s | %.0f away\n%s',
@@ -297,7 +349,7 @@ function MapUI:RenderCanvas(canvasWidth, canvasHeight)
                 hoveredSpawn.Class.ShortName() or '?',
                 hoveredSpawn.Distance() or 0,
                 hoveredInside and 'Inside safe area' or 'Outside safe area')
-        else
+        elseif editMode then
             local worldX, worldY = screenToWorld(mouseX, mouseY)
             ImGui.SetTooltip('World: %.1f, %.1f | Drag to pan | %s',
                 worldX, worldY,
