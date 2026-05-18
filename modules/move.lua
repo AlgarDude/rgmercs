@@ -657,6 +657,9 @@ end
 
 function Module:OnZone()
     self:CampOff()
+    if mq.TLO.Nav.Active() then
+        Movement:DoNav(true, "stop")
+    end
 end
 
 function Module:DoAutoCampCheck(bCalledFromInsideEvent)
