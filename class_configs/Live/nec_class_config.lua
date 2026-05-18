@@ -106,6 +106,9 @@ local _ClassConfig = {
             "Shielding",
             "Lesser Shielding",
         },
+        ['Levitate'] = {
+            "Dead Men Floating",
+        },
         ['SelfRune1'] = {
             "Wraithskin XIII",
             "Golemskin",
@@ -119,6 +122,13 @@ local _ClassConfig = {
             "Corpseskin",
             "Shadowskin",
             "Wraithskin",
+            "Dull Pain",
+            "Force Shield",
+            "Manaskin",
+            "Diamondskin",
+            "Steelskin",
+            "Leatherskin",
+            "Shieldskin",
         },
         ['SelfSpellShield1'] = {
             "Shield of Fate VII",
@@ -214,7 +224,7 @@ local _ClassConfig = {
             "Lifetap",
         },
         ['DurationTap'] = {
-            ---DurationTap >= LVL29
+            ---DurationTap >= LVL9
             "Sharosh's Grasp",
             "Helmsbane's Grasp",
             "The Protector's Grasp",
@@ -232,17 +242,20 @@ local _ClassConfig = {
             "Saryrn's Kiss",
             "Vexing Mordinia",
             "Bond of Death",
+            "Auspice",
             "Vampiric Curse",
+            "Leech",
         },
         ['GroupLeech'] = {
-            ---GroupLeech >= LVL9
+            ---GroupLeech >= LVL60
             "Dark Leech VIII",
             "Ghastly Leech",
             "Twilight Leech",
             "Frozen Leech",
             "Ashen Leech",
             "Dark Leech",
-            "Leech",
+            "Night Stalker",
+            "Zevfeer's Theft of Vitae",
         },
         ['ManaDrain'] = {
             --Mana Drain with Group Mana Recourse
@@ -708,7 +721,6 @@ local _ClassConfig = {
             "Noxious Servant",
             "Putrescent Servant",
             "Dark Assassin",
-            "Child of Bertoxxulous",
             "Saryrn's Companion",
             "Minion of Shadows",
         },
@@ -726,6 +738,7 @@ local _ClassConfig = {
             "Relamar's Shade",
             "Riza`farr's Shadow",
             "Lost Soul",
+            "Child of Bertoxxulous",
             "Emissary of Thule",
             "Servant of Bones",
             "Invoke Death",
@@ -772,6 +785,24 @@ local _ClassConfig = {
             "Augment Death",
             "Intensify Death",
             "Focus Death",
+        },
+        ['PetHealSpell'] = {
+            "Chilling Renewal XVI",
+            "Bracing Revival",
+            "Frigid Salubrity",
+            "Icy Revival",
+            "Algid Renewal",
+            "Icy Mending",
+            "Algid Mending",
+            "Chilled Mending",
+            "Gelid Mending",
+            "Icy Stitches",
+            "Wintry Revival",
+            "Chilling Renewal",
+            "Dark Salve",
+            "Touch of Death",
+            "Renew Bones",
+            "Mend Bones",
         },
         ['FleshBuff'] = {
             "Flesh to Toxin",  -- Level 119
@@ -874,6 +905,14 @@ local _ClassConfig = {
             cond = function(self, combat_state)
                 return combat_state == "Combat" and not Casting.IAmFeigning() and Targeting.MobHasLowHP(Targeting.GetAutoTarget())
             end,
+        },
+        {
+            name = 'PetHealing',
+            state = 1,
+            steps = 1,
+            doFullRotation = true,
+            targetId = function(self) return mq.TLO.Me.Pet.ID() > 0 and { mq.TLO.Me.Pet.ID(), } or {} end,
+            cond = function(self, target) return (mq.TLO.Me.Pet.PctHPs() or 100) < Config:GetSetting('PetHealPct') end,
         },
     },
     ['Rotations']       = {
@@ -1027,7 +1066,8 @@ local _ClassConfig = {
                 type = "Spell",
                 load_cond = function(self) return Config:GetSetting('DoGroupLeech') end,
                 cond = function(self, spell, target)
-                    return Casting.HaveManaToDot() and Casting.DotSpellCheck(spell, target)
+                    return Casting.HaveManaToDot() and Casting.DotSpellCheck(spell, target) and
+                        self.Helpers.GroupMemberBelowHP(self, Config:GetSetting('LightHealPoint'))
                 end,
             },
             {
@@ -1228,6 +1268,13 @@ local _ClassConfig = {
                 type = "AA",
             },
             {
+                name = "Wake the Dead",
+                type = "AA",
+                cond = function(self, aaName)
+                    return mq.TLO.SpawnCount("corpse radius 100 los")() >= Config:GetSetting('WakeDeadCorpseCnt')
+                end,
+            },
+            {
                 name = "Companion's Fury",
                 type = "AA",
             },
@@ -1276,6 +1323,27 @@ local _ClassConfig = {
                 end,
             },
         },
+        ['PetHealing']      = {
+            {
+                name = "Mend Companion",
+                type = "AA",
+                cond = function(self, aaName, target)
+                    return (mq.TLO.Me.Pet.PctHPs() or 999) <= Config:GetSetting('BigHealPoint')
+                end,
+            },
+            {
+                name = "Companion's Fortification",
+                type = "AA",
+                cond = function(self, aaName, target)
+                    return (mq.TLO.Me.Pet.PctHPs() or 999) <= Config:GetSetting('BigHealPoint')
+                end,
+            },
+            {
+                name = "PetHealSpell",
+                type = "Spell",
+                load_cond = function(self) return Config:GetSetting('DoPetHealSpell') end,
+            },
+        },
         ['Downtime']        = {
             {
                 name = "Mortifier's Unity",
@@ -1287,6 +1355,20 @@ local _ClassConfig = {
             {
                 name = "SelfHPBuff",
                 type = "Spell",
+                active_cond = function(self, spell) return Casting.IHaveBuff(spell) end,
+                cond = function(self, spell) return Casting.SelfBuffCheck(spell) end,
+            },
+            {
+                name = "Dead Man Floating",
+                type = "AA",
+                load_cond = function(self) return Config:GetSettings('DoLevitate') and Casting.CanUseAA("Dead Man Floating") end,
+                active_cond = function(self, aaName) return Casting.IHaveBuff(aaName) end,
+                cond = function(self, aaName) return Casting.SelfBuffAACheck(aaName) end,
+            },
+            {
+                name = "Levitate",
+                type = "Spell",
+                load_cond = function(self) return Config:GetSettings('DoLevitate') and not Casting.CanUseAA("Dead Man Floating") end,
                 active_cond = function(self, spell) return Casting.IHaveBuff(spell) end,
                 cond = function(self, spell) return Casting.SelfBuffCheck(spell) end,
             },
@@ -1365,6 +1447,19 @@ local _ClassConfig = {
         },
     },
     ['Helpers']         = {
+        -- Check if any group member (excluding self) is at or below a given HP%.
+        -- Group.Member(0) is you; 1..N are your group members.
+        GroupMemberBelowHP = function(self, pct)
+            local count = mq.TLO.Group.Members() or 0
+            for i = 1, count do
+                local member = mq.TLO.Group.Member(i)
+                if member and member() and (member.PctHPs() or 100) <= pct then
+                    return true
+                end
+            end
+            return false
+        end,
+
         CancelLich = function(self)
             -- detspa means detremental spell affect
             -- spa is positive spell affect
@@ -1398,33 +1493,34 @@ local _ClassConfig = {
             name = "Default",
             -- cond = function(self) return true end, --Kept here for illustration, this line could be removed in this instance since we aren't using conditions.
             spells = {
-                { name = "PoisonNuke1", cond = function(self) return not Core.GetResolvedActionMapItem('PoisonNuke2') end, },
+                { name = "PetHealSpell", cond = function(self) return Config:GetSetting('DoPetHealSpell') end, },
+                { name = "PoisonNuke1",  cond = function(self) return not Core.GetResolvedActionMapItem('PoisonNuke2') end, },
                 { name = "PoisonNuke2", },
                 { name = "FireNuke", },
-                { name = "Lifetap",     cond = function(self) return Config:GetSetting('DoLifetap') end, },
-                { name = "CharmSpell",  cond = function(self) return Config:GetSetting('CharmOn') end, },
-                { name = "SnareDot",    cond = function(self) return Config:GetSetting('DoSnare') and not Casting.CanUseAA("Enchroaching Darkness") end, },
-                { name = "ScentDebuff", cond = function(self) return Config:GetSetting('DoScentDebuff') and not Casting.CanUseAA("Scent of Thule") end, },
-                { name = "LichSpell",   cond = function(self) return not Config:GetSetting('DoUnity') end, },
+                { name = "Lifetap",      cond = function(self) return Config:GetSetting('DoLifetap') end, },
+                { name = "CharmSpell",   cond = function(self) return Config:GetSetting('CharmOn') end, },
+                { name = "SnareDot",     cond = function(self) return Config:GetSetting('DoSnare') and not Casting.CanUseAA("Enchroaching Darkness") end, },
+                { name = "ScentDebuff",  cond = function(self) return Config:GetSetting('DoScentDebuff') and not Casting.CanUseAA("Scent of Thule") end, },
+                { name = "LichSpell",    cond = function(self) return not Config:GetSetting('DoUnity') end, },
                 { name = "SwarmPet", },
-                { name = "DurationTap", cond = function(self) return Config:GetSetting('DoDurationTap') end, },
-                { name = "DreadDot",    cond = function(self) return Config:GetSetting('DoDreadDot') > 1 end, },
-                { name = "VenomDot",    cond = function(self) return Config:GetSetting('DoVenomDot') > 1 end, },
-                { name = "HorrorDot",   cond = function(self) return Config:GetSetting('DoHorrorDot') > 1 end, },
-                { name = "ComboDot",    cond = function(self) return Config:GetSetting('DoComboDot') end, },
-                { name = "GroupLeech",  cond = function(self) return Config:GetSetting('DoGroupLeech') end, },
-                { name = "DichoDot",    cond = function(self) return Config:GetSetting('DoDichoDot') end, },
-                { name = "SearingDot",  cond = function(self) return Config:GetSetting('DoSearingDot') end, },
-                { name = "MoriDot",     cond = function(self) return Config:GetSetting('DoMoriDot') end, },
-                { name = "WoundDot",    cond = function(self) return Config:GetSetting('DoWoundDot') end, },
-                { name = "DecayDot",    cond = function(self) return Config:GetSetting('DoDecayDot') end, },
-                { name = "GripDot",     cond = function(self) return Config:GetSetting('DoGripDot') end, },
-                { name = "HazeDot",     cond = function(self) return Config:GetSetting('DoHazeDot') end, },
-                { name = "DreadDot2",   cond = function(self) return Config:GetSetting('DoDreadDot') > 2 end, },
-                { name = "VenomDot2",   cond = function(self) return Config:GetSetting('DoVenomDot') > 2 end, },
-                { name = "HorrorDot2",  cond = function(self) return Config:GetSetting('DoHorrorDot') > 2 end, },
+                { name = "DurationTap",  cond = function(self) return Config:GetSetting('DoDurationTap') end, },
+                { name = "DreadDot",     cond = function(self) return Config:GetSetting('DoDreadDot') > 1 end, },
+                { name = "VenomDot",     cond = function(self) return Config:GetSetting('DoVenomDot') > 1 end, },
+                { name = "HorrorDot",    cond = function(self) return Config:GetSetting('DoHorrorDot') > 1 end, },
+                { name = "ComboDot",     cond = function(self) return Config:GetSetting('DoComboDot') end, },
+                { name = "GroupLeech",   cond = function(self) return Config:GetSetting('DoGroupLeech') end, },
+                { name = "DichoDot",     cond = function(self) return Config:GetSetting('DoDichoDot') end, },
+                { name = "SearingDot",   cond = function(self) return Config:GetSetting('DoSearingDot') end, },
+                { name = "MoriDot",      cond = function(self) return Config:GetSetting('DoMoriDot') end, },
+                { name = "WoundDot",     cond = function(self) return Config:GetSetting('DoWoundDot') end, },
+                { name = "DecayDot",     cond = function(self) return Config:GetSetting('DoDecayDot') end, },
+                { name = "GripDot",      cond = function(self) return Config:GetSetting('DoGripDot') end, },
+                { name = "HazeDot",      cond = function(self) return Config:GetSetting('DoHazeDot') end, },
+                { name = "DreadDot2",    cond = function(self) return Config:GetSetting('DoDreadDot') > 2 end, },
+                { name = "VenomDot2",    cond = function(self) return Config:GetSetting('DoVenomDot') > 2 end, },
+                { name = "HorrorDot2",   cond = function(self) return Config:GetSetting('DoHorrorDot') > 2 end, },
                 { name = "ManaDrain", },
-                { name = "FleshBuff",   cond = function(self) return not Config:GetSetting('DoUnity') or not Casting.CanUseAA("Mortifier's Unity") end, },
+                { name = "FleshBuff",    cond = function(self) return not Config:GetSetting('DoUnity') or not Casting.CanUseAA("Mortifier's Unity") end, },
                 { name = "BestowBuff", },
                 { name = "PetBuff", },
             },
@@ -1455,6 +1551,27 @@ local _ClassConfig = {
             Min = 1,
             Max = 2,
             RequiresLoadoutChange = true,
+        },
+        ['DoPetHealSpell']    = {
+            DisplayName = "Pet Heal Spell",
+            Group = "Abilities",
+            Header = "Recovery",
+            Category = "General Healing",
+            Index = 101,
+            Tooltip = "Mem and cast your Pet Heal (Salve) spell. AA Pet Heals are always used in emergencies.",
+            Default = false,
+        },
+        ['PetHealPct']        = {
+            DisplayName = "Pet Heal Spell HP%",
+            Group = "Abilities",
+            Header = "Recovery",
+            Category = "Healing Thresholds",
+            Index = 101,
+            Tooltip = "Use your pet heal spell when your pet is at or below this HP percentage.",
+
+            Default = 60,
+            Min = 1,
+            Max = 99,
         },
         ['BattleRez']         = {
             DisplayName = "Battle Rez",
@@ -1531,6 +1648,7 @@ local _ClassConfig = {
             Tooltip = "Enable casting Lich spells.",
             RequiresLoadoutChange = true,
             Default = true,
+            Index = 102,
         },
         ['StopLichHP']        = {
             DisplayName = "Stop Lich HP",
@@ -1542,6 +1660,7 @@ local _ClassConfig = {
             Default = 25,
             Min = 1,
             Max = 99,
+            Index = 103,
         },
         ['StopLichMana']      = {
             DisplayName = "Stop Lich Mana",
@@ -1553,6 +1672,7 @@ local _ClassConfig = {
             Default = 100,
             Min = 1,
             Max = 101,
+            Index = 104,
         },
         ['StartLichMana']     = {
             DisplayName = "Start Lich Mana",
@@ -1564,6 +1684,17 @@ local _ClassConfig = {
             Default = 70,
             Min = 1,
             Max = 100,
+            Index = 105,
+        },
+        ['DoLevitate']        = {
+            DisplayName = "Do Levitate",
+            Group = "Abilities",
+            Header = "Buffs",
+            Category = "Self",
+            Tooltip = "Enable self-casting your Dead Man Floating spell.",
+            RequiresLoadoutChange = true,
+            Default = true,
+            Index = 106,
         },
         ['DoScentDebuff']     = {
             DisplayName = "Use Scent Debuff",
@@ -1673,7 +1804,7 @@ local _ClassConfig = {
             Header = "Damage",
             Category = "Over Time",
             Index = 106,
-            Tooltip = "Use your Group Leech dot line.",
+            Tooltip = "Use your Group Leech dot line. Only fires when a watched party member is below the light heal threshold.",
             RequiresLoadoutChange = true,
             Default = false,
         },
