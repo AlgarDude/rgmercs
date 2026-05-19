@@ -4194,8 +4194,8 @@ function Ui.RenderToastNotifications(states, lingerTime)
     for i = #states, 1, -1 do
         if not states[i].active then
             table.remove(states, i)
-        elseif states[i].from and (os.time() - states[i].receivedTime) > (lingerTime * 10) then
-            Logger.log_debug("Auto-dismissing toast from %s after %.1f seconds. Msg: %s", states[i].from, Globals.GetTimeSeconds() - states[i].receivedTime, states[i].message)
+        elseif (os.time() - states[i].receivedTime) > (lingerTime * 10) then
+            Logger.log_debug("Auto-dismissing toast from %s after %.1f seconds. Msg: %s", states[i].from or "Self", os.time() - states[i].receivedTime, states[i].message)
             table.remove(states, i)
         end
     end
@@ -4223,11 +4223,11 @@ function Ui.RenderToastNotifications(states, lingerTime)
         if not lines then
             local lns, maxW = toastLines(s.message, text_max_w)
             s._lines        = lns
-            local fromW     = s.from and ImGui.CalcTextSize(fromLabel) or 0
+            local fromW     = ImGui.CalcTextSize(fromLabel)
             s._toast_w      = math.max(maxW, fromW) + toast_pad_x * 2
             lines           = lns
         end
-        local fromH = s.from and from_extra_h or 0
+        local fromH = from_extra_h
         heights[i] = #lines * line_h + toast_pad_y * 2 + fromH
     end
 
@@ -4302,20 +4302,18 @@ function Ui.RenderToastNotifications(states, lingerTime)
                 -- from header + separator
                 local text_col = IM_COL32(255, 255, 255, iAlpha)
                 local text_y   = base_y + toast_pad_y
-                if state.from then
-                    local from_col = IM_COL32(220, 180, 100, iAlpha)
-                    draw_list:AddText(ImVec2(x + toast_pad_x, text_y), from_col, fromLabel)
-                    text_y = text_y + line_h + sep_gap
-                    local sep_col = IM_COL32(180, 180, 180, math.floor(alpha * 80))
-                    draw_list:AddLine(ImVec2(x + toast_pad_x, text_y),
-                        ImVec2(x + toast_w - toast_pad_x, text_y), sep_col, sep_h)
-                    text_y = text_y + sep_h + sep_gap
+                local from_col = IM_COL32(220, 180, 100, iAlpha)
+                draw_list:AddText(ImVec2(x + toast_pad_x, text_y), from_col, fromLabel)
+                text_y = text_y + line_h + sep_gap
+                local sep_col = IM_COL32(180, 180, 180, math.floor(alpha * 80))
+                draw_list:AddLine(ImVec2(x + toast_pad_x, text_y),
+                    ImVec2(x + toast_w - toast_pad_x, text_y), sep_col, sep_h)
+                text_y = text_y + sep_h + sep_gap
 
-                    local mx, my = ImGui.GetMousePos()
-                    if mx >= x and mx <= x + toast_w and my >= base_y and my <= base_y + toast_h then
-                        if ImGui.IsMouseClicked(0) then
-                            Comms.SendPeerDoCmd(state.peer, "/foreground")
-                        end
+                local mx, my = ImGui.GetMousePos()
+                if mx >= x and mx <= x + toast_w and my >= base_y and my <= base_y + toast_h then
+                    if ImGui.IsMouseClicked(0) then
+                        Comms.SendPeerDoCmd(state.peer, "/foreground")
                     end
                 end
 

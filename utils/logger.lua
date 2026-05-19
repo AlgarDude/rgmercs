@@ -114,6 +114,7 @@ local function log(logLevel, output, ...)
 			active = true,
 			timer = 0,
 			message = plainOutput,
+			receivedTime = os.time(),
 			color = logLevels[logLevel].color,
 		})
 
