@@ -302,15 +302,18 @@ function MapUI:RenderCanvas(canvasWidth, canvasHeight)
             local inside = isSpawnInsideSafeArea(spawn)
             local r, g, b = Ui.GetConColorBySpawn(spawn)
             local alpha = inside and 0.9 or 0.55
+            local cleanLower = (spawn.CleanName() or ""):lower()
+            local isChest = cleanLower:match("^a.*chest$") ~= nil and (spawn.Race() or "") == "Chest"
             local isNamed = Modules:ExecModule("Named", "IsNamed", spawn)
-            if isNamed then
+            if isChest or isNamed then
+                local starColor = isChest and ImGui.GetColorU32(ImVec4(1.0, 0.84, 0.0, 1.0)) or allowColor
                 local starPts = {}
                 for k = 0, 9 do
                     local angle = -math.pi / 2 + k * math.pi / 5
-                    local radius = (k % 2 == 0) and 4 or 1.6
+                    local radius = (k % 2 == 0) and 8 or 3.2
                     table.insert(starPts, ImVec2(sx + math.cos(angle) * radius, sy + math.sin(angle) * radius))
                 end
-                drawList:AddConvexPolyFilled(starPts, allowColor)
+                drawList:AddConvexPolyFilled(starPts, starColor)
             else
                 drawList:AddCircleFilled(ImVec2(sx, sy), 3, ImGui.GetColorU32(ImVec4(r, g, b, alpha)), 10)
             end
