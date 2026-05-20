@@ -99,7 +99,7 @@ end
 Ui.LoadThemez = function()
     local themez, err = loadfile(mq.configDir .. '/MyThemez.lua')
     if err or not themez then
-        Logger.log_warn("\ayNo Themez Lua found.")
+        Logger.log_debug("\ayNo Themez Lua found.")
     else
         Ui.Themez = themez()
 
