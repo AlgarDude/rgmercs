@@ -233,6 +233,14 @@ function MapUI:RenderCanvas(canvasWidth, canvasHeight)
     end
 
     local mySx, mySy = worldToScreen(-(me.X() or 0), me.Y() or 0)
+
+    local target = mq.TLO.Target
+    if (target.ID() or 0) > 0 and not target.Dead() then
+        local tSx, tSy = worldToScreen(-(target.X() or 0), target.Y() or 0)
+        drawList:AddLine(ImVec2(mySx, mySy), ImVec2(tSx, tSy),
+            ImGui.GetColorU32(ImVec4(1.0, 0.4, 0.4, 0.75)), 1.5)
+    end
+
     local heading = math.rad(me.Heading.Degrees() or 0)
     local sinH, cosH = math.sin(heading), math.cos(heading)
     local tipX, tipY = mySx + sinH * 10, mySy - cosH * 10
