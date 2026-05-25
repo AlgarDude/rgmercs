@@ -149,6 +149,7 @@ local _ClassConfig = {
             "Eriki's Psalm of Power",    -- Level 69, OoW
             "Yelhun's Mystic Call",      -- Level 68, OoW
             "Echo of the Trusik",        -- Level 65, GoD
+            "Call of the Muse",          -- Level 65, LDoN
             "Rizlona's Call of Flame",   -- Level 64, PoP (overhaste/spell damage)
         },
         ['OverhasteSong'] = {            -- before effects are combined in aria
@@ -1412,7 +1413,7 @@ local _ClassConfig = {
                 type = "AA",
                 load_cond = function(self) return Config:GetSetting('UseFading') and Casting.CanUseAA('Fading Memories') end,
                 cond = function(self, aaName)
-                    return self.Helpers.UnwantedAggroCheck(self)
+                    return mq.TLO.Me.PctHPs() <= Config:GetSetting('EmergencyStart') and self.Helpers.UnwantedAggroCheck(self)
                     --I wanted to use XTAggroCount here but it doesn't include your current target in the number it returns and I don't see a good workaround. For Loop it is.
                 end,
             },
