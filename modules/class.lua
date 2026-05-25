@@ -517,7 +517,7 @@ function Module:RenderRotationWithToggle(r, rotationTable)
     local enabledRotationEntries = Config:GetSetting('EnabledRotationEntries') or {}
     local rotationDisabled = enabledRotations[r.name] == false
     local rotationIcon = rotationDisabled and Icons.MD_ERROR or (r.lastCondCheck and Icons.MD_CHECK or Icons.MD_CLOSE)
-    local headerText = string.format("[%s] %s", rotationIcon, rotationName)
+    local headerText = string.format("[%s] %s###Header_%s", rotationIcon, rotationName, rotationName)
     local toggleOffset = 60  -- how far left to move from the far right of the window to render the toggle button
     local timingOffset = 160 -- how far left to move from the far right of the window to render the toggle button
 
