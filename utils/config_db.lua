@@ -274,7 +274,9 @@ local function luaToString(v, depth)
                 else
                     keyStr = "[" .. luaToString(k, depth + 1) .. "]"
                 end
-                table.insert(parts, indent .. keyStr .. " = " .. luaToString(val, depth + 1))
+                if keyStr ~= "nil" then
+                    table.insert(parts, indent .. keyStr .. " = " .. luaToString(val, depth + 1))
+                end
             end
         end
         if #parts == 0 then return "{}" end
@@ -299,7 +301,7 @@ local function serialize(v, vtype)
 end
 
 -- Deserialize a stored text value back to a Lua value.
-local function deserialize(text, vtype)
+local function deserialize(key, text, vtype)
     if text == nil then return nil end
     if vtype == "bool" then
         return text == "true" or text == "1"
@@ -308,7 +310,7 @@ local function deserialize(text, vtype)
     elseif vtype == "lua" then
         local fn, err = load("return " .. text)
         if fn then return fn() end
-        Logger.log_error("\arDB: failed to deserialize lua value: %s", err)
+        Logger.log_error("\arDB: failed to deserialize lua value for key '%s': %s\ntext: \'%s\'", key, err, text)
         return nil
     else
         return text
@@ -1025,7 +1027,7 @@ function DB:_fetchValue(serverName, charName, charClass, module, key)
     stmt:bind(5, key)
     local rows = collectRows(stmt)
     if not rows[1] then return nil end
-    local value = deserialize(rows[1].value, rows[1].value_type)
+    local value = deserialize(key, rows[1].value, rows[1].value_type)
     self:_cacheSet(serverName, charName, charClass, module, key, value)
     return value
 end
@@ -1046,7 +1048,7 @@ function DB:_fetchModule(serverName, charName, charClass, module)
     stmt:bind(3, charClass)
     stmt:bind(4, module)
     for row in stmt:nrows() do
-        self:_cacheSet(serverName, charName, charClass, module, row.key, deserialize(row.value, row.value_type))
+        self:_cacheSet(serverName, charName, charClass, module, row.key, deserialize(row.key, row.value, row.value_type))
     end
     stmt:finalize()
 end
@@ -1066,7 +1068,7 @@ function DB:_fetchServerValue(serverName, module, key)
     stmt:bind(3, key)
     local rows = collectRows(stmt)
     if not rows[1] then return nil end
-    local value = deserialize(rows[1].value, rows[1].value_type)
+    local value = deserialize(key, rows[1].value, rows[1].value_type)
     self:_serverCacheSet(serverName, module, key, value)
     return value
 end
@@ -1084,7 +1086,7 @@ function DB:_fetchServerModule(serverName, module)
     stmt:bind(1, serverName)
     stmt:bind(2, module)
     for row in stmt:nrows() do
-        self:_serverCacheSet(serverName, module, row.key, deserialize(row.value, row.value_type))
+        self:_serverCacheSet(serverName, module, row.key, deserialize(row.key, row.value, row.value_type))
     end
     stmt:finalize()
 end
