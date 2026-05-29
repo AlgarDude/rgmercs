@@ -1,23 +1,23 @@
 -- Sample Pull Class Module
 local mq        = require('mq')
-local Config    = require('utils.config')
-local Globals   = require('utils.globals')
-local Math      = require('utils.math')
-local Combat    = require("utils.combat")
-local Casting   = require("utils.casting")
-local Core      = require("utils.core")
-local Movement  = require("utils.movement")
-local Targeting = require("utils.targeting")
-local Ui        = require("utils.ui")
-local Comms     = require("utils.comms")
-local Tables    = require("utils.tables")
-local Modules   = require("utils.modules")
-local Strings   = require("utils.strings")
-local Logger    = require("utils.logger")
-local Events    = require("utils.events")
+local Icons     = require('mq.ICONS')
 local Set       = require("mq.Set")
 local Base      = require("modules.base")
-local Icons     = require('mq.ICONS')
+local Casting   = require("utils.casting")
+local Combat    = require("utils.combat")
+local Comms     = require("utils.comms")
+local Config    = require('utils.config')
+local Core      = require("utils.core")
+local Events    = require("utils.events")
+local Globals   = require('utils.globals')
+local Logger    = require("utils.logger")
+local Math      = require('utils.math')
+local Modules   = require("utils.modules")
+local Movement  = require("utils.movement")
+local Strings   = require("utils.strings")
+local Tables    = require("utils.tables")
+local Targeting = require("utils.targeting")
+local Ui        = require("utils.ui")
 
 local Module    = { _version = '0.1a', _name = "Pull", _author = 'Derple', }
 Module.__index  = Module
@@ -239,7 +239,7 @@ Module.DefaultConfig                   = {
         Tooltip = "",
         Type = "Custom",
         Default = {},
-        OnChange = function() Modules.ModuleList["Pull"]:FlagPullListUpdated() end,
+        OnChange = function() Modules:ExecModule("Pull", "FlagPullListUpdated") end,
         FAQ = "I only want to attack a specific set of mobs in my pull mode, how do I set this up?",
         Answer = "In the Pull Allow List (found on your Pull module tab), you will find a button to add your target to that list.\n\n" ..
             "Alternatively, you can use /rgl pullallow <mobname> or /rgl pullallowrm <mobname> or <List#> to adjust this list from the command line.\n\n" ..
@@ -251,7 +251,7 @@ Module.DefaultConfig                   = {
         Tooltip = "",
         Type = "Custom",
         Default = {},
-        OnChange = function() Modules.ModuleList["Pull"]:FlagPullListUpdated() end,
+        OnChange = function() Modules:ExecModule("Pull", "FlagPullListUpdated") end,
         FAQ = "I want to avoid pulling a specific mob (or mobs) in my pull mode, can I do that?",
         Answer = "In the Pull Deny List (found on your Pull module tab), you will find a button to add your target to that list.\n\n" ..
             "Alternatively, you can use /rgl pulldeny <mobname> or /rgl pulldenyrm <mobname> or <List#> to adjust this list from the command line.\n\n" ..
@@ -264,7 +264,7 @@ Module.DefaultConfig                   = {
         Type = "Custom",
         Default = {},
         Scope = "server",
-        OnChange = function() Modules.ModuleList["Pull"]:FlagPullListUpdated() end,
+        OnChange = function() Modules:ExecModule("Pull", "FlagPullListUpdated") end,
     },
     ['PullDenyListShared']                     = {
         DisplayName = "Shared Deny List",
@@ -273,7 +273,7 @@ Module.DefaultConfig                   = {
         Type = "Custom",
         Default = {},
         Scope = "server",
-        OnChange = function() Modules.ModuleList["Pull"]:FlagPullListUpdated() end,
+        OnChange = function() Modules:ExecModule("Pull", "FlagPullListUpdated") end,
     },
     ['UseSharedPullLists']                     = {
         DisplayName = "Use Shared Pull Lists",
@@ -281,7 +281,7 @@ Module.DefaultConfig                   = {
         Tooltip = "",
         Type = "Custom",
         Default = false,
-        OnChange = function() Modules.ModuleList["Pull"]:FlagPullListUpdated() end,
+        OnChange = function() Modules:ExecModule("Pull", "FlagPullListUpdated") end,
     },
     ['PullSafeZones']                          = {
         DisplayName = "SafeZones",
@@ -873,13 +873,14 @@ end
 
 function Module:RenderMobList(displayName, settingName)
     if ImGui.CollapsingHeader(string.format("Pull %s", displayName)) then
-        if mq.TLO.Target() and Targeting.TargetIsType("NPC") then
-            ImGui.PushID("##_small_btn_allow_target_" .. settingName)
-            if ImGui.SmallButton(string.format("Add Target To %s", displayName)) then
-                self:AddMobToList(settingName, mq.TLO.Target.CleanName())
-            end
-            ImGui.PopID()
+        local invalidTarget = not (mq.TLO.Target() and Targeting.TargetIsType("NPC"))
+        ImGui.BeginDisabled(invalidTarget)
+        ImGui.PushID("##_small_btn_allow_target_" .. settingName)
+        if ImGui.SmallButton(invalidTarget and "Select an NPC to Add" or string.format("Add Target To %s", displayName)) then
+            self:AddMobToList(settingName, mq.TLO.Target.CleanName())
         end
+        ImGui.PopID()
+        ImGui.EndDisabled()
 
         if ImGui.BeginTable("settingName", 4, bit32.bor(ImGuiTableFlags.Borders)) then
             ImGui.TableSetupColumn('Id', (ImGuiTableColumnFlags.WidthFixed), 40.0)

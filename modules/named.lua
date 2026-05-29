@@ -1,23 +1,24 @@
 -- Sample Named Class Module
 local mq           = require('mq')
+local Icons        = require('mq.ICONS')
+local Base         = require("modules.base")
 local Config       = require('utils.config')
 local Core         = require("utils.core")
 local Globals      = require("utils.globals")
 local Logger       = require("utils.logger")
 local Modules      = require("utils.modules")
+local NamedDefault = require("namedlist.named_default")
+local NamedEQMight = require("namedlist.named_eqmight")
 local Strings      = require("utils.strings")
 local Targeting    = require("utils.targeting")
 local Ui           = require("utils.ui")
-local Icons        = require('mq.ICONS')
-local NamedDefault = require("namedlist.named_default")
-local NamedEQMight = require("namedlist.named_eqmight")
-local Base         = require("modules.base")
 
 local Module       = { _version = '1.1', _name = "Named", _author = 'Derple, Algar, Grimmier', }
 Module.__index     = Module
 setmetatable(Module, { __index = Base, })
 
 Module.CachedNamedList = {}
+Module.ShowDownNamed = false
 Module.CommandHandlers = {}
 
 Module.NamedList       = {}
@@ -72,10 +73,7 @@ Module.DefaultConfig = {
         Type = "Custom",
         Default = {},
         Scope = "server",
-        OnChange = function()
-            Modules.ModuleList["Named"].LastZoneID = -1
-            Modules.ModuleList["Named"]:RefreshAutoTargetProfile()
-        end,
+        OnChange = function() Modules:ExecModule("Named", "InvalidateNamedList") end,
         FAQ = "Can I add my own named NPCs and immunity flags to RGMercs?",
         Answer = "Open the Named module tab and add your current target via the Custom Named List editor. " ..
             "Each row's Flags combo toggles Named, elemental immunity flags (Fire/Cold/Magic/Poison/Disease), and status immunity flags (Slow/Snare/Stun). " ..
@@ -118,7 +116,7 @@ end
 
 function Module:Render()
     Base.Render(self)
-    Ui.RenderZoneNamed()
+    self:RenderZoneNamed()
     ImGui.NewLine()
     self:RenderCustomNamedList()
 end
@@ -267,10 +265,6 @@ function Module:CheckZoneNamed()
     self.CachedNamedList = tmpTbl
 end
 
-function Module:GetNamedList()
-    return self.CachedNamedList
-end
-
 --- Checks if the given spawn is a named entity.
 --- @param spawn MQSpawn The spawn object to check.
 --- @return boolean True if the spawn is named, false otherwise.
@@ -357,6 +351,13 @@ function Module:GetImmuneFlags(cleanName)
     return elementalImmunities, statusImmunities
 end
 
+--- Invalidates the cached named list (forcing a rebuild next access) and refreshes the
+--- auto-target immunity profile immediately. Called from OnChange when the list or UseImmuneData changes.
+function Module:InvalidateNamedList()
+    self.LastZoneID = -1
+    self:RefreshAutoTargetProfile()
+end
+
 --- Refreshes Globals.AutoTargetElementalImmunities / AutoTargetStatusImmunities against the current auto-target.
 --- Called from OnChange callbacks when registry contents or UseImmuneData change mid-combat,
 --- so the immunity gate reflects the new flags without requiring a target re-acquisition.
@@ -366,15 +367,79 @@ function Module:RefreshAutoTargetProfile()
     Globals.AutoTargetElementalImmunities, Globals.AutoTargetStatusImmunities = self:GetImmuneFlags(cleanName)
 end
 
+function Module:RenderZoneNamed()
+    self.ShowDownNamed, _ = Ui.RenderOptionToggle("ShowDown", "Show Downed Named", self.ShowDownNamed)
+
+    if ImGui.BeginTable("Zone Named", 5, bit32.bor(ImGuiTableFlags.Borders, ImGuiTableFlags.Resizable)) then
+        ImGui.TableSetupColumn('Name', (ImGuiTableColumnFlags.WidthFixed), 250.0)
+        ImGui.TableSetupColumn('Up', (ImGuiTableColumnFlags.WidthFixed), 20.0)
+        ImGui.TableSetupColumn('Distance', (ImGuiTableColumnFlags.WidthFixed), 60.0)
+        ImGui.TableSetupColumn('Loc', (ImGuiTableColumnFlags.WidthFixed), 160.0)
+        ImGui.TableSetupColumn('Immunities', (ImGuiTableColumnFlags.WidthStretch), 1.0)
+        ImGui.TableHeadersRow()
+
+        for _, named in ipairs(self.CachedNamedList) do
+            local namedSpawn = named.Spawn
+            local spawnExists = namedSpawn and namedSpawn()
+
+            if spawnExists and namedSpawn.PctHPs() > 0 then
+                ImGui.TableNextColumn()
+                local _, clicked = ImGui.Selectable(string.format("%s##%d", named.Name, namedSpawn.ID()), false)
+                if clicked then
+                    namedSpawn.DoTarget()
+                end
+                ImGui.TableNextColumn()
+                ImGui.PushStyleColor(ImGuiCol.Text, Globals.Constants.Colors.ConditionPassColor)
+                Ui.RenderText(Icons.FA_SMILE_O)
+                ImGui.PopStyleColor()
+                ImGui.TableNextColumn()
+                Ui.RenderText(tostring(math.ceil(named.Distance)))
+                ImGui.TableNextColumn()
+                Ui.NavEnabledLoc(named.Loc)
+                ImGui.TableNextColumn()
+                if named.Immunities and named.Immunities ~= "" then
+                    local availW = ImGui.GetContentRegionAvail()
+                    local textW = ImGui.CalcTextSize(named.Immunities)
+                    Ui.RenderText(named.Immunities)
+                    if textW > availW and ImGui.IsItemHovered() then
+                        ImGui.SetTooltip(named.Immunities)
+                    end
+                end
+            elseif spawnExists or self.ShowDownNamed then
+                ImGui.TableNextColumn()
+                Ui.RenderText(named.Name)
+                ImGui.TableNextColumn()
+                ImGui.PushStyleColor(ImGuiCol.Text, Globals.Constants.Colors.ConditionFailColor)
+                Ui.RenderText(Icons.FA_FROWN_O)
+                ImGui.PopStyleColor()
+                ImGui.TableNextColumn()
+                ImGui.TableNextColumn()
+                ImGui.TableNextColumn()
+                if named.Immunities and named.Immunities ~= "" then
+                    local availW = ImGui.GetContentRegionAvail()
+                    local textW = ImGui.CalcTextSize(named.Immunities)
+                    Ui.RenderText(named.Immunities)
+                    if textW > availW and ImGui.IsItemHovered() then
+                        ImGui.SetTooltip(named.Immunities)
+                    end
+                end
+            end
+        end
+
+        ImGui.EndTable()
+    end
+end
+
 function Module:RenderCustomNamedList()
     if ImGui.CollapsingHeader("Custom Named List") then
-        if mq.TLO.Target() and Targeting.TargetIsType("NPC") then
-            ImGui.PushID("##_small_btn_add_target_custom_named")
-            if ImGui.SmallButton("Add Target To List") then
-                self:AddNamedToCustomList(mq.TLO.Target.CleanName())
-            end
-            ImGui.PopID()
+        local invalidTarget = not (mq.TLO.Target() and Targeting.TargetIsType("NPC"))
+        ImGui.BeginDisabled(invalidTarget)
+        ImGui.PushID("##_small_btn_add_target_custom_named")
+        if ImGui.SmallButton(invalidTarget and "Select an NPC to Add" or "Add Target To List") then
+            self:AddNamedToCustomList(mq.TLO.Target.CleanName())
         end
+        ImGui.PopID()
+        ImGui.EndDisabled()
 
         if ImGui.BeginTable("CustomNamedList", 3, bit32.bor(ImGuiTableFlags.Borders, ImGuiTableFlags.Resizable)) then
             ImGui.TableSetupColumn('Name', ImGuiTableColumnFlags.WidthFixed, 130.0)

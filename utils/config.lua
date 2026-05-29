@@ -1,12 +1,12 @@
 local mq       = require('mq')
-local Modules  = require("utils.modules")
-local Tables   = require("utils.tables")
-local Strings  = require("utils.strings")
-local Logger   = require("utils.logger")
-local Comms    = require("utils.comms")
 local Set      = require("mq.Set")
+local Comms    = require("utils.comms")
 local Files    = require("utils.files")
 local Globals  = require("utils.globals")
+local Logger   = require("utils.logger")
+local Modules  = require("utils.modules")
+local Strings  = require("utils.strings")
+local Tables   = require("utils.tables")
 
 local Config   = {
     _version    = '2.1.4',
@@ -918,10 +918,7 @@ Config.DefaultConfig                                     = {
             "Refer to the Named List FAQs for more details.",
         Default = true,
         ConfigType = "Advanced",
-        OnChange = function()
-            Modules.ModuleList["Named"].LastZoneID = -1
-            Modules.ModuleList["Named"]:RefreshAutoTargetProfile()
-        end,
+        OnChange = function() Modules:ExecModule("Named", "InvalidateNamedList") end,
         FAQ = "What does the Use Immune Data setting do?",
         Answer = "The RGMercs named list *may* contain known immunity data for nameds - elemental (Fire/Cold/Magic/Poison/Disease) or status (Slow/Snare/Stun). " ..
             "When this setting is enabled, RGMercs will use that data to automatically avoid casting spells those mobs are immune to.\n\n" ..
