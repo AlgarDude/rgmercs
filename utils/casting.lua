@@ -2155,7 +2155,7 @@ function Casting.RunCastLoop(opts)
     local bAllowDead = opts.bAllowDead
     local spellRange = opts.spellRange
     local castTime = opts.castTime or 0
-    local retryCount = opts.retryCount or Config:GetSetting('CastRetryCountBeta')
+    local retryCount = opts.retryCount or Config:GetSetting('CastRetryCount')
 
     -- bard firing a 0-cast action mid-song: fire-and-return so we don't wait on or clip the in-progress song.
     if castTime == 0 and (mq.TLO.Window("CastingWindow").Open() or mq.TLO.Me.Casting()) then
