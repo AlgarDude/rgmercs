@@ -371,11 +371,11 @@ return {
         ['ForHonor'] = {           -- Hate Over Time with small absorb recourse
             "Challenge for Honor", -- Level 71
         },
-        -- ['FlameLure'] = { -- eqm port of wizard fire lures, not quite sure what i'm going to do with these yet
-        --     "Lure of Ro",    -- Level 67
-        --     "Lure of Flame", -- Level 62
-        --     "Lure of Fire",  -- Level 55 EQM Custom
-        -- },
+        ['FlameLure'] = {          -- eqm port of wizard fire lures, not quite sure what i'm going to do with these yet
+            "Lure of Ro",          -- Level 67
+            "Lure of Flame",       -- Level 62
+            "Lure of Fire",        -- Level 55 EQM Custom
+        },
     },
     ['AASets']            = {
         ['Disruption'] = {
@@ -405,6 +405,7 @@ return {
                 { name = "CureCurse",       cond = function(self) return Config:GetSetting('KeepCurseMemmed') end, },
                 { name = "PurityCure",      cond = function(self) return Config:GetSetting('KeepPurityMemmed') end, },
                 { name = "CureCorrupt",     cond = function(self) return Config:GetSetting('KeepCorruptMemmed') end, },
+                { name = "FlameLure",       cond = function(self) return Config:GetSetting('DoFlameLure') end, },
                 { name = "UndeadNuke",      cond = function(self) return Config:GetSetting('DoUndeadNuke') end, },
                 { name = "QuickUndeadNuke", cond = function(self) return Config:GetSetting('DoQuickUndeadNuke') end, },
                 { name = "WardProc", },
@@ -873,12 +874,9 @@ return {
             },
         },
         ['HateTools(AggroTarget)'] = {
-            { --more valuable on laz because we have less hate tools and no other hatelist + 1 abilities
+            {
                 name = "Taunt",
                 type = "Ability",
-                cond = function(self, abilityName, target)
-                    return Targeting.GetTargetDistance(target) < 30
-                end,
             },
             {
                 name = "Xeno's Faceguard",
@@ -906,11 +904,11 @@ return {
             },
         },
         ['HateTools(AutoTarget)'] = {
-            { --more valuable on laz because we have less hate tools and no other hatelist + 1 abilities
+            {
                 name = "Taunt",
                 type = "Ability",
                 cond = function(self, abilityName, target)
-                    return Targeting.LostAutoTargetAggro() and Targeting.GetTargetDistance(target) < 30
+                    return Targeting.LostAutoTargetAggro()
                 end,
             },
             {
@@ -1117,6 +1115,14 @@ return {
                 load_cond = function(self) return Config:GetSetting('DoUndeadNuke') end,
                 cond = function(self, aaName, target)
                     return Targeting.TargetBodyIs(target, "Undead")
+                end,
+            },
+            {
+                name = "FlameLure",
+                type = "Spell",
+                load_cond = function(self) return Config:GetSetting('DoFlameLure') end,
+                cond = function(self, aaName, target)
+                    return Casting.OkayToNuke(true)
                 end,
             },
             {
@@ -1490,6 +1496,16 @@ return {
             Tooltip = "Use the quick undead nuke line (which includes a potential snare and ac debuff trigger).",
             RequiresLoadoutChange = true,
             Default = true,
+        },
+        ['DoFlameLure']       = {
+            DisplayName = "Do FlameLure Nuke",
+            Group = "Abilities",
+            Header = "Damage",
+            Category = "Direct",
+            Index = 104,
+            Tooltip = "Use the fire lure nuke line.",
+            RequiresLoadoutChange = true,
+            Default = false,
         },
         ['DoValorousRage']    = {
             DisplayName = "Valorous Rage",
