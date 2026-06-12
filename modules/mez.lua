@@ -392,8 +392,8 @@ function Module:FallbackMezAbilities()
     end
     if Core.MyClassIs("ENC") then
         return {
-            { type = "Spell", name = "TwinCastMez",     cond = function() return (Config:GetSetting('TwincastMez') or 0) > 1 end, },
-            { type = "Spell", name = "MezSpell",        cond = function() return (Config:GetSetting('TwincastMez') or 0) == 1 end, },
+            { type = "Spell", name = "TwinCastMez",     cond = function() return (Config:GetSetting('TwincastMez', true) or 0) > 1 end, },
+            { type = "Spell", name = "MezSpell",        cond = function() return (Config:GetSetting('TwincastMez', true) or 0) == 1 end, },
             { type = "Spell", name = "MezAESpell", },
             { type = "AA",    name = "Beam of Slumber", cond = function() return Config:GetSetting('DoAAMez') end, },
         }
@@ -671,6 +671,7 @@ function Module:UpdateMezList()
 
         if Config:GetSetting('AutoLevelRange') and mezSpell and mezSpell() then
             minLevel = 0
+            ---@diagnostic disable-next-line: undefined-field
             maxLevel = mezSpell.MaxLevel()
         end
         local searchString = string.format("%s radius %d zradius %d range %d %d %s", searchType,
