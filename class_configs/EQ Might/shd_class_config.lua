@@ -10,6 +10,8 @@ local Logger       = require("utils.logger")
 local Targeting    = require("utils.targeting")
 local Ui           = require("utils.ui")
 
+local Colors       = Globals.Constants.Colors
+
 --todo: add a LOT of tooltips or scrap them entirely. Hopefully the former.
 local Tooltips     = {
     Mantle              = "Spell Line: Melee Absorb Proc",
@@ -584,7 +586,14 @@ local _ClassConfig = {
                 load_cond = function(self) return Config:GetSetting('ProcChoice') == 1 end,
                 active_cond = function(self, spell) return Casting.IHaveBuff(spell) end,
                 cond = function(self, spell)
-                    return Casting.SelfBuffCheck(spell)
+                    local selfBuffCheck, reason = Casting.SelfBuffCheck(spell)
+                    Core.SetSetRotationEntryTooltip({
+                        { text = "Self Buff Check: ",     color = Colors.White,                                           padAfter = 4, },
+                        { text = tostring(selfBuffCheck), color = selfBuffCheck and Colors.LightGreen or Colors.LightRed, sameLine = true, padAfter = 4, },
+                        not selfBuffCheck and
+                        { text = " (" .. reason .. ")", color = Colors.LightRed, sameLine = true, } or nil,
+                    })
+                    return selfBuffCheck
                 end,
             },
             {
@@ -594,7 +603,14 @@ local _ClassConfig = {
                 load_cond = function(self) return Config:GetSetting('ProcChoice') == 2 end,
                 active_cond = function(self, spell) return Casting.IHaveBuff(spell) end,
                 cond = function(self, spell)
-                    return Casting.SelfBuffCheck(spell)
+                    local selfBuffCheck, reason = Casting.SelfBuffCheck(spell)
+                    Core.SetSetRotationEntryTooltip({
+                        { text = "Self Buff Check: ",     color = Colors.White,                                           padAfter = 4, },
+                        { text = tostring(selfBuffCheck), color = selfBuffCheck and Colors.LightGreen or Colors.LightRed, sameLine = true, padAfter = 4, },
+                        not selfBuffCheck and
+                        { text = " (" .. reason .. ")", color = Colors.LightRed, sameLine = true, } or nil,
+                    })
+                    return selfBuffCheck
                 end,
             },
             {
@@ -603,8 +619,16 @@ local _ClassConfig = {
                 tooltip = Tooltips.CloakHP,
                 active_cond = function(self, spell) return Casting.IHaveBuff(spell) end,
                 cond = function(self, spell)
-                    return Casting.SelfBuffCheck(spell)
+                    local selfBuffCheck, reason = Casting.SelfBuffCheck(spell)
+                    Core.SetSetRotationEntryTooltip({
+                        { text = "Self Buff Check: ",     color = Colors.White,                                           padAfter = 4, },
+                        { text = tostring(selfBuffCheck), color = selfBuffCheck and Colors.LightGreen or Colors.LightRed, sameLine = true, padAfter = 4, },
+                        not selfBuffCheck and
+                        { text = " (" .. reason .. ")", color = Colors.LightRed, sameLine = true, } or nil,
+                    })
+                    return selfBuffCheck
                 end,
+
             },
             {
                 name = "SelfDS",
@@ -612,7 +636,14 @@ local _ClassConfig = {
                 tooltip = Tooltips.SelfDS,
                 active_cond = function(self, spell) return Casting.IHaveBuff(spell) end,
                 cond = function(self, spell)
-                    return Casting.SelfBuffCheck(spell)
+                    local selfBuffCheck, reason = Casting.SelfBuffCheck(spell)
+                    Core.SetSetRotationEntryTooltip({
+                        { text = "Self Buff Check: ",     color = Colors.White,                                           padAfter = 4, },
+                        { text = tostring(selfBuffCheck), color = selfBuffCheck and Colors.LightGreen or Colors.LightRed, sameLine = true, padAfter = 4, },
+                        not selfBuffCheck and
+                        { text = " (" .. reason .. ")", color = Colors.LightRed, sameLine = true, } or nil,
+                    })
+                    return selfBuffCheck
                 end,
             },
             {
@@ -622,7 +653,14 @@ local _ClassConfig = {
                 load_cond = function(self) return Config:GetSetting("DoCallBuff") end,
                 active_cond = function(self, spell) return Casting.IHaveBuff(spell) end,
                 cond = function(self, spell)
-                    return Casting.SelfBuffCheck(spell)
+                    local selfBuffCheck, reason = Casting.SelfBuffCheck(spell)
+                    Core.SetSetRotationEntryTooltip({
+                        { text = "Self Buff Check: ",     color = Colors.White,                                           padAfter = 4, },
+                        { text = tostring(selfBuffCheck), color = selfBuffCheck and Colors.LightGreen or Colors.LightRed, sameLine = true, padAfter = 4, },
+                        not selfBuffCheck and
+                        { text = " (" .. reason .. ")", color = Colors.LightRed, sameLine = true, } or nil,
+                    })
+                    return selfBuffCheck
                 end,
             },
             --You'll notice my use of TotalSeconds, this is to keep as close to 100% uptime as possible on these buffs, rebuffing early to decrease the chance of them falling off in combat
@@ -634,7 +672,22 @@ local _ClassConfig = {
                 tooltip = Tooltips.Skin,
                 active_cond = function(self, spell) return Casting.IHaveBuff(spell) end,
                 cond = function(self, spell)
-                    return spell.RankName.Stacks() and (mq.TLO.Me.Buff(spell).Duration.TotalSeconds() or 0) < 60
+                    if not spell() then
+                        Core.SetSetRotationEntryTooltip({
+                            { text = "Spell data not found.", color = Colors.LightRed, },
+                        })
+                        return false
+                    end
+
+                    local stacksCheck = spell.RankName.Stacks()
+                    local durationCheck = (mq.TLO.Me.Buff(spell).Duration.TotalSeconds() or 0) < 60
+                    Core.SetSetRotationEntryTooltip({
+                        { text = "Stacks: ",              color = Colors.White,                                           padAfter = 4, },
+                        { text = tostring(stacksCheck),   color = stacksCheck and Colors.LightGreen or Colors.LightRed,   sameLine = true, padAfter = 4, },
+                        { text = "Duration < 60: ",       color = Colors.White,                                           padAfter = 4, },
+                        { text = tostring(durationCheck), color = durationCheck and Colors.LightGreen or Colors.LightRed, sameLine = true, padAfter = 4, },
+                    })
+                    return stacksCheck and durationCheck
                 end,
             },
             {
@@ -644,7 +697,14 @@ local _ClassConfig = {
                 load_cond = function(self) return Casting.CanUseAA("Voice of Thule") and Config:GetSetting('DoHateBuff') end,
                 active_cond = function(self, aaName) return Casting.IHaveBuff(mq.TLO.Me.AltAbility(aaName).Spell.ID()) end,
                 cond = function(self, aaName)
-                    return Casting.SelfBuffAACheck(aaName)
+                    local aaCheck, reason = Casting.SelfBuffAACheck(aaName)
+                    Core.SetSetRotationEntryTooltip({
+                        { text = "Self Buff Check: ", color = Colors.White,                                     padAfter = 4, },
+                        { text = tostring(aaCheck),   color = aaCheck and Colors.LightGreen or Colors.LightRed, sameLine = true, padAfter = 4, },
+                        not aaCheck and
+                        { text = " (" .. reason .. ")", color = Colors.LightRed, sameLine = true, } or nil,
+                    })
+                    return aaCheck
                 end,
             },
             {
@@ -654,8 +714,17 @@ local _ClassConfig = {
                 load_cond = function(self) return not Casting.CanUseAA("Voice of Thule") and Config:GetSetting('DoHateBuff') end,
                 active_cond = function(self, spell) return Casting.IHaveBuff(spell) end,
                 cond = function(self, spell)
-                    if not Casting.CastReady(spell) then return false end
-                    return Casting.SelfBuffCheck(spell)
+                    local castReady = Casting.CastReady(spell)
+                    local selfBuffCheck, reason = Casting.SelfBuffCheck(spell)
+                    Core.SetSetRotationEntryTooltip({
+                        { text = "Cast Ready: ",          color = Colors.White,                                           padAfter = 4, },
+                        { text = tostring(castReady),     color = castReady and Colors.LightGreen or Colors.LightRed,     sameLine = true, padAfter = 4, },
+                        { text = "Self Buff Check: ",     color = Colors.White,                                           padAfter = 4, },
+                        { text = tostring(selfBuffCheck), color = selfBuffCheck and Colors.LightGreen or Colors.LightRed, sameLine = true, padAfter = 4, },
+                        not selfBuffCheck and
+                        { text = " (" .. reason .. ")", color = Colors.LightRed, sameLine = true, } or nil,
+                    })
+                    return castReady and selfBuffCheck
                 end,
             },
             {
@@ -663,7 +732,17 @@ local _ClassConfig = {
                 desc = "Removes VoD at Critical HP",
                 type = "CustomFunc",
                 load_cond = function(self) Casting.CanUseAA("Visage of Death") end,
-                cond = function(self) return Config:GetSetting('HPCritical') and mq.TLO.Me.Buff("Visage of Death")() end,
+                cond = function(self)
+                    local hpCritical = Config:GetSetting('HPCritical')
+                    local hasVoD = mq.TLO.Me.Buff("Visage of Death")() ~= nil
+                    Core.SetSetRotationEntryTooltip({
+                        { text = "HP Critical: ",      color = Colors.White,                                        padAfter = 4, },
+                        { text = tostring(hpCritical), color = hpCritical and Colors.LightGreen or Colors.LightRed, sameLine = true, padAfter = 4, },
+                        { text = "Has VoD: ",          color = Colors.White,                                        padAfter = 4, },
+                        { text = tostring(hasVoD),     color = hasVoD and Colors.LightGreen or Colors.LightRed,     sameLine = true, padAfter = 4, },
+                    })
+                    return hpCritical and hasVoD
+                end,
                 custom_func = function(self)
                     Core.DoCmd("/removebuff \"Visage of Death\"")
                 end,
@@ -693,7 +772,14 @@ local _ClassConfig = {
                 tooltip = Tooltips.PetHaste,
                 active_cond = function(self, spell) return mq.TLO.Me.PetBuff(spell.RankName())() ~= nil end,
                 cond = function(self, spell)
-                    return Casting.PetBuffCheck(spell)
+                    local petBuffCheck, reason = Casting.PetBuffCheck(spell)
+                    Core.SetSetRotationEntryTooltip({
+                        { text = "Pet Buff Check: ",     color = Colors.White,                                          padAfter = 4, },
+                        { text = tostring(petBuffCheck), color = petBuffCheck and Colors.LightGreen or Colors.LightRed, sameLine = true, padAfter = 4, },
+                        not petBuffCheck and
+                        { text = " (" .. reason .. ")", color = Colors.LightRed, sameLine = true, } or nil,
+                    })
+                    return petBuffCheck
                 end,
             },
             {
@@ -701,14 +787,28 @@ local _ClassConfig = {
                 type = "AA",
                 active_cond = function(self, aaName) return mq.TLO.Me.PetBuff(aaName)() ~= nil end,
                 cond = function(self, aaName)
-                    return Casting.PetBuffAACheck(aaName)
+                    local petBuffAACheck, reason = Casting.PetBuffAACheck(aaName)
+                    Core.SetSetRotationEntryTooltip({
+                        { text = "Pet Buff AA Check: ",    color = Colors.White,                                            padAfter = 4, },
+                        { text = tostring(petBuffAACheck), color = petBuffAACheck and Colors.LightGreen or Colors.LightRed, sameLine = true, padAfter = 4, },
+                        not petBuffAACheck and
+                        { text = " (" .. reason .. ")", color = Colors.LightRed, sameLine = true, } or nil,
+                    })
+                    return petBuffAACheck
                 end,
             },
             {
                 name = "Minionskin",
                 type = "Spell",
                 cond = function(self, spell)
-                    return Casting.PetBuffCheck(spell)
+                    local petBuffCheck, reason = Casting.PetBuffCheck(spell)
+                    Core.SetSetRotationEntryTooltip({
+                        { text = "Pet Buff Check: ",     color = Colors.White,                                          padAfter = 4, },
+                        { text = tostring(petBuffCheck), color = petBuffCheck and Colors.LightGreen or Colors.LightRed, sameLine = true, padAfter = 4, },
+                        not petBuffCheck and
+                        { text = " (" .. reason .. ")", color = Colors.LightRed, sameLine = true, } or nil,
+                    })
+                    return petBuffCheck
                 end,
             },
 
@@ -732,7 +832,13 @@ local _ClassConfig = {
                     end
                 end,
                 cond = function(self, discSpell)
-                    return Casting.NoDiscActive()
+                    local noDiscActive = Casting.NoDiscActive()
+                    local discActive = not noDiscActive
+                    Core.SetSetRotationEntryTooltip({
+                        { text = "Another Disc Active: ", color = Colors.White,                                        padAfter = 4, },
+                        { text = tostring(discActive),    color = discActive and Colors.LightRed or Colors.LightGreen, sameLine = true, padAfter = 4, },
+                    })
+                    return noDiscActive
                 end,
             },
             {
@@ -740,7 +846,13 @@ local _ClassConfig = {
                 type = "Disc",
                 tooltip = Tooltips.LeechCurse,
                 cond = function(self)
-                    return Casting.NoDiscActive()
+                    local noDiscActive = Casting.NoDiscActive()
+                    local discActive = not noDiscActive
+                    Core.SetSetRotationEntryTooltip({
+                        { text = "Another Disc Active: ", color = Colors.White,                                        padAfter = 4, },
+                        { text = tostring(discActive),    color = discActive and Colors.LightRed or Colors.LightGreen, sameLine = true, padAfter = 4, },
+                    })
+                    return noDiscActive
                 end,
             },
             {
@@ -748,7 +860,13 @@ local _ClassConfig = {
                 type = "Disc",
                 tooltip = Tooltips.UnholyAura,
                 cond = function(self, discSpell, target)
-                    return Casting.NoDiscActive()
+                    local noDiscActive = Casting.NoDiscActive()
+                    local discActive = not noDiscActive
+                    Core.SetSetRotationEntryTooltip({
+                        { text = "Another Disc Active: ", color = Colors.White,                                        padAfter = 4, },
+                        { text = tostring(discActive),    color = discActive and Colors.LightRed or Colors.LightGreen, sameLine = true, padAfter = 4, },
+                    })
+                    return noDiscActive
                 end,
             },
             {
@@ -756,7 +874,17 @@ local _ClassConfig = {
                 desc = "Removes VoD at Critical HP",
                 type = "CustomFunc",
                 load_cond = function(self) Casting.CanUseAA("Visage of Death") end,
-                cond = function(self) return Config:GetSetting('HPCritical') and mq.TLO.Me.Buff("Visage of Death")() end,
+                cond = function(self)
+                    local hpCritical = Config:GetSetting('HPCritical')
+                    local hasVoD = mq.TLO.Me.Buff("Visage of Death")() ~= nil
+                    Core.SetSetRotationEntryTooltip({
+                        { text = "HP Critical: ",      color = Colors.White,                                        padAfter = 4, },
+                        { text = tostring(hpCritical), color = hpCritical and Colors.LightGreen or Colors.LightRed, sameLine = true, padAfter = 4, },
+                        { text = "Has VoD: ",          color = Colors.White,                                        padAfter = 4, },
+                        { text = tostring(hasVoD),     color = hasVoD and Colors.LightGreen or Colors.LightRed,     sameLine = true, padAfter = 4, },
+                    })
+                    return hpCritical and hasVoD
+                end,
                 custom_func = function(self)
                     Core.DoCmd("/removebuff \"Visage of Death\"")
                 end,
@@ -768,7 +896,12 @@ local _ClassConfig = {
                 type = "Ability",
                 tooltip = Tooltips.Taunt,
                 cond = function(self, abilityName, target)
-                    return Targeting.LostAutoTargetAggro()
+                    local lostAggro = Targeting.LostAutoTargetAggro()
+                    Core.SetSetRotationEntryTooltip({
+                        { text = "Lost Auto Target Aggro: ", color = Colors.White,                                       padAfter = 4, },
+                        { text = tostring(lostAggro),        color = lostAggro and Colors.LightGreen or Colors.LightRed, sameLine = true, padAfter = 4, },
+                    })
+                    return lostAggro
                 end,
             },
             {
@@ -782,7 +915,14 @@ local _ClassConfig = {
                 tooltip = Tooltips.Terror,
                 load_cond = function(self) return Config:GetSetting('DoTerror') end,
                 cond = function(self, spell, target)
-                    return (mq.TLO.Target.SecondaryPctAggro() or 0) > 60
+                    local secondaryAggro = mq.TLO.Target.SecondaryPctAggro() or 0
+                    local aggroCheck = secondaryAggro > 60
+                    Core.SetSetRotationEntryTooltip({
+                        { text = "Secondary Aggro% > 60: ",     color = Colors.White,                                        padAfter = 4, },
+                        { text = tostring(aggroCheck),          color = aggroCheck and Colors.LightGreen or Colors.LightRed, sameLine = true, padAfter = 4, },
+                        { text = "(" .. secondaryAggro .. "%)", color = Colors.White,                                        sameLine = true, padAfter = 4, },
+                    })
+                    return aggroCheck
                 end,
             },
             {
@@ -791,7 +931,14 @@ local _ClassConfig = {
                 tooltip = Tooltips.Terror,
                 load_cond = function(self) return Config:GetSetting('DoTerror') end,
                 cond = function(self, spell, target)
-                    return (mq.TLO.Target.SecondaryPctAggro() or 0) > 60
+                    local secondaryAggro = mq.TLO.Target.SecondaryPctAggro() or 0
+                    local aggroCheck = secondaryAggro > 60
+                    Core.SetSetRotationEntryTooltip({
+                        { text = "Secondary Aggro% > 60: ",     color = Colors.White,                                        padAfter = 4, },
+                        { text = tostring(aggroCheck),          color = aggroCheck and Colors.LightGreen or Colors.LightRed, sameLine = true, padAfter = 4, },
+                        { text = "(" .. secondaryAggro .. "%)", color = Colors.White,                                        sameLine = true, padAfter = 4, },
+                    })
+                    return aggroCheck
                 end,
             },
             {
@@ -800,7 +947,14 @@ local _ClassConfig = {
                 tooltip = Tooltips.Terror,
                 load_cond = function(self) return Config:GetSetting('DoTerror') end,
                 cond = function(self, spell, target)
-                    return (mq.TLO.Target.SecondaryPctAggro() or 0) > 80
+                    local secondaryAggro = mq.TLO.Target.SecondaryPctAggro() or 0
+                    local aggroCheck = secondaryAggro > 80
+                    Core.SetSetRotationEntryTooltip({
+                        { text = "Secondary Aggro% > 80: ",     color = Colors.White,                                        padAfter = 4, },
+                        { text = tostring(aggroCheck),          color = aggroCheck and Colors.LightGreen or Colors.LightRed, sameLine = true, padAfter = 4, },
+                        { text = "(" .. secondaryAggro .. "%)", color = Colors.White,                                        sameLine = true, padAfter = 4, },
+                    })
+                    return aggroCheck
                 end,
             },
         },
@@ -825,7 +979,12 @@ local _ClassConfig = {
                 type = "Disc",
                 load_cond = function(self) return Config:GetSetting('BladeDiscUse') > 1 end,
                 cond = function(self, discSpell)
-                    return Config:GetSetting('DoAEDamage')
+                    local doAEDamage = Config:GetSetting('DoAEDamage')
+                    Core.SetSetRotationEntryTooltip({
+                        { text = "Do AE Damage: ",     color = Colors.White,                                        padAfter = 4, },
+                        { text = tostring(doAEDamage), color = doAEDamage and Colors.LightGreen or Colors.LightRed, sameLine = true, padAfter = 4, },
+                    })
+                    return doAEDamage
                 end,
             },
             {
@@ -833,7 +992,15 @@ local _ClassConfig = {
                 type = "Spell",
                 tooltip = Tooltips.AETaunt,
                 cond = function(self, spell, target)
-                    return mq.TLO.Me.PctHPs() > Config:GetSetting('EmergencyStart')
+                    local pctHPs = mq.TLO.Me.PctHPs() or 0
+                    local emergencyStart = Config:GetSetting('EmergencyStart')
+                    local hpCheck = pctHPs > emergencyStart
+                    Core.SetSetRotationEntryTooltip({
+                        { text = "HP% > Emergency Start: ",                         color = Colors.White,                                     padAfter = 4, },
+                        { text = tostring(hpCheck),                                 color = hpCheck and Colors.LightGreen or Colors.LightRed, sameLine = true, padAfter = 4, },
+                        { text = "(" .. pctHPs .. "% > " .. emergencyStart .. "%)", color = Colors.White,                                     sameLine = true, padAfter = 4, },
+                    })
+                    return hpCheck
                 end,
             },
         },
@@ -877,7 +1044,12 @@ local _ClassConfig = {
                 name = "Visage of Death",
                 type = "AA",
                 cond = function(self, aaName)
-                    return Config:GetSetting('DoVisage')
+                    local doVisage = Config:GetSetting('DoVisage')
+                    Core.SetSetRotationEntryTooltip({
+                        { text = "Do Visage: ",      color = Colors.White,                                      padAfter = 4, },
+                        { text = tostring(doVisage), color = doVisage and Colors.LightGreen or Colors.LightRed, sameLine = true, padAfter = 4, },
+                    })
+                    return doVisage
                 end,
             },
             { -- for DPS mode
@@ -886,7 +1058,12 @@ local _ClassConfig = {
                 tooltip = Tooltips.UnholyAura,
                 load_cond = function(self) return not Core.IsTanking() end,
                 cond = function(self)
-                    return Casting.NoDiscActive()
+                    local discActive = not Casting.NoDiscActive()
+                    Core.SetSetRotationEntryTooltip({
+                        { text = "Another Disc Active: ", color = Colors.White,                                        padAfter = 4, },
+                        { text = tostring(discActive),    color = discActive and Colors.LightRed or Colors.LightGreen, sameLine = true, padAfter = 4, },
+                    })
+                    return not discActive
                 end,
             },
             { -- for DPS mode
@@ -894,7 +1071,12 @@ local _ClassConfig = {
                 type = "Disc",
                 load_cond = function(self) return not Core.IsTanking() end,
                 cond = function(self)
-                    return Casting.NoDiscActive()
+                    local discActive = not Casting.NoDiscActive()
+                    Core.SetSetRotationEntryTooltip({
+                        { text = "Another Disc Active: ", color = Colors.White,                                        padAfter = 4, },
+                        { text = tostring(discActive),    color = discActive and Colors.LightRed or Colors.LightGreen, sameLine = true, padAfter = 4, },
+                    })
+                    return not discActive
                 end,
             },
             {
@@ -907,7 +1089,12 @@ local _ClassConfig = {
                 type = "AA",
                 tooltip = Tooltips.ThoughtLeech,
                 cond = function(self, aaName, target)
-                    return Config:GetSetting('DoLeechTouch') ~= 1
+                    local doLeechTouch = Config:GetSetting('DoLeechTouch') ~= 1
+                    Core.SetSetRotationEntryTooltip({
+                        { text = "Do Leech Touch: ",     color = Colors.White,                                          padAfter = 4, },
+                        { text = tostring(doLeechTouch), color = doLeechTouch and Colors.LightGreen or Colors.LightRed, sameLine = true, padAfter = 4, },
+                    })
+                    return doLeechTouch
                 end,
             },
             {
@@ -915,8 +1102,21 @@ local _ClassConfig = {
                 type = "Spell",
                 tooltip = Tooltips.Skin,
                 cond = function(self, spell, target)
-                    if not Core.IsTanking() or not Globals.AutoTargetIsNamed then return false end
-                    return Casting.SelfBuffCheck(spell)
+                    local isTanking = Core.IsTanking()
+                    local isNamed = Globals.AutoTargetIsNamed
+                    local selfBuffCheck, reason = Casting.SelfBuffCheck(spell)
+                    Core.SetSetRotationEntryTooltip({
+                        { text = "Is Tanking: ",          color = Colors.White,                                           padAfter = 4, },
+                        { text = tostring(isTanking),     color = isTanking and Colors.LightGreen or Colors.LightRed,     sameLine = true, padAfter = 4, },
+                        { text = "Is Named: ",            color = Colors.White,                                           padAfter = 4, },
+                        { text = tostring(isNamed),       color = isNamed and Colors.LightGreen or Colors.LightRed,       sameLine = true, padAfter = 4, },
+                        { text = "Self Buff Check: ",     color = Colors.White,                                           padAfter = 4, },
+                        { text = tostring(selfBuffCheck), color = selfBuffCheck and Colors.LightGreen or Colors.LightRed, sameLine = true, padAfter = 4, },
+                        not selfBuffCheck and
+                        { text = " (" .. reason .. ")", color = Colors.LightRed, sameLine = true, } or nil,
+                    })
+                    if not isTanking or not isNamed then return false end
+                    return selfBuffCheck
                 end,
             },
         },
@@ -927,7 +1127,20 @@ local _ClassConfig = {
                 type = "AA",
                 load_cond = function(self) return Casting.CanUseAA("Encroaching Darkness") end,
                 cond = function(self, aaName, target)
-                    return Casting.DetAACheck(aaName) and Targeting.MobHasLowHP(target) and not Casting.SnareImmuneTarget(target)
+                    local detAACheck, reason = Casting.DetAACheck(aaName)
+                    local lowHP = Targeting.MobHasLowHP(target)
+                    local snareImmune = Casting.SnareImmuneTarget(target)
+                    Core.SetSetRotationEntryTooltip({
+                        { text = "Det AA Check: ",     color = Colors.White,                                        padAfter = 4, },
+                        { text = tostring(detAACheck), color = detAACheck and Colors.LightGreen or Colors.LightRed, sameLine = true, padAfter = 4, },
+                        not detAACheck and
+                        { text = " (" .. (reason or "") .. ")", color = Colors.LightRed, sameLine = true, } or nil,
+                        { text = "Low HP: ",            color = Colors.White,                                         padAfter = 4, },
+                        { text = tostring(lowHP),       color = lowHP and Colors.LightGreen or Colors.LightRed,       sameLine = true, padAfter = 4, },
+                        { text = "Snare Immune: ",      color = Colors.White,                                         padAfter = 4, },
+                        { text = tostring(snareImmune), color = snareImmune and Colors.LightRed or Colors.LightGreen, sameLine = true, padAfter = 4, },
+                    })
+                    return detAACheck and lowHP and not snareImmune
                 end,
             },
             {
@@ -936,7 +1149,20 @@ local _ClassConfig = {
                 tooltip = Tooltips.SnareDot,
                 load_cond = function(self) return not Casting.CanUseAA("Encroaching Darkness") end,
                 cond = function(self, spell, target)
-                    return Casting.DetSpellCheck(spell) and Targeting.MobHasLowHP(target) and not Casting.SnareImmuneTarget(target)
+                    local detSpellCheck, reason = Casting.DetSpellCheck(spell)
+                    local lowHP = Targeting.MobHasLowHP(target)
+                    local snareImmune = Casting.SnareImmuneTarget(target)
+                    Core.SetSetRotationEntryTooltip({
+                        { text = "Det Spell Check: ",     color = Colors.White,                                           padAfter = 4, },
+                        { text = tostring(detSpellCheck), color = detSpellCheck and Colors.LightGreen or Colors.LightRed, sameLine = true, padAfter = 4, },
+                        not detSpellCheck and
+                        { text = " (" .. (reason or "") .. ")", color = Colors.LightRed, sameLine = true, } or nil,
+                        { text = "Low HP: ",            color = Colors.White,                                         padAfter = 4, },
+                        { text = tostring(lowHP),       color = lowHP and Colors.LightGreen or Colors.LightRed,       sameLine = true, padAfter = 4, },
+                        { text = "Snare Immune: ",      color = Colors.White,                                         padAfter = 4, },
+                        { text = tostring(snareImmune), color = snareImmune and Colors.LightRed or Colors.LightGreen, sameLine = true, padAfter = 4, },
+                    })
+                    return detSpellCheck and lowHP and not snareImmune
                 end,
             },
         },
@@ -946,7 +1172,12 @@ local _ClassConfig = {
                 type = "Disc",
                 load_cond = function(self) return Core.IsTanking() end,
                 cond = function(self, discSpell, target)
-                    return Casting.NoDiscActive()
+                    local discActive = not Casting.NoDiscActive()
+                    Core.SetSetRotationEntryTooltip({
+                        { text = "Another Disc Active: ", color = Colors.White,                                        padAfter = 4, },
+                        { text = tostring(discActive),    color = discActive and Colors.LightRed or Colors.LightGreen, sameLine = true, padAfter = 4, },
+                    })
+                    return not discActive
                 end,
             },
             {
@@ -955,7 +1186,15 @@ local _ClassConfig = {
                 tooltip = Tooltips.Mantle,
                 load_cond = function(self) return Core.IsTanking() end,
                 cond = function(self, discSpell, target)
-                    return Casting.NoDiscActive() and Casting.DiscOnCoolDown('Protective')
+                    local discActive = not Casting.NoDiscActive()
+                    local protectiveOnCD = Casting.DiscOnCoolDown('Protective')
+                    Core.SetSetRotationEntryTooltip({
+                        { text = "Another Disc Active: ",  color = Colors.White,                                            padAfter = 4, },
+                        { text = tostring(discActive),     color = discActive and Colors.LightRed or Colors.LightGreen,     sameLine = true, padAfter = 4, },
+                        { text = "Protective On CD: ",     color = Colors.White,                                            padAfter = 4, },
+                        { text = tostring(protectiveOnCD), color = protectiveOnCD and Colors.LightGreen or Colors.LightRed, sameLine = true, padAfter = 4, },
+                    })
+                    return not discActive and protectiveOnCD
                 end,
             },
             {
@@ -963,8 +1202,22 @@ local _ClassConfig = {
                 type = "Item",
                 tooltip = Tooltips.Epic,
                 cond = function(self, itemName, target)
-                    if Config:GetSetting('HoldEpicForNoDisc') and not Casting.NoDiscActive() then return false end
-                    return self.Helpers.LeechCheck(self) or Globals.AutoTargetIsNamed
+                    local holdForNoDisc = Config:GetSetting('HoldEpicForNoDisc')
+                    local discActive = not Casting.NoDiscActive()
+                    local leechCheck = self.Helpers.LeechCheck(self)
+                    local isNamed = Globals.AutoTargetIsNamed
+                    Core.SetSetRotationEntryTooltip({
+                        { text = "Hold For No Disc: ",    color = Colors.White,                                           padAfter = 4, },
+                        { text = tostring(holdForNoDisc), color = holdForNoDisc and Colors.LightGreen or Colors.LightRed, sameLine = true, padAfter = 4, },
+                        { text = "Another Disc Active: ", color = Colors.White,                                           padAfter = 4, },
+                        { text = tostring(discActive),    color = discActive and Colors.LightRed or Colors.LightGreen,    sameLine = true, padAfter = 4, },
+                        { text = "Leech Check: ",         color = Colors.White,                                           padAfter = 4, },
+                        { text = tostring(leechCheck),    color = leechCheck and Colors.LightGreen or Colors.LightRed,    sameLine = true, padAfter = 4, },
+                        { text = "Is Named: ",            color = Colors.White,                                           padAfter = 4, },
+                        { text = tostring(isNamed),       color = isNamed and Colors.LightGreen or Colors.LightRed,       sameLine = true, padAfter = 4, },
+                    })
+                    if holdForNoDisc and discActive then return false end
+                    return leechCheck or isNamed
                 end,
             },
         },
@@ -975,8 +1228,18 @@ local _ClassConfig = {
                 type = "AA",
                 tooltip = Tooltips.LeechTouch,
                 cond = function(self, aaName, target)
-                    if Config:GetSetting('DoLeechTouch') == 2 then return false end
-                    return mq.TLO.Me.PctHPs() <= Config:GetSetting('HPCritical')
+                    local doLeechTouch = Config:GetSetting('DoLeechTouch') ~= 2
+                    local pctHPs = mq.TLO.Me.PctHPs() or 0
+                    local hpCritical = Config:GetSetting('HPCritical')
+                    local hpCheck = pctHPs <= hpCritical
+                    Core.SetSetRotationEntryTooltip({
+                        { text = "Do Leech Touch: ",                             color = Colors.White,                                          padAfter = 4, },
+                        { text = tostring(doLeechTouch),                         color = doLeechTouch and Colors.LightGreen or Colors.LightRed, sameLine = true, padAfter = 4, },
+                        { text = "HP% <= Critical: ",                            color = Colors.White,                                          padAfter = 4, },
+                        { text = tostring(hpCheck),                              color = hpCheck and Colors.LightGreen or Colors.LightRed,      sameLine = true, padAfter = 4, },
+                        { text = "(" .. pctHPs .. "% <= " .. hpCritical .. "%)", color = Colors.White,                                          sameLine = true, padAfter = 4, },
+                    })
+                    return doLeechTouch and hpCheck
                 end,
             },
             {
@@ -984,8 +1247,23 @@ local _ClassConfig = {
                 type = "Spell",
                 tooltip = Tooltips.LifeTap,
                 cond = function(self, spell)
-                    local myHP = mq.TLO.Me.PctHPs()
-                    return Casting.HaveManaToNuke() and myHP <= Config:GetSetting('StartLifeTap') or myHP <= Config:GetSetting('EmergencyStart')
+                    local pctHPs = mq.TLO.Me.PctHPs() or 0
+                    local haveMana = Casting.HaveManaToNuke()
+                    local startLifeTap = Config:GetSetting('StartLifeTap')
+                    local emergencyStart = Config:GetSetting('EmergencyStart')
+                    local manaAndHP = haveMana and pctHPs <= startLifeTap
+                    local emergency = pctHPs <= emergencyStart
+                    Core.SetSetRotationEntryTooltip({
+                        { text = "Have Mana: ",                                      color = Colors.White,                                                      padAfter = 4, },
+                        { text = tostring(haveMana),                                 color = haveMana and Colors.LightGreen or Colors.LightRed,                 sameLine = true, padAfter = 4, },
+                        { text = "HP% <= Start: ",                                   color = Colors.White,                                                      padAfter = 4, },
+                        { text = tostring(pctHPs <= startLifeTap),                   color = (pctHPs <= startLifeTap) and Colors.LightGreen or Colors.LightRed, sameLine = true, padAfter = 4, },
+                        { text = "(" .. pctHPs .. "% <= " .. startLifeTap .. "%)",   color = Colors.White,                                                      sameLine = true, padAfter = 4, },
+                        { text = "Emergency: ",                                      color = Colors.White,                                                      padAfter = 4, },
+                        { text = tostring(emergency),                                color = emergency and Colors.LightGreen or Colors.LightRed,                sameLine = true, padAfter = 4, },
+                        { text = "(" .. pctHPs .. "% <= " .. emergencyStart .. "%)", color = Colors.White,                                                      sameLine = true, padAfter = 4, },
+                    })
+                    return manaAndHP or emergency
                 end,
             },
             {
@@ -993,8 +1271,23 @@ local _ClassConfig = {
                 type = "Spell",
                 tooltip = Tooltips.LifeTap,
                 cond = function(self, spell)
-                    local myHP = mq.TLO.Me.PctHPs()
-                    return Casting.HaveManaToNuke() and myHP <= Config:GetSetting('StartLifeTap') or myHP <= Config:GetSetting('EmergencyStart')
+                    local pctHPs = mq.TLO.Me.PctHPs() or 0
+                    local haveMana = Casting.HaveManaToNuke()
+                    local startLifeTap = Config:GetSetting('StartLifeTap')
+                    local emergencyStart = Config:GetSetting('EmergencyStart')
+                    local manaAndHP = haveMana and pctHPs <= startLifeTap
+                    local emergency = pctHPs <= emergencyStart
+                    Core.SetSetRotationEntryTooltip({
+                        { text = "Have Mana: ",                                      color = Colors.White,                                                      padAfter = 4, },
+                        { text = tostring(haveMana),                                 color = haveMana and Colors.LightGreen or Colors.LightRed,                 sameLine = true, padAfter = 4, },
+                        { text = "HP% <= Start: ",                                   color = Colors.White,                                                      padAfter = 4, },
+                        { text = tostring(pctHPs <= startLifeTap),                   color = (pctHPs <= startLifeTap) and Colors.LightGreen or Colors.LightRed, sameLine = true, padAfter = 4, },
+                        { text = "(" .. pctHPs .. "% <= " .. startLifeTap .. "%)",   color = Colors.White,                                                      sameLine = true, padAfter = 4, },
+                        { text = "Emergency: ",                                      color = Colors.White,                                                      padAfter = 4, },
+                        { text = tostring(emergency),                                color = emergency and Colors.LightGreen or Colors.LightRed,                sameLine = true, padAfter = 4, },
+                        { text = "(" .. pctHPs .. "% <= " .. emergencyStart .. "%)", color = Colors.White,                                                      sameLine = true, padAfter = 4, },
+                    })
+                    return manaAndHP or emergency
                 end,
             },
             {
@@ -1002,8 +1295,23 @@ local _ClassConfig = {
                 type = "Spell",
                 tooltip = Tooltips.LifeTap,
                 cond = function(self, spell)
-                    local myHP = mq.TLO.Me.PctHPs()
-                    return Casting.HaveManaToNuke() and myHP <= Config:GetSetting('StartLifeTap') or myHP <= Config:GetSetting('EmergencyStart')
+                    local pctHPs = mq.TLO.Me.PctHPs() or 0
+                    local haveMana = Casting.HaveManaToNuke()
+                    local startLifeTap = Config:GetSetting('StartLifeTap')
+                    local emergencyStart = Config:GetSetting('EmergencyStart')
+                    local manaAndHP = haveMana and pctHPs <= startLifeTap
+                    local emergency = pctHPs <= emergencyStart
+                    Core.SetSetRotationEntryTooltip({
+                        { text = "Have Mana: ",                                      color = Colors.White,                                                      padAfter = 4, },
+                        { text = tostring(haveMana),                                 color = haveMana and Colors.LightGreen or Colors.LightRed,                 sameLine = true, padAfter = 4, },
+                        { text = "HP% <= Start: ",                                   color = Colors.White,                                                      padAfter = 4, },
+                        { text = tostring(pctHPs <= startLifeTap),                   color = (pctHPs <= startLifeTap) and Colors.LightGreen or Colors.LightRed, sameLine = true, padAfter = 4, },
+                        { text = "(" .. pctHPs .. "% <= " .. startLifeTap .. "%)",   color = Colors.White,                                                      sameLine = true, padAfter = 4, },
+                        { text = "Emergency: ",                                      color = Colors.White,                                                      padAfter = 4, },
+                        { text = tostring(emergency),                                color = emergency and Colors.LightGreen or Colors.LightRed,                sameLine = true, padAfter = 4, },
+                        { text = "(" .. pctHPs .. "% <= " .. emergencyStart .. "%)", color = Colors.White,                                                      sameLine = true, padAfter = 4, },
+                    })
+                    return manaAndHP or emergency
                 end,
             },
         },
@@ -1014,7 +1322,14 @@ local _ClassConfig = {
                 tooltip = Tooltips.ForPower,
                 load_cond = function(self) return Core.IsTanking() end,
                 cond = function(self, spell, target)
-                    return Casting.DetSpellCheck(spell, target)
+                    local detSpellCheck, reason = Casting.DetSpellCheck(spell, target)
+                    Core.SetSetRotationEntryTooltip({
+                        { text = "Det Spell Check: ",     color = Colors.White,                                           padAfter = 4, },
+                        { text = tostring(detSpellCheck), color = detSpellCheck and Colors.LightGreen or Colors.LightRed, sameLine = true, padAfter = 4, },
+                        not detSpellCheck and
+                        { text = " (" .. (reason or "") .. ")", color = Colors.LightRed, sameLine = true, } or nil,
+                    })
+                    return detSpellCheck
                 end,
             },
             {
@@ -1022,7 +1337,12 @@ local _ClassConfig = {
                 type = "Spell",
                 tooltip = Tooltips.SpearNuke,
                 cond = function(self, spell, target)
-                    return Casting.HaveManaToNuke()
+                    local haveMana = Casting.HaveManaToNuke()
+                    Core.SetSetRotationEntryTooltip({
+                        { text = "Have Mana To Nuke: ", color = Colors.White,                                      padAfter = 4, },
+                        { text = tostring(haveMana),    color = haveMana and Colors.LightGreen or Colors.LightRed, sameLine = true, padAfter = 4, },
+                    })
+                    return haveMana
                 end,
             },
             {
@@ -1030,7 +1350,18 @@ local _ClassConfig = {
                 type = "Disc",
                 load_cond = function(self) return Config:GetSetting('BladeDiscUse') == 3 and Core.GetResolvedActionMapItem('BladeDisc') end,
                 cond = function(self, discSpell)
-                    return Config:GetSetting('DoAEDamage') and mq.TLO.Me.PctEndurance() >= Config:GetSetting("ManaToNuke") -- save endurance for emergency discs
+                    local doAEDamage = Config:GetSetting('DoAEDamage')
+                    local pctEndurance = mq.TLO.Me.PctEndurance() or 0
+                    local manaToNuke = Config:GetSetting("ManaToNuke")
+                    local enduranceCheck = pctEndurance >= manaToNuke
+                    Core.SetSetRotationEntryTooltip({
+                        { text = "Do AE Damage: ",                                     color = Colors.White,                                            padAfter = 4, },
+                        { text = tostring(doAEDamage),                                 color = doAEDamage and Colors.LightGreen or Colors.LightRed,     sameLine = true, padAfter = 4, },
+                        { text = "Endurance% >= ManaToNuke: ",                         color = Colors.White,                                            padAfter = 4, },
+                        { text = tostring(enduranceCheck),                             color = enduranceCheck and Colors.LightGreen or Colors.LightRed, sameLine = true, padAfter = 4, },
+                        { text = "(" .. pctEndurance .. "% >= " .. manaToNuke .. "%)", color = Colors.White,                                            sameLine = true, padAfter = 4, },
+                    })
+                    return doAEDamage and enduranceCheck
                 end,
             },
             {
@@ -1039,8 +1370,24 @@ local _ClassConfig = {
                 tooltip = Tooltips.BondTap,
                 load_cond = function(self) return Config:GetSetting('DoBondTap') end,
                 cond = function(self, spell, target)
-                    if Config:GetSetting('DotNamedOnly') and not Globals.AutoTargetIsNamed then return false end
-                    return Casting.HaveManaToDot() and Casting.SelfBuffCheck(spell) -- use for recourse --Casting.DotSpellCheck(spell)
+                    local dotNamedOnly = Config:GetSetting('DotNamedOnly')
+                    local isNamed = Globals.AutoTargetIsNamed
+                    local haveManaToDot = Casting.HaveManaToDot()
+                    local selfBuffCheck, reason = Casting.SelfBuffCheck(spell)
+                    Core.SetSetRotationEntryTooltip({
+                        { text = "Named Only: ",          color = Colors.White,                                           padAfter = 4, },
+                        { text = tostring(dotNamedOnly),  color = Colors.White,                                           sameLine = true, padAfter = 4, },
+                        { text = "Is Named: ",            color = Colors.White,                                           padAfter = 4, },
+                        { text = tostring(isNamed),       color = isNamed and Colors.LightGreen or Colors.LightRed,       sameLine = true, padAfter = 4, },
+                        { text = "Have Mana To Dot: ",    color = Colors.White,                                           padAfter = 4, },
+                        { text = tostring(haveManaToDot), color = haveManaToDot and Colors.LightGreen or Colors.LightRed, sameLine = true, padAfter = 4, },
+                        { text = "Self Buff Check: ",     color = Colors.White,                                           padAfter = 4, },
+                        { text = tostring(selfBuffCheck), color = selfBuffCheck and Colors.LightGreen or Colors.LightRed, sameLine = true, padAfter = 4, },
+                        not selfBuffCheck and
+                        { text = " (" .. (reason or "") .. ")", color = Colors.LightRed, sameLine = true, } or nil,
+                    })
+                    if dotNamedOnly and not isNamed then return false end
+                    return haveManaToDot and selfBuffCheck
                 end,
             },
             {
@@ -1049,8 +1396,24 @@ local _ClassConfig = {
                 tooltip = Tooltips.PoisonDot,
                 load_cond = function(self) return Config:GetSetting('DoPoisonDot') end,
                 cond = function(self, spell, target)
-                    if Config:GetSetting('DotNamedOnly') and not Globals.AutoTargetIsNamed then return false end
-                    return Casting.HaveManaToDot() and Casting.DotSpellCheck(spell)
+                    local dotNamedOnly = Config:GetSetting('DotNamedOnly')
+                    local isNamed = Globals.AutoTargetIsNamed
+                    local haveManaToDot = Casting.HaveManaToDot()
+                    local dotSpellCheck, reason = Casting.DotSpellCheck(spell)
+                    Core.SetSetRotationEntryTooltip({
+                        { text = "Named Only: ",          color = Colors.White,                                           padAfter = 4, },
+                        { text = tostring(dotNamedOnly),  color = Colors.White,                                           sameLine = true, padAfter = 4, },
+                        { text = "Is Named: ",            color = Colors.White,                                           padAfter = 4, },
+                        { text = tostring(isNamed),       color = isNamed and Colors.LightGreen or Colors.LightRed,       sameLine = true, padAfter = 4, },
+                        { text = "Have Mana To Dot: ",    color = Colors.White,                                           padAfter = 4, },
+                        { text = tostring(haveManaToDot), color = haveManaToDot and Colors.LightGreen or Colors.LightRed, sameLine = true, padAfter = 4, },
+                        { text = "Dot Spell Check: ",     color = Colors.White,                                           padAfter = 4, },
+                        { text = tostring(dotSpellCheck), color = dotSpellCheck and Colors.LightGreen or Colors.LightRed, sameLine = true, padAfter = 4, },
+                        not dotSpellCheck and
+                        { text = " (" .. (reason or "") .. ")", color = Colors.LightRed, sameLine = true, } or nil,
+                    })
+                    if dotNamedOnly and not isNamed then return false end
+                    return haveManaToDot and dotSpellCheck
                 end,
             },
             {
@@ -1059,8 +1422,24 @@ local _ClassConfig = {
                 tooltip = Tooltips.DireDot,
                 load_cond = function(self) return Config:GetSetting('DoDireDot') end,
                 cond = function(self, spell, target)
-                    if Config:GetSetting('DotNamedOnly') and not Globals.AutoTargetIsNamed then return false end
-                    return Casting.HaveManaToDot() and Casting.DotSpellCheck(spell)
+                    local dotNamedOnly = Config:GetSetting('DotNamedOnly')
+                    local isNamed = Globals.AutoTargetIsNamed
+                    local haveManaToDot = Casting.HaveManaToDot()
+                    local dotSpellCheck, reason = Casting.DotSpellCheck(spell)
+                    Core.SetSetRotationEntryTooltip({
+                        { text = "Named Only: ",          color = Colors.White,                                           padAfter = 4, },
+                        { text = tostring(dotNamedOnly),  color = Colors.White,                                           sameLine = true, padAfter = 4, },
+                        { text = "Is Named: ",            color = Colors.White,                                           padAfter = 4, },
+                        { text = tostring(isNamed),       color = isNamed and Colors.LightGreen or Colors.LightRed,       sameLine = true, padAfter = 4, },
+                        { text = "Have Mana To Dot: ",    color = Colors.White,                                           padAfter = 4, },
+                        { text = tostring(haveManaToDot), color = haveManaToDot and Colors.LightGreen or Colors.LightRed, sameLine = true, padAfter = 4, },
+                        { text = "Dot Spell Check: ",     color = Colors.White,                                           padAfter = 4, },
+                        { text = tostring(dotSpellCheck), color = dotSpellCheck and Colors.LightGreen or Colors.LightRed, sameLine = true, padAfter = 4, },
+                        not dotSpellCheck and
+                        { text = " (" .. (reason or "") .. ")", color = Colors.LightRed, sameLine = true, } or nil,
+                    })
+                    if dotNamedOnly and not isNamed then return false end
+                    return haveManaToDot and dotSpellCheck
                 end,
             },
             {
@@ -1077,7 +1456,15 @@ local _ClassConfig = {
                 name = "Companion's Blessing",
                 type = "AA",
                 cond = function(self, aaName, target)
-                    return (mq.TLO.Me.Pet.PctHPs() or 999) <= Config:GetSetting('BigHealPoint')
+                    local petPctHPs = mq.TLO.Me.Pet.PctHPs() or 999
+                    local bigHealPoint = Config:GetSetting('BigHealPoint')
+                    local hpCheck = petPctHPs <= bigHealPoint
+                    Core.SetSetRotationEntryTooltip({
+                        { text = "Pet HP% <= Big Heal: ",                             color = Colors.White,                                     padAfter = 4, },
+                        { text = tostring(hpCheck),                                   color = hpCheck and Colors.LightGreen or Colors.LightRed, sameLine = true, padAfter = 4, },
+                        { text = "(" .. petPctHPs .. "% <= " .. bigHealPoint .. "%)", color = Colors.White,                                     sameLine = true, padAfter = 4, },
+                    })
+                    return hpCheck
                 end,
             },
             {
@@ -1086,7 +1473,14 @@ local _ClassConfig = {
                 tooltip = Tooltips.PowerTapAC,
                 load_cond = function(self) return Config:GetSetting('DoACTap') end,
                 cond = function(self, spell, target)
-                    return Casting.SelfBuffCheck(spell)
+                    local selfBuffCheck, reason = Casting.SelfBuffCheck(spell)
+                    Core.SetSetRotationEntryTooltip({
+                        { text = "Self Buff Check: ",     color = Colors.White,                                           padAfter = 4, },
+                        { text = tostring(selfBuffCheck), color = selfBuffCheck and Colors.LightGreen or Colors.LightRed, sameLine = true, padAfter = 4, },
+                        not selfBuffCheck and
+                        { text = " (" .. (reason or "") .. ")", color = Colors.LightRed, sameLine = true, } or nil,
+                    })
+                    return selfBuffCheck
                 end,
             },
             {
@@ -1095,7 +1489,14 @@ local _ClassConfig = {
                 tooltip = Tooltips.PowerTapAtk,
                 load_cond = function(self) return Config:GetSetting('DoAtkTap') end,
                 cond = function(self, spell, target)
-                    return Casting.SelfBuffCheck(spell)
+                    local selfBuffCheck, reason = Casting.SelfBuffCheck(spell)
+                    Core.SetSetRotationEntryTooltip({
+                        { text = "Self Buff Check: ",     color = Colors.White,                                           padAfter = 4, },
+                        { text = tostring(selfBuffCheck), color = selfBuffCheck and Colors.LightGreen or Colors.LightRed, sameLine = true, padAfter = 4, },
+                        not selfBuffCheck and
+                        { text = " (" .. (reason or "") .. ")", color = Colors.LightRed, sameLine = true, } or nil,
+                    })
+                    return selfBuffCheck
                 end,
             },
             {
@@ -1103,7 +1504,15 @@ local _ClassConfig = {
                 type = "Ability",
                 tooltip = Tooltips.Bash,
                 cond = function(self)
-                    return (Core.ShieldEquipped() or Casting.CanUseAA("2 Hand Bash"))
+                    local shieldEquipped = Core.ShieldEquipped()
+                    local canTwoHandBash = Casting.CanUseAA("2 Hand Bash")
+                    Core.SetSetRotationEntryTooltip({
+                        { text = "Shield Equipped: ",      color = Colors.White,                                            padAfter = 4, },
+                        { text = tostring(shieldEquipped), color = shieldEquipped and Colors.LightGreen or Colors.LightRed, sameLine = true, padAfter = 4, },
+                        { text = "2H Bash AA: ",           color = Colors.White,                                            padAfter = 4, },
+                        { text = tostring(canTwoHandBash), color = canTwoHandBash and Colors.LightGreen or Colors.LightRed, sameLine = true, padAfter = 4, },
+                    })
+                    return shieldEquipped or canTwoHandBash
                 end,
             },
             {
@@ -1118,8 +1527,23 @@ local _ClassConfig = {
                 name = "Equip Shield",
                 type = "CustomFunc",
                 cond = function(self, target)
-                    if mq.TLO.Me.Bandolier("Shield").Active() then return false end
-                    return (mq.TLO.Me.PctHPs() <= Config:GetSetting('EquipShield')) or (Globals.AutoTargetIsNamed and Config:GetSetting('NamedShieldLock'))
+                    local shieldActive = mq.TLO.Me.Bandolier("Shield").Active()
+                    local pctHPs = mq.TLO.Me.PctHPs() or 0
+                    local equipShield = Config:GetSetting('EquipShield')
+                    local hpCheck = pctHPs <= equipShield
+                    local isNamed = Globals.AutoTargetIsNamed
+                    local namedShieldLock = Config:GetSetting('NamedShieldLock')
+                    Core.SetSetRotationEntryTooltip({
+                        { text = "Shield Already Active: ",                       color = Colors.White,                                                           padAfter = 4, },
+                        { text = tostring(shieldActive),                          color = shieldActive and Colors.LightRed or Colors.LightGreen,                  sameLine = true, padAfter = 4, },
+                        { text = "HP% <= Equip Shield: ",                         color = Colors.White,                                                           padAfter = 4, },
+                        { text = tostring(hpCheck),                               color = hpCheck and Colors.LightGreen or Colors.LightRed,                       sameLine = true, padAfter = 4, },
+                        { text = "(" .. pctHPs .. "% <= " .. equipShield .. "%)", color = Colors.White,                                                           sameLine = true, padAfter = 4, },
+                        { text = "Named Shield Lock: ",                           color = Colors.White,                                                           padAfter = 4, },
+                        { text = tostring(isNamed and namedShieldLock),           color = (isNamed and namedShieldLock) and Colors.LightGreen or Colors.LightRed, sameLine = true, padAfter = 4, },
+                    })
+                    if shieldActive then return false end
+                    return hpCheck or (isNamed and namedShieldLock)
                 end,
                 custom_func = function(self) return ItemManager.BandolierSwap("Shield") end,
             },
@@ -1127,9 +1551,27 @@ local _ClassConfig = {
                 name = "Equip 2Hand",
                 type = "CustomFunc",
                 cond = function()
-                    if mq.TLO.Me.Bandolier("2Hand").Active() then return false end
-                    return mq.TLO.Me.PctHPs() >= Config:GetSetting('Equip2Hand') and mq.TLO.Me.ActiveDisc() ~= "Deflection Discipline" and
-                        not (Globals.AutoTargetIsNamed and Config:GetSetting('NamedShieldLock'))
+                    local twoHandActive = mq.TLO.Me.Bandolier("2Hand").Active()
+                    local pctHPs = mq.TLO.Me.PctHPs() or 0
+                    local equip2Hand = Config:GetSetting('Equip2Hand')
+                    local hpCheck = pctHPs >= equip2Hand
+                    local activeDisc = mq.TLO.Me.ActiveDisc() or ""
+                    local noDeflection = activeDisc ~= "Deflection Discipline"
+                    local isNamed = Globals.AutoTargetIsNamed
+                    local namedShieldLock = Config:GetSetting('NamedShieldLock')
+                    Core.SetSetRotationEntryTooltip({
+                        { text = "2Hand Already Active: ",                       color = Colors.White,                                                           padAfter = 4, },
+                        { text = tostring(twoHandActive),                        color = twoHandActive and Colors.LightRed or Colors.LightGreen,                 sameLine = true, padAfter = 4, },
+                        { text = "HP% >= Equip 2Hand: ",                         color = Colors.White,                                                           padAfter = 4, },
+                        { text = tostring(hpCheck),                              color = hpCheck and Colors.LightGreen or Colors.LightRed,                       sameLine = true, padAfter = 4, },
+                        { text = "(" .. pctHPs .. "% >= " .. equip2Hand .. "%)", color = Colors.White,                                                           sameLine = true, padAfter = 4, },
+                        { text = "No Deflection Disc: ",                         color = Colors.White,                                                           padAfter = 4, },
+                        { text = tostring(noDeflection),                         color = noDeflection and Colors.LightGreen or Colors.LightRed,                  sameLine = true, padAfter = 4, },
+                        { text = "Named Shield Lock: ",                          color = Colors.White,                                                           padAfter = 4, },
+                        { text = tostring(isNamed and namedShieldLock),          color = (isNamed and namedShieldLock) and Colors.LightRed or Colors.LightGreen, sameLine = true, padAfter = 4, },
+                    })
+                    if twoHandActive then return false end
+                    return hpCheck and noDeflection and not (isNamed and namedShieldLock)
                 end,
                 custom_func = function(self) return ItemManager.BandolierSwap("2Hand") end,
             },
