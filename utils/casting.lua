@@ -2855,4 +2855,9 @@ function Casting.LevelCheckPass(targetLevel, spellLevel)
     return maxSpellLevel >= spellLevel
 end
 
+function Casting.SlowSpellCheck(spell, target)
+    if not spell or not spell() then return false end
+    return (spell.RankName.SlowPct() or 0) > Targeting.GetTargetSlowedPct() and not Casting.SlowImmuneTarget(target)
+end
+
 return Casting

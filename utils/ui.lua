@@ -389,7 +389,7 @@ end
 --- Renders a combo box for selecting the active class config directory.
 function Ui.RenderConfigSelector()
     if Globals.ClassConfigDirs ~= nil then
-        Ui.RenderText("Config Type:")
+        Ui.RenderText("Active Config:")
         ImGui.SameLine()
         ImGui.SetNextItemWidth(200)
         local newConfigDir, changed = ImGui.Combo("##config_type", Ui.GetClassConfigIDFromName(Config:GetSetting('ClassConfigDir')), Globals.ClassConfigDirs,

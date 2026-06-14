@@ -1095,34 +1095,33 @@ function Combat.FindWorstHurtGroupMember(minHPs)
     for i = 1, groupSize do
         local healTarget = mq.TLO.Group.Member(i)
 
-        if healTarget and healTarget() and (healTarget.Distance3D() or 999) <= 300 and not (healTarget.Dead() or healTarget.OtherZone() or healTarget.Offline()) then
-            -- Heal the aggro holder if they are in our group and below the mainheal point, no other checks needed
-            if Targeting.TargetIsType("NPC", mq.TLO.Target) and mq.TLO.Me.TargetOfTarget.ID() == healTarget.ID() and Targeting.BigHealsNeeded(healTarget) then
-                Logger.log_verbose("\agSomeone with aggro is hurt, prioritizing id %d", healTarget.ID())
-                return healTarget.ID()
-            end
+        if healTarget and healTarget() then
+            if (healTarget.Distance3D() or 999) <= 300 and not (healTarget.Dead() or healTarget.OtherZone() or healTarget.Offline()) then
+                -- Heal the aggro holder if they are in our group and below the mainheal point, no other checks needed
+                if Targeting.TargetIsType("NPC", mq.TLO.Target) and mq.TLO.Me.TargetOfTarget.ID() == healTarget.ID() and Targeting.BigHealsNeeded(healTarget) then
+                    Logger.log_verbose("\agSomeone with aggro is hurt, prioritizing id %d", healTarget.ID())
+                    return healTarget.ID()
+                end
 
-            -- Prioritize any tanks in the group that are under mainhealpoint, otherwise, treat them as normal group members
-            if Targeting.TargetIsATank(healTarget) and (healTarget.PctHPs() or 101) < tankPct then
-                tankPct = (healTarget.PctHPs() or tankPct)
-                tankId = (healTarget.PctHPs() and healTarget.ID() or tankId)
-            else
-                if (healTarget.PctHPs() or 101) < worstPct then
+                -- Prioritize any tanks in the group that are under mainhealpoint, otherwise, treat them as normal group members
+                if Targeting.TargetIsATank(healTarget) and (healTarget.PctHPs() or 101) < tankPct then
+                    tankPct = (healTarget.PctHPs() or tankPct)
+                    tankId = (healTarget.PctHPs() and healTarget.ID() or tankId)
+                elseif (healTarget.PctHPs() or 101) < worstPct then
                     Logger.log_verbose("\aySo far %s is the worst off.", healTarget.DisplayName())
                     -- this looks weird but it guards against a possible yield between the if above and this line where the healtarget might have died.
                     worstPct = (healTarget.PctHPs() or worstPct)
                     worstId = (healTarget.PctHPs() and healTarget.ID() or worstId)
                 end
+            end
 
-                if Config:GetSetting('DoPetHeals') and (healTarget.Pet.ID() or 0) > 0 then
-                    local petHP = healTarget.Pet.PctHPs() or 101
-                    if petHP < worstPct and petHP < Config:GetSetting('PetHealPoint') then
-                        Logger.log_verbose("\aySo far %s's pet %s is the worst off.", healTarget.DisplayName(),
-                            healTarget.Pet.DisplayName())
-                        -- this looks weird but it guards against a possible yield between the if above and this line where the healtarget might have died.
-                        worstPct = (healTarget.Pet.PctHPs() or worstPct)
-                        worstId = (healTarget.Pet.PctHPs() and healTarget.Pet.ID() or worstId)
-                    end
+            -- Pet heals gate on the pet's own range; a live pet implies the owner is in-zone even if out of heal range
+            if Config:GetSetting('DoPetHeals') and (healTarget.Pet.ID() or 0) > 0 then
+                local petHP = healTarget.Pet.PctHPs() or 101
+                if petHP > 0 and petHP < worstPct and petHP < Config:GetSetting('PetHealPoint') and (healTarget.Pet.Distance3D() or 999) <= 300 then
+                    Logger.log_verbose("\aySo far %s's pet %s is the worst off.", healTarget.DisplayName(), healTarget.Pet.DisplayName())
+                    worstPct = (healTarget.Pet.PctHPs() or worstPct)
+                    worstId = (healTarget.Pet.PctHPs() and healTarget.Pet.ID() or worstId)
                 end
             end
         end
@@ -1140,6 +1139,23 @@ function Combat.FindWorstHurtGroupMember(minHPs)
 
     Logger.log_verbose("\agNo one is hurt!")
     return 0
+end
+
+--- True if any group member's pet is in heal range and below the given HP%.
+---@param minHPs number Pet HP% threshold.
+---@return boolean
+function Combat.AnyHurtGroupPet(minHPs)
+    for i = 1, mq.TLO.Group.Members() do
+        local member = mq.TLO.Group.Member(i)
+        if member and member() and (member.Pet.ID() or 0) > 0 then
+            local pet = member.Pet
+            local petHP = pet.PctHPs() or 101
+            if petHP > 0 and petHP < minHPs and (pet.Distance3D() or 999) <= 300 then
+                return true
+            end
+        end
+    end
+    return false
 end
 
 --- Finds the entity with the worst hurt mana exceeding a minimum threshold.
@@ -1213,25 +1229,33 @@ end
 function Combat.FindWorstHurtHealList(minHPs)
     local worstId = 0
     local worstPct = minHPs
-    local hpPct = 101
+    local myX, myY, myZ = mq.TLO.Me.X(), mq.TLO.Me.Y(), mq.TLO.Me.Z()
 
     Logger.log_verbose("\ayChecking for worst Hurt from Heal List.")
     for _, name in ipairs(Config:GetSetting('HealList') or {}) do
-        local healTarget = mq.TLO.Spawn(string.format("PC =%s", name))
-        if healTarget and healTarget() and (healTarget.Distance3D() or 0) < 300 and not healTarget.Dead() then
-            local heartbeat = Comms.GetPeerHeartbeatByName(name)
+        local hpPct, id = nil, nil
+        local data = Comms.GetPeerHeartbeat(Comms.GetPeerName(name, Globals.CurServer)).Data
 
-            if heartbeat and heartbeat.Data and heartbeat.Data.HPs then
-                hpPct = tonumber(heartbeat.Data.HPs) or 101
-            else
+        if data and data.HPs and data.ZoneId == Globals.CurZoneId and data.InstanceId == Globals.CurInstanceId then
+            -- RGMercs peer in our zone/instance: evaluate from the heartbeat (no spawn lookup, squared distance, no sqrt)
+            local dx, dy, dz = (data.X or 0) - myX, (data.Y or 0) - myY, (data.Z or 0) - myZ
+            if data.HPs > 0 and (dx * dx + dy * dy + dz * dz) < 90000 then
+                hpPct = data.HPs
+                id = data.ID
+            end
+        else
+            -- Non-RGMercs heal target (e.g. another player's tank): fall back to a spawn lookup
+            local healTarget = mq.TLO.Spawn(string.format("PC =%s", name))
+            if healTarget and healTarget() and (healTarget.Distance3D() or 0) < 300 and not healTarget.Dead() then
                 hpPct = healTarget.PctHPs() or 101
+                id = healTarget.ID()
             end
+        end
 
-            if hpPct < worstPct then
-                Logger.log_verbose("\aySo far %s is the worst off.", healTarget.DisplayName() or "Error")
-                worstId = healTarget.ID()
-                worstPct = hpPct
-            end
+        if hpPct and id and hpPct < worstPct then
+            Logger.log_verbose("\aySo far heal-list id %d is the worst off.", id)
+            worstId = id
+            worstPct = hpPct
         end
     end
 

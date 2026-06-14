@@ -2259,6 +2259,20 @@ local _ClassConfig = {
             Max = 3,
             RequiresLoadoutChange = true,
         },
+        ['HealPriority']      = {
+            DisplayName = "Healing Priority",
+            Group = "Abilities",
+            Header = "Recovery",
+            Category = "Healing Thresholds",
+            Index = 101,
+            Type = "Combo",
+            ComboOptions = { 'Ignore', 'Big Heal Point', },
+            Default = 2,
+            Min = 1,
+            Max = 2,
+            Tooltip = "When to yield offensive rotations for healing: Ignore (never) or at the Big Heal Point.",
+            ConfigType = "Advanced",
+        },
     },
     ['ClassFAQ']          = {
         {

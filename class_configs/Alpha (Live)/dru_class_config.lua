@@ -961,7 +961,7 @@ local _ClassConfig = {
             load_cond = function(self) return Core.OnEMU() end,
             cond = function(self, combat_state)
                 if not Config:GetSetting('DoPet') or mq.TLO.Me.Pet.ID() ~= 0 then return false end
-                return combat_state == "Downtime" and (not Core.IsModeActive('Heal') or Core.CombatActionsCheck()) and Casting.OkayToPetBuff() and Casting.AmIBuffable()
+                return combat_state == "Downtime" and Core.CombatActionsCheck() and Casting.OkayToPetBuff() and Casting.AmIBuffable()
             end,
         },
         {
@@ -1674,6 +1674,20 @@ local _ClassConfig = {
             Tooltip = "Use your short duration damage shield (Barkspur line) on the MA during combat.",
             RequiresLoadoutChange = true,
             Default = false,
+        },
+        ['HealPriority'] = {
+            DisplayName = "Healing Priority",
+            Group = "Abilities",
+            Header = "Recovery",
+            Category = "Healing Thresholds",
+            Index = 101,
+            Type = "Combo",
+            ComboOptions = { 'Ignore', 'Big Heal Point', 'Main Heal Point', },
+            Default = 3,
+            Min = 1,
+            Max = 3,
+            Tooltip = "When to yield offensive rotations for healing: Ignore (never), at the Big Heal Point, or at the Main Heal Point.",
+            ConfigType = "Advanced",
         },
     },
     ['ClassFAQ']          = {

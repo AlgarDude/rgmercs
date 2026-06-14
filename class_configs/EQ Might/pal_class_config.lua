@@ -731,7 +731,7 @@ return {
             targetId = function(self) return Targeting.CheckForAutoTargetID() end,
             cond = function(self, combat_state)
                 if not Config:GetSetting('DoAEDamage') or (Core.IsTanking() and mq.TLO.Me.PctHPs() <= Config:GetSetting('HPCritical')) then return false end
-                return combat_state == "Combat" and Combat.AETargetCheck(true)
+                return combat_state == "Combat" and Combat.AETargetCheck(true) and Core.CombatActionsCheck()
             end,
         },
         { --DPS Spells, includes recourse/gift maintenance
@@ -976,9 +976,6 @@ return {
                 type = "Spell",
                 allowDead = true,
                 load_cond = function(self) return Config:GetSetting('AEStunUse') == 3 and Core.GetResolvedActionMapItem('PBAEStun') end,
-                cond = function(self, spell, target)
-                    return mq.TLO.Me.PctEndurance() >= Config:GetSetting("ManaToNuke") -- save mana for emergency healing
-                end,
             },
             {
                 name = "BladeDisc",
@@ -1226,13 +1223,13 @@ return {
         ['AEStunUse']         = {
             DisplayName = "AEStun Spell Use:",
             Group = "Abilities",
-            Header = "Debuff",
+            Header = "Debuffs",
             Category = "Stun",
-            Index = 103,
-            Tooltip = "When to use your AE Stun Spell Line (DPS mode will not attempt to regain hate).",
+            Index = 102,
+            Tooltip = "When to use your AE Stun Spell Line.",
             RequiresLoadoutChange = true,
             Type = "Combo",
-            ComboOptions = { 'Disabled', 'Only To Regain Hate', 'Whenever Possible', },
+            ComboOptions = { 'Disabled', 'To Regain Hate If In Tank Mode', 'Whenever Possible', },
             Default = 2,
             Min = 1,
             Max = 3,
@@ -1243,10 +1240,10 @@ return {
             Header = "Damage",
             Category = "AE",
             Index = 102,
-            Tooltip = "When to use your AE Blade Disc Line (DPS mode will not attempt to regain hate).",
+            Tooltip = "When to use your AE Blade Disc Line.",
             RequiresLoadoutChange = true,
             Type = "Combo",
-            ComboOptions = { 'Disabled', 'Only To Regain Hate', 'Whenever Possible', },
+            ComboOptions = { 'Disabled', 'To Regain Hate If In Tank Mode', 'Whenever Possible', },
             Default = 2,
             Min = 1,
             Max = 3,
@@ -1601,6 +1598,20 @@ return {
             FAQ = "Why am I using and Undead proc, I'm not fighting any undead?",
             Answer = "If you have elected to use the Standard DD proc (default) and it is not yet available, we will use the Undead proc still.\n" ..
                 "Your desired proc can be adjusted with the Proc Buff Choice setting in Self Buff category.",
+        },
+        ['HealPriority']      = {
+            DisplayName = "Healing Priority",
+            Group = "Abilities",
+            Header = "Recovery",
+            Category = "Healing Thresholds",
+            Index = 101,
+            Type = "Combo",
+            ComboOptions = { 'Ignore', 'Big Heal Point', },
+            Default = 2,
+            Min = 1,
+            Max = 2,
+            Tooltip = "When to yield offensive rotations for healing: Ignore (never) or at the Big Heal Point.",
+            ConfigType = "Advanced",
         },
     },
     ['ClassFAQ']          = {

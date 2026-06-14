@@ -306,7 +306,7 @@ return {
             steps = 4,
             targetId = function(self) return Targeting.CheckForAutoTargetID() end,
             cond = function(self, combat_state)
-                return combat_state == "Combat" and Casting.BurnCheck()
+                return combat_state == "Combat" and Casting.BurnCheck() and Core.CombatActionsCheck()
             end,
         },
         {
@@ -316,7 +316,7 @@ return {
             doFullRotation = true,
             targetId = function(self) return Targeting.CheckForAutoTargetID() end,
             cond = function(self, combat_state)
-                return combat_state == "Combat" and (Config:GetSetting('DoHeals') and Casting.OkayToNuke() or Targeting.AggroCheckOkay())
+                return combat_state == "Combat" and Core.CombatActionsCheck() and (Config:GetSetting('DoHeals') and Casting.OkayToNuke() or Targeting.AggroCheckOkay())
             end,
         },
         {
@@ -325,7 +325,7 @@ return {
             steps = 1,
             targetId = function(self) return Targeting.CheckForAutoTargetID() end,
             cond = function(self, combat_state)
-                return combat_state == "Combat" and Targeting.AggroCheckOkay()
+                return combat_state == "Combat" and Targeting.AggroCheckOkay() and Core.CombatActionsCheck()
             end,
         },
     },
@@ -351,13 +351,13 @@ return {
                         Movement:NavAroundCircle(mq.TLO.Target, Config:GetSetting('BowNavDistance'))
                     end
                 elseif tooClose then
-                    if chaseDistance < 30 then
+                    if chaseDistance < 10 then
                         Logger.log_warn(
                             "Custom Ranger combatNav: \arWarning! \awChase distance is %d. \ayThis may interfere with ranged combat, depending on chase target movement!",
                             chaseDistance)
                     end
                     Core.DoCmd('/squelch face fast')
-                    Movement:DoStickCmd("10 moveback")
+                    Movement:DoStickCmd("%d moveback", Config:GetSetting('BowNavDistance'))
                 elseif tooFar or forceMove then
                     Movement:DoNav(true, "id %d distance=%d lineofsight=on", Globals.AutoTargetID, Config:GetSetting('BowNavDistance'))
                     Core.DoCmd('/squelch /face fast')
@@ -759,8 +759,8 @@ return {
             Index = 101,
             Tooltip = "The distance from your target you should nav to for ranged attacks when necessary.\n" ..
                 "If Nav Circle is enabled, the distance to circle at.",
-            Default = 45,
-            Min = 30,
+            Default = 30,
+            Min = 10,
             Max = 200,
             FAQ = "Why is my ranger rubber-banding, charging back and forth or changing heading constantly?",
             Answer = "Some terrain blocks line of sight while MQ reports that the ranger has line of sight.\n" ..
@@ -961,6 +961,20 @@ return {
             Default = 3,
             Min = 1,
             Max = 99,
+        },
+        ['HealPriority']    = {
+            DisplayName = "Healing Priority",
+            Group = "Abilities",
+            Header = "Recovery",
+            Category = "Healing Thresholds",
+            Index = 101,
+            Type = "Combo",
+            ComboOptions = { 'Ignore', 'Big Heal Point', },
+            Default = 2,
+            Min = 1,
+            Max = 2,
+            Tooltip = "When to yield offensive rotations for healing: Ignore (never) or at the Big Heal Point.",
+            ConfigType = "Advanced",
         },
     },
     ['ClassFAQ']          = {

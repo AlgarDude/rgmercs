@@ -1695,16 +1695,6 @@ Config.DefaultConfig                                     = {
         Max = 100,
         ConfigType = "Advanced",
     },
-    ['PriorityHealing']            = {
-        DisplayName = "Prioritize Healing",
-        Group = "Abilities",
-        Header = "Recovery",
-        Category = "Healing Thresholds",
-        Index = 8,
-        Default = true,
-        Tooltip = "Yield offensive rotations at the Main Heal Point instead of the Big Heal Point.",
-        ConfigType = "Advanced",
-    },
     --Recovery/Curing
     ['DoCureSpells']               = {
         DisplayName = "Do Cure Spells",
