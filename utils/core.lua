@@ -583,4 +583,8 @@ function Core.GetPetBlockedTable()
     Logger.log_debug("Pet Block Finish")
 end
 
+function Core.SetSetRotationEntryTooltip(tooltipLines)
+    Modules:ExecModule("Class", "SetRotationEntryTooltip", tooltipLines)
+end
+
 return Core

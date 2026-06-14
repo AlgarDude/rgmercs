@@ -2002,13 +2002,18 @@ function Ui.RenderRotationTable(name, rotationTable, resolvedActionMap, rotation
                     Ui.RenderText(Icons.FA_EXCLAMATION)
                 end
                 ImGui.PopStyleColor()
-                if entry.tooltip then
-                    Ui.Tooltip(entry.tooltip)
+                if entry.cond_tooltip and ImGui.IsItemHovered() then
+                    Ui.Tooltip(entry.cond_tooltip)
                 end
             end
 
             ImGui.TableNextColumn()
             if enabledRotationEntries[entry.name] == false then Ui.StrikeThroughText(entry.name) else Ui.RenderText(entry.name) end
+
+            if entry.tooltip and ImGui.IsItemHovered() then
+                Ui.Tooltip(entry.tooltip)
+            end
+
             ImGui.TableNextColumn()
             local mappedAction = resolvedActionMap[entry.name]
             local typeLower = entry.type:lower()
