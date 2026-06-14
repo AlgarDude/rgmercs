@@ -611,7 +611,7 @@ function Module:Render()
     local pressed = false
 
     if self.ClassConfig and self.ModuleLoaded then
-        Ui.RenderText("Active Mode:")
+        Ui.RenderText("Current Mode:")
         ImGui.SameLine()
         ImGui.SetNextItemWidth(150)
         Ui.Tooltip(self.ClassConfig.DefaultConfig.Mode.Tooltip)
@@ -1265,6 +1265,19 @@ function Module:RunHealRotation()
     else
         self:HealById(Combat.FindWorstHurtXT(Config:GetSetting('MaxHealPoint')))
     end
+end
+
+--- True if anyone we heal (group/pets + heal list or XT) is below the gate threshold this frame.
+---@param priority integer HealPriority setting: 2 Big Heal Point, 3 Main Heal Point
+---@return boolean
+function Module:NeedToHeal(priority)
+    local point = Config:GetSetting(priority == 3 and 'MainHealPoint' or 'BigHealPoint')
+    if (mq.TLO.Group.Injured(point)() or 0) > 0 then return true end
+    if Config:GetSetting('DoPetHeals') and Combat.AnyHurtGroupPet(Config:GetSetting('PetHealPoint')) then return true end
+    if Config:GetSetting('UseHealList') then
+        return Combat.FindWorstHurtHealList(point) > 0
+    end
+    return Combat.FindWorstHurtXT(point) > 0
 end
 
 function Module:ClearCureFromList(id)
