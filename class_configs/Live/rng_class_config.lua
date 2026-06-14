@@ -892,7 +892,7 @@ local _ClassConfig = {
             targetId = function(self) return Targeting.CheckForAutoTargetID() end,
             cond = function(self, combat_state)
                 return combat_state == "Combat" and
-                    Casting.BurnCheck()
+                    Casting.BurnCheck() and Core.CombatActionsCheck()
             end,
         },
         {
@@ -911,7 +911,7 @@ local _ClassConfig = {
             steps = 1,
             targetId = function(self) return Targeting.CheckForAutoTargetID() end,
             cond = function(self, combat_state)
-                return combat_state == "Combat" and not Core.IsModeActive("Healer")
+                return combat_state == "Combat" and Core.CombatActionsCheck()
             end,
         },
         {
@@ -920,7 +920,7 @@ local _ClassConfig = {
             steps = 1,
             targetId = function(self) return Targeting.CheckForAutoTargetID() end,
             cond = function(self, combat_state)
-                return combat_state == "Combat" and not Core.IsModeActive("Healer")
+                return combat_state == "Combat" and Core.CombatActionsCheck()
             end,
         },
         {
@@ -1666,7 +1666,7 @@ local _ClassConfig = {
                             chaseDistance)
                     end
                     Core.DoCmd('/squelch face fast')
-                    Movement:DoStickCmd("10 moveback")
+                    Movement:DoStickCmd("%d moveback", Config:GetSetting('BowNavDistance'))
                 elseif tooFar or forceMove then
                     Movement:DoNav(true, "id %d distance=%d lineofsight=on", Globals.AutoTargetID, Config:GetSetting('BowNavDistance'))
                     Core.DoCmd('/squelch /face fast')
@@ -1847,6 +1847,20 @@ local _ClassConfig = {
             Category = "Self",
             Tooltip = "Use Aggro Reduction Buffs.",
             Default = true,
+        },
+        ['HealPriority']       = {
+            DisplayName = "Healing Priority",
+            Group = "Abilities",
+            Header = "Recovery",
+            Category = "Healing Thresholds",
+            Index = 101,
+            Type = "Combo",
+            ComboOptions = { 'Ignore', 'Big Heal Point', },
+            Default = 2,
+            Min = 1,
+            Max = 2,
+            Tooltip = "When to yield offensive rotations for healing: Ignore (never) or at the Big Heal Point.",
+            ConfigType = "Advanced",
         },
     },
     ['ClassFAQ']          = {

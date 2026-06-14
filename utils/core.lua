@@ -416,7 +416,7 @@ function Core.ShieldEquipped()
 end
 
 --- Safe to skip healing this frame.
----@param priority boolean? when set, yields at MainHealPoint instead of BigHealPoint
+---@param priority integer? HealPriority setting: 1 Ignore, 2 Big Heal Point, 3 Main Heal Point (nil/absent treats as Ignore)
 ---@return boolean True if it is safe to perform non-heal actions.
 function Core.OkayToNotHeal(priority)
     if not Core.IsHealing() then return true end
@@ -425,7 +425,9 @@ function Core.OkayToNotHeal(priority)
         Logger.log_verbose("OkayToNotHeal: We have a queued cure to process! Skipping.")
         return false
     end
-    return (mq.TLO.Group.Injured(Config:GetSetting(priority and 'MainHealPoint' or 'BigHealPoint'))() or 0) == 0
+
+    if (priority or 1) == 1 then return true end
+    return not Modules:ExecModule("Class", "NeedToHeal", priority)
 end
 
 --- Safe to skip mezzing this frame.
@@ -454,7 +456,7 @@ end
 function Core.CombatActionsCheck()
     if not Core.OkayToNotCharm() then return false end
     if Core.CharmAssistNeeded() then return false end
-    if not Core.OkayToNotHeal(Config:GetSetting('PriorityHealing')) then return false end
+    if not Core.OkayToNotHeal(Config:GetSetting('HealPriority', true)) then return false end
     if not Core.OkayToNotMez(Config:GetSetting('PriorityMez')) then return false end
     return true
 end

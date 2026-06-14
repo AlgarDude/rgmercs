@@ -914,7 +914,7 @@ function Module:CharmAssistNeeded()
     self.TempSettings.LastCharmAssistTime = Globals.GetTimeMS()
 
     local assistOn = Config:GetSetting('DoCharmAssist')
-    local healClear = Core.OkayToNotHeal(Config:GetSetting('PriorityHealing'))
+    local healClear = Core.OkayToNotHeal(Config:GetSetting('HealPriority', true))
     local mezClear = Core.OkayToNotMez(Config:GetSetting('PriorityMez'))
     local hpOk = (mq.TLO.Me.PctHPs() or 100) > (Config:GetSetting('HPCritical', true) or Config:GetSetting('EmergencyStart', true) or 0)
     -- only scan for a loose charm once the cheaper gates pass
