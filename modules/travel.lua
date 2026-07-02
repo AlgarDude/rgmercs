@@ -126,11 +126,14 @@ function Module:Init()
             end
         end
 
+        local sortedTabNames = {}
         for k in pairs(self.TransportSpells[Globals.CurLoadedChar].Tabs) do
-            table.insert(
-                self.TransportSpells[Globals.CurLoadedChar].SortedTabNames, k)
+            table.insert(sortedTabNames, k)
         end
-        table.sort(self.TransportSpells[Globals.CurLoadedChar].SortedTabNames)
+
+        table.sort(sortedTabNames)
+
+        self.TransportSpells[Globals.CurLoadedChar].SortedTabNames = sortedTabNames
 
         -- notify everyone else of my state...
         self:SendPorterInfo()
