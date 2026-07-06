@@ -711,7 +711,10 @@ function Module:IsValidMezTarget(mobId)
             spawn.ID(), spawn.CleanName(), spawn.Level() or 0)
         return false
     end
-    -- future: body-gated mez (e.g. necro undead-only) - give ['Mez'] entries a bodyType and reject a mob no enabled entry can target (the giant rule below is the same body-check shape)
+    if not Modules:ExecModule("Class", "CanMezTarget", mobId) then
+        return false
+    end
+
     if Targeting.TargetBodyIs(spawn, "giant") then
         Logger.log_debug(
             "\ayUpdateMezList: Adding ID: %d Name: %s Level: %d to our immune list as it is a giant.", spawn.ID(),
