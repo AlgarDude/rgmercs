@@ -907,7 +907,7 @@ function Module:DoMez()
         self:ProcessMezList()
     else
         Logger.log_verbose("DoMez() : Skipping Mez list processing: Spell(%s) Ready(%s) TableSize(%d)", mezSpell and mezSpell() or "None",
-            mezSpell and mezSpell() and Strings.BoolToColorString(mq.TLO.Me.SpellReady(mezSpell.RankName())()) or "NoSpell",
+            mezSpell and mezSpell() and Strings.BoolToColorString(mq.TLO.Me.SpellReady(mezSpell.RankName() or "")()) or "NoSpell",
             tableSize)
     end
 
