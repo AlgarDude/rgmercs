@@ -1,24 +1,26 @@
-local mq          = require('mq')
-local Set         = require('mq.set')
-local Combat      = require("utils.combat")
-local Comms       = require("utils.comms")
-local Config      = require('utils.config')
-local ConfigShare = require("utils.rg_config_share")
-local Core        = require("utils.core")
-local Globals     = require('utils.globals')
-local Logger      = require("utils.logger")
-local Modules     = require("utils.modules")
-local Strings     = require("utils.strings")
-local Targeting   = require("utils.targeting")
+local mq               = require('mq')
+local Set              = require('mq.set')
+local Combat           = require("utils.combat")
+local Comms            = require("utils.comms")
+local Config           = require('utils.config')
+local ConfigShare      = require("utils.rg_config_share")
+local Core             = require("utils.core")
+local Globals          = require('utils.globals')
+local Logger           = require("utils.logger")
+local Modules          = require("utils.modules")
+local Strings          = require("utils.strings")
+local Targeting        = require("utils.targeting")
 
-local Binds       = { _version = '0.1a', _name = "Binds", _author = 'Derple', }
+local Binds            = { _version = '0.1a', _name = "Binds", _author = 'Derple', }
 
 Binds.ImmunityKeywords = {}
-for _, name in ipairs(Globals.Constants.ResistTypes)     do Binds.ImmunityKeywords[name:lower()] = { canonical = name, group = "elementalImmunities", } end
+for _, name in ipairs(Globals.Constants.ResistTypes) do Binds.ImmunityKeywords[name:lower()] = { canonical = name, group = "elementalImmunities", } end
 for _, name in ipairs(Globals.Constants.ImmunityEffects) do Binds.ImmunityKeywords[name:lower()] = { canonical = name, group = "statusImmunities", } end
 
 Binds.MainHandler = function(cmd, ...)
     if not cmd or cmd:len() == 0 then cmd = "help" end
+
+    cmd = cmd:lower()
 
     if Binds.Handlers[cmd] then
         return Binds.Handlers[cmd].handler(...)
@@ -309,7 +311,8 @@ Binds.Handlers    = {
     },
     ['immuneadd'] = {
         usage = "/rgl immuneadd <Fire|Cold|Magic|Poison|Disease|Slow|Snare|Stun> [Name]",
-        about = "Flag a mob as immune to an element (Fire/Cold/Magic/Poison/Disease) or status effect (Slow/Snare/Stun) in the current zone. If no name is entered, your target's name is used.",
+        about =
+        "Flag a mob as immune to an element (Fire/Cold/Magic/Poison/Disease) or status effect (Slow/Snare/Stun) in the current zone. If no name is entered, your target's name is used.",
         handler = function(keyword, name)
             local match = keyword and Binds.ImmunityKeywords[tostring(keyword):lower()]
             if not match then
