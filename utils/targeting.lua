@@ -78,6 +78,7 @@ function Targeting.ClearTarget()
     if Config:GetSetting('DoAutoTarget') then
         Logger.log_debug("Clearing Target")
         Globals.AutoTargetID = 0
+        Globals.MATargetID = 0
         Globals.AutoTargetIsNamed = false
         Globals.AutoTargetElementalImmunities = {}
         Globals.AutoTargetStatusImmunities = {}
@@ -416,6 +417,22 @@ end
 ---@return number Count of current XTarget haters.
 function Targeting.GetXTHaterCount(printDebug)
     return #Targeting.GetXTHaterIDs(printDebug)
+end
+
+--- Returns true if any XTarget hater is within range units of us.
+---@param range number Distance in units to check against.
+---@return boolean True if a hater is within range.
+function Targeting.XTHaterInRange(range)
+    local xtCount = mq.TLO.Me.XTarget() or 0
+
+    for i = 1, xtCount do
+        local xtarg = mq.TLO.Me.XTarget(i)
+        if xtarg and xtarg.ID() > 0 and not xtarg.Dead() and (xtarg.Type() or "Corpse") ~= "Corpse" and (xtarg.Aggressive() or (xtarg.TargetType() or ""):lower() == "auto hater" or xtarg.ID() == Globals.ForceTargetID) then
+            if (xtarg.Distance3D() or 999) <= range then return true end
+        end
+    end
+
+    return false
 end
 
 --- Returns true if any current XTarget hater ID is not in t (new hater appeared).

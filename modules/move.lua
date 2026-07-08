@@ -125,6 +125,11 @@ Module.DefaultConfig   = {
         Index = 1,
         Tooltip = "Follow the Chase target using MQ2Nav. Requires navmeshes!",
         Default = false,
+        OnChange = function(oldVal, newVal)
+            if newVal then
+                Config:SetSetting('ManualMode', false, false, true)
+            end
+        end,
     },
     ['RunMovePaused']                          = {
         DisplayName = "Chase or Camp While Paused",
@@ -231,6 +236,15 @@ Module.DefaultConfig   = {
         Min = 1,
         Max = 600,
         ConfigType = "Advanced",
+    },
+    ['ChaseInCombat']                          = {
+        DisplayName = "Chase In Combat",
+        Group = "Movement",
+        Header = "Following",
+        Category = "Chase",
+        Index = 11,
+        Tooltip = "Continue chase movement even while an XTarget hater is within Assist Range.",
+        Default = false,
     },
 
 
@@ -361,16 +375,17 @@ function Module:ChaseOn(nameParam)
     -- if no name passed, use current chase target
     local targetName = nameParam or (currentChase ~= "" and currentChase)
 
-    -- if we end up chasing our tails then use the MA.
+    -- being told to chase ourselves means we're the chase target; stop chasing whoever we were following.
     if targetName == mq.TLO.Me.CleanName() then
-        Logger.log_warn("\ayWarning: Attempting to chase yourself, defaulting to Main Assist.")
-        targetName = Core.GetGroupMainAssistName()
+        Logger.log_warn("\ayWarning: Attempting to chase yourself, stopping chase instead.")
+        self:ChaseOff()
+        return
     end
 
     -- if no current chase target, use MA
     local chaseTarget = targetName and mq.TLO.Spawn("pc =" .. targetName) or Core.GetMainAssistSpawn()
 
-    if chaseTarget and chaseTarget() and chaseTarget.ID() > 0 then
+    if chaseTarget and chaseTarget() and chaseTarget.ID() > 0 and chaseTarget.ID() ~= mq.TLO.Me.ID() then
         self:CampOff()
         Config:SetSetting('ChaseOn', true)
         Config:SetSetting('ChaseTarget', chaseTarget.CleanName())
@@ -597,6 +612,16 @@ function Module:Render()
 
         if ImGui.BeginTable("ChaseInfoTable", 2, bit32.bor(ImGuiTableFlags.Borders)) then
             ImGui.TableNextColumn()
+            Ui.RenderText("Chase Status")
+            ImGui.TableNextColumn()
+            if not Config:GetSetting('ChaseOn') then
+                Ui.RenderColoredText(Globals.Constants.BasicColors.Red, "Off")
+            elseif self.TempSettings.ChaseSuppressed then
+                Ui.RenderColoredText(Globals.Constants.BasicColors.Yellow, "Suppressed (Combat)")
+            else
+                Ui.RenderColoredText(Globals.Constants.BasicColors.Green, "Chasing")
+            end
+            ImGui.TableNextColumn()
             Ui.RenderText("Chase Target")
             ImGui.TableNextColumn()
             Ui.RenderText(self:GetChaseTarget())
@@ -685,7 +710,24 @@ function Module:OnDeath()
 end
 
 function Module:ShouldFollow()
-    return not mq.TLO.MoveTo.Moving() and (not mq.TLO.Me.Casting() or Core.MyClassIs("brd"))
+    if mq.TLO.MoveTo.Moving() or (mq.TLO.Me.Casting() and not Core.MyClassIs("brd")) then return false end
+
+    if not Config:GetSetting('ChaseInCombat') and not Config:GetSetting('PriorityFollow') and Config:GetSetting('DoAutoEngage')
+        and not Globals.PauseMain and not Config:GetSetting('ManualMode')
+        and Targeting.XTHaterInRange(Config:GetSetting('AssistRange')) then
+        -- Hold unless the MA's fight has moved out of our reach (they were summoned, or we were left behind).
+        local maTargetId = Globals.MATargetID
+        local separated = maTargetId > 0 and Targeting.IsSpawnXTHater(maTargetId, true)
+            and (mq.TLO.Spawn(maTargetId).Distance3D() or 9999) > Config:GetSetting('AssistRange')
+        if not separated then
+            self.TempSettings.ChaseSuppressed = true
+            Logger.log_super_verbose("ShouldFollow(): chase paused, XTarget hater within Assist Range.")
+            return false
+        end
+    end
+
+    self.TempSettings.ChaseSuppressed = false
+    return true
 end
 
 function Module:OnZone()
