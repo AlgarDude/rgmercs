@@ -9,7 +9,7 @@ local Strings  = require("utils.strings")
 local Tables   = require("utils.tables")
 
 local Config   = {
-    _version    = '2.1.4',
+    _version    = '2.2.0',
     _subVersion = "Shattering of Ro",
     _name       = "Config",
     _AppName    = "RGMercs Lua Edition",
