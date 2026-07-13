@@ -93,7 +93,7 @@ Module.DefaultConfig   = {
 		Min = 1,
 		Max = 20000,
 	},
-	['OpenChests'] = {
+	['OpenChests']                             = {
 		DisplayName = "Open Chests",
 		Group = "General",
 		Header = "Loot(Emu)",
@@ -102,7 +102,7 @@ Module.DefaultConfig   = {
 		Tooltip = "Target and open nearby treasure chests. (Added for EQ/Project Might)",
 		Default = function() return Core.OnMight() end,
 	},
-	['NavToChests'] = {
+	['NavToChests']                            = {
 		DisplayName = "Nav To Chests",
 		Group = "General",
 		Header = "Loot(Emu)",
@@ -111,7 +111,7 @@ Module.DefaultConfig   = {
 		Tooltip = "Navigate to treasure chests that are out of open range. (Added for EQ/Project Might)",
 		Default = function() return Core.OnMight() end,
 	},
-	['MaxChestNavDistance'] = {
+	['MaxChestNavDistance']                    = {
 		DisplayName = "Max Chest Nav Dist",
 		Group = "General",
 		Header = "Loot(Emu)",
@@ -121,6 +121,15 @@ Module.DefaultConfig   = {
 		Default = 100,
 		Min = 10,
 		Max = 500,
+	},
+	['BreakInvisForLooting']                   = {
+		DisplayName = "Break Invis for Looting",
+		Group = "General",
+		Header = "Loot(Emu)",
+		Category = "LNS",
+		Index = 9,
+		Tooltip = "Enables looting if hidden or invisible.",
+		Default = false,
 	},
 	[string.format("%s_Popped", Module._name)] = {
 		DisplayName = Module._name .. " Popped",
@@ -305,7 +314,7 @@ function Module:GiveTime()
 
 	suppressWarning = false
 
-	if not Core.OkayToNotHeal() or mq.TLO.Me.Invis() or Casting.IAmFeigning() then return end
+	if not Core.OkayToNotHeal() or (not Config:GetSetting('BreakInvisForLooting') and mq.TLO.Me.Invis()) or Casting.IAmFeigning() then return end
 
 	if Combat.CombatNavActive() then return end
 
