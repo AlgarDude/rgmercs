@@ -386,6 +386,10 @@ local _ClassConfig = {
         },
     },
     ['AASets']            = {
+        ['Spire'] = {
+            "Fundament: Second Spire of Nature",
+            "Fundament: First Spire of Nature",
+        },
         ['FireDebuffAA'] = {
             "Blessing of Ro",
             "Hand of Ro",
@@ -599,6 +603,15 @@ local _ClassConfig = {
             end,
         },
         {
+            name = 'CombatBuffs',
+            state = 1,
+            steps = 1,
+            targetId = function(self) return Casting.GetBuffableIDs() end,
+            cond = function(self, combat_state)
+                return combat_state == "Combat" and Core.CombatActionsCheck()
+            end,
+        },
+        {
             name = 'InstantRunBuff',
             state = 1,
             steps = 1,
@@ -773,11 +786,8 @@ local _ClassConfig = {
                 name = "Spirits of Nature",
                 type = "AA",
             },
-            { -- Spire, the SpireChoice setting will determine which ability is displayed/used.
-                name_func = function(self)
-                    local spireAbil = string.format("Fundament: %s Spire of Nature", Globals.Constants.SpireChoices[Config:GetSetting('SpireChoice') or 4])
-                    return Casting.CanUseAA(spireAbil) and spireAbil or "Spire Not Purchased/Selected"
-                end,
+            {
+                name = "Spire",
                 type = "AA",
             },
         },
@@ -1016,6 +1026,15 @@ local _ClassConfig = {
                 end,
             },
         },
+        ['CombatBuffs']    = {
+            {
+                name = "ReptileBuff",
+                type = "Spell",
+                cond = function(self, spell, target)
+                    return Targeting.TargetClassIs({ "WAR", "SHD", }, target) and Casting.GroupBuffCheck(spell, target) --does not stack with PAL innate buff
+                end,
+            },
+        },
     },
     ['SpellList']         = { -- New style spell list, gemless, priority-based. Will use the first set whose conditions are met.
         {
@@ -1135,22 +1154,6 @@ local _ClassConfig = {
             Min = 1,
             Max = 3,
             ConfigType = "Advanced",
-        },
-        ['SpireChoice']       = {
-            DisplayName = "Spire Choice:",
-            Group = "Abilities",
-            Header = "Buffs",
-            Category = "Group",
-            Index = 105,
-            Tooltip = "Choose which Fundament you would like to use during burns:\n" ..
-                "First Spire: Spell Crit Buff to Self.\n" ..
-                "Second Spire: Healing Power Buff to Self.\n" ..
-                "Third Spire: Large Group HP Buff.",
-            Type = "Combo",
-            ComboOptions = Globals.Constants.SpireChoices,
-            Default = 3,
-            Min = 1,
-            Max = #Globals.Constants.SpireChoices,
         },
         ['WolfSpiritChoice']  = {
             DisplayName = "Self Wolfbuff Choice:",
