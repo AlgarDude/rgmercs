@@ -695,11 +695,11 @@ _ClassConfig      = {
                 load_cond = function(self) return Config:GetSetting('DoFranticDS') end,
                 cond = function(self, spell, target)
                     local shieldSpell = Core.GetResolvedActionMapItem("FranticDS")
-                    return Casting.CastReady(shieldSpell)
+                    return Casting.CastReady(shieldSpell) and Core.GetGroupTankId() > 0
                 end,
                 custom_func = function(self)
                     local shieldSpell = Core.GetResolvedActionMapItem("FranticDS")
-                    Casting.UseSpell(shieldSpell.RankName(), Core.GetMainAssistId(), false, false, 0)
+                    Casting.UseSpell(shieldSpell.RankName(), Core.GetGroupTankId(), false, false, 0)
                 end,
             },
             {
@@ -871,7 +871,7 @@ _ClassConfig      = {
                 name = "FireShroud",
                 type = "Spell",
                 cond = function(self, spell, target)
-                    if not Targeting.TargetIsATank(target) then return false end
+                    if not Targeting.TargetIsTanking(target) then return false end
                     return Casting.GroupBuffCheck(spell, target)
                         -- workarounds for laz
                         and Casting.AddedBuffCheck(19847, target) -- necrotic pustules
