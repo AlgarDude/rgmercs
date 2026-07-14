@@ -293,6 +293,10 @@ return {
         -- },
     },
     ['AASets']        = {
+        ['Spire'] = {
+            "Fundament: Second Spire of Arcanum",
+            "Fundament: First Spire of Arcanum",
+        },
         ['Devastation'] = {
             "Prolonged Destruction",
             "Frenzied Devastation",
@@ -412,7 +416,7 @@ return {
             doFullRotation = true,
             targetId = function(self) return Targeting.CheckForAutoTargetID() end,
             cond = function(self, combat_state)
-                return combat_state == "Combat" and not (Core.IsModeActive('PBAE') and Combat.AETargetCheck(true))
+                return combat_state == "Combat" and Targeting.AggroCheckOkay() and not (Core.IsModeActive('PBAE') and Combat.AETargetCheck(true))
             end,
         },
         {
@@ -423,7 +427,7 @@ return {
             targetId = function(self) return Targeting.CheckForAutoTargetID() end,
             cond = function(self, combat_state)
                 if self.Helpers.PickElement() ~= "Fire" then return false end
-                return combat_state == "Combat" and not (Core.IsModeActive('PBAE') and Combat.AETargetCheck(true))
+                return combat_state == "Combat" and Targeting.AggroCheckOkay() and not (Core.IsModeActive('PBAE') and Combat.AETargetCheck(true))
             end,
         },
         {
@@ -434,7 +438,7 @@ return {
             targetId = function(self) return Targeting.CheckForAutoTargetID() end,
             cond = function(self, combat_state)
                 if self.Helpers.PickElement() ~= "Cold" then return false end
-                return combat_state == "Combat" and not (Core.IsModeActive('PBAE') and Combat.AETargetCheck(true))
+                return combat_state == "Combat" and Targeting.AggroCheckOkay() and not (Core.IsModeActive('PBAE') and Combat.AETargetCheck(true))
             end,
         },
         {
@@ -445,7 +449,7 @@ return {
             targetId = function(self) return Targeting.CheckForAutoTargetID() end,
             cond = function(self, combat_state)
                 if self.Helpers.PickElement() ~= "Magic" then return false end
-                return combat_state == "Combat" and not (Core.IsModeActive('PBAE') and Combat.AETargetCheck(true))
+                return combat_state == "Combat" and Targeting.AggroCheckOkay() and not (Core.IsModeActive('PBAE') and Combat.AETargetCheck(true))
             end,
         },
         {
@@ -457,7 +461,7 @@ return {
             targetId = function(self) return Targeting.CheckForAutoTargetID() end,
             cond = function(self, combat_state)
                 if not Config:GetSetting('DoAEDamage') then return false end
-                return combat_state == "Combat" and Combat.AETargetCheck(true)
+                return combat_state == "Combat" and Targeting.AggroCheckOkay() and Combat.AETargetCheck(true)
             end,
         },
         {
@@ -467,7 +471,7 @@ return {
             load_cond = function() return Casting.CanUseAA("Force of Will") or Casting.CanUseAA("Lower Element") end,
             targetId = function(self) return Targeting.CheckForAutoTargetID() end,
             cond = function(self, combat_state)
-                return combat_state == "Combat"
+                return combat_state == "Combat" and Targeting.AggroCheckOkay()
             end,
         },
         {
@@ -496,6 +500,10 @@ return {
             },
             {
                 name = "Focus of Arcanum",
+                type = "AA",
+            },
+            {
+                name = "Spire",
                 type = "AA",
             },
             { -- Fury AA: split per element so Auto mode picks the right one on the fly each burn pass
@@ -646,23 +654,19 @@ return {
                 type = "Spell",
                 load_cond = function(self) return Config:GetSetting('DoRain') end,
                 cond = function(self, spell, target)
-                    if not self.Helpers.RainCheck(target) then return false end
-                    return Targeting.AggroCheckOkay()
+                    return self.Helpers.RainCheck(target)
                 end,
             },
             {
                 name = "BigFireNuke",
                 type = "Spell",
                 cond = function(self, spell, target)
-                    return Targeting.MobNotLowHP(target) and Targeting.AggroCheckOkay()
+                    return Targeting.MobNotLowHP(target)
                 end,
             },
             {
                 name = "FireNuke",
                 type = "Spell",
-                cond = function(self, spell, target)
-                    return Targeting.AggroCheckOkay()
-                end,
             },
         },
         ['DPS(Cold)'] = {
@@ -679,23 +683,19 @@ return {
                 type = "Spell",
                 load_cond = function(self) return Config:GetSetting('DoRain') end,
                 cond = function(self, spell, target)
-                    if not self.Helpers.RainCheck(target) then return false end
-                    return Targeting.AggroCheckOkay()
+                    return self.Helpers.RainCheck(target)
                 end,
             },
             {
                 name = "BigColdNuke",
                 type = "Spell",
                 cond = function(self, spell, target)
-                    return Targeting.MobNotLowHP(target) and Targeting.AggroCheckOkay()
+                    return Targeting.MobNotLowHP(target)
                 end,
             },
             {
                 name = "ColdNuke",
                 type = "Spell",
-                cond = function(self, spell, target)
-                    return Targeting.AggroCheckOkay()
-                end,
             },
         },
         ['DPS(Magic)'] = {
@@ -711,15 +711,12 @@ return {
                 name = "BigMagicNuke",
                 type = "Spell",
                 cond = function(self, spell, target)
-                    return Targeting.MobNotLowHP(target) and Targeting.AggroCheckOkay()
+                    return Targeting.MobNotLowHP(target)
                 end,
             },
             {
                 name = "MagicNuke",
                 type = "Spell",
-                cond = function(self, spell, target)
-                    return Targeting.AggroCheckOkay()
-                end,
             },
         },
         ['DPS(PBAE)'] = {
@@ -728,7 +725,7 @@ return {
                 type = "Spell",
                 allowDead = true,
                 cond = function(self, spell, target)
-                    return Targeting.AggroCheckOkay() and Targeting.InSpellRange(spell, target)
+                    return Targeting.InSpellRange(spell, target)
                 end,
             },
             {
@@ -736,7 +733,7 @@ return {
                 type = "Spell",
                 allowDead = true,
                 cond = function(self, spell, target)
-                    return Targeting.AggroCheckOkay() and Targeting.InSpellRange(spell, target)
+                    return Targeting.InSpellRange(spell, target)
                 end,
             },
             {
@@ -744,7 +741,7 @@ return {
                 type = "Spell",
                 allowDead = true,
                 cond = function(self, spell, target)
-                    return Targeting.AggroCheckOkay() and Targeting.InSpellRange(spell, target)
+                    return Targeting.InSpellRange(spell, target)
                 end,
             },
             {
@@ -752,7 +749,7 @@ return {
                 type = "Spell",
                 allowDead = true,
                 cond = function(self, spell, target)
-                    return Targeting.AggroCheckOkay() and Targeting.InSpellRange(spell, target)
+                    return Targeting.InSpellRange(spell, target)
                 end,
             },
         },

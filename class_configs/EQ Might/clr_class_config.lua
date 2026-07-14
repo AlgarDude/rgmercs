@@ -366,6 +366,12 @@ local _ClassConfig = {
             "Promised Renewal", -- Level 71
         },
     },                          -- end AbilitySets
+    ['AASets']            = {
+        ['Spire'] = {
+            "Fundament: Second Spire of Divinity",
+            "Fundament: First Spire of Divinity",
+        },
+    },
     ['Helpers']           = {
         -- Artifact of Aegis is Aegis of Vie Rk. I
         PreferAegisSpell = function(self)
@@ -636,7 +642,7 @@ local _ClassConfig = {
             end,
         },
         {
-            name = 'Combat Buffs',
+            name = 'CombatBuffs',
             state = 1,
             steps = 1,
             targetId = function(self) return Casting.GetBuffableIDs() end,
@@ -678,6 +684,10 @@ local _ClassConfig = {
                 type = "AA",
             },
             {
+                name = "Spire",
+                type = "AA",
+            },
+            {
                 name = "OoW_Chest",
                 type = "Item",
             },
@@ -708,14 +718,14 @@ local _ClassConfig = {
                 type = "AA",
             },
         },
-        ['Combat Buffs'] = {
+        ['CombatBuffs'] = {
             {
                 name = "DivineBuff",
                 type = "Spell",
                 load_cond = function(self) return Config:GetSetting('DoDivineBuff') end,
                 cond = function(self, spell, target)
-                    if not Targeting.TargetIsATank(target) then return false end
-                    return Casting.CastReady(spell) and Casting.GroupBuffCheck(spell, target)
+                    if not Casting.CastReady(spell) then return false end --avoid constant group buff checks
+                    return Targeting.TargetIsATank(target) and Casting.GroupBuffCheck(spell, target)
                 end,
             },
             {
