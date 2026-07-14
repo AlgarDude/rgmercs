@@ -469,7 +469,7 @@ local _ClassConfig = {
                 type = "AA",
                 cond = function(self, aaName, target)
                     if not Targeting.GroupedWithTarget(target) then return false end
-                    return Targeting.TargetIsATank(target)
+                    return Targeting.TargetIsTanking(target)
                 end,
             },
             {
@@ -488,7 +488,7 @@ local _ClassConfig = {
                 type = "Item",
                 cond = function(self, itemName, target)
                     if not Targeting.GroupedWithTarget(target) then return false end
-                    return Targeting.TargetIsATank(target)
+                    return Targeting.TargetIsTanking(target)
                 end,
             },
             {
@@ -510,14 +510,14 @@ local _ClassConfig = {
                 name = "Focused Celestial Regeneration",
                 type = "AA",
                 cond = function(self, aaName, target)
-                    return Targeting.TargetIsATank(target)
+                    return Targeting.TargetIsTanking(target)
                 end,
             },
             {
                 name = "Blessing of Sanctuary",
                 type = "AA",
                 cond = function(self, aaName, target)
-                    return target.ID() == (mq.TLO.Target.AggroHolder.ID() or 0) and not Targeting.TargetIsATank(target)
+                    return target.ID() == (mq.TLO.Target.AggroHolder.ID() or 0) and not Targeting.TargetIsTanking(target)
                 end,
             },
             { --The stuff above is down, lets make mainhealpoint faster.
@@ -557,7 +557,7 @@ local _ClassConfig = {
                 name = "CompleteHeal",
                 type = "Spell",
                 cond = function(self, spell, target)
-                    if not Config:GetSetting("DoCompleteHeal") or not Targeting.TargetIsATank(target) then return false end
+                    if not Config:GetSetting("DoCompleteHeal") or not Targeting.TargetIsTanking(target) then return false end
                     return (target.PctHPs() or 999) <= Config:GetSetting('CompleteHealPct')
                 end,
             },
@@ -565,7 +565,7 @@ local _ClassConfig = {
                 name = "HealingLight",
                 type = "Spell",
                 cond = function(self, spell, target)
-                    return not (Config:GetSetting("DoCompleteHeal") and Targeting.TargetIsATank(target))
+                    return not (Config:GetSetting("DoCompleteHeal") and Targeting.TargetIsTanking(target))
                 end,
             },
         },
@@ -645,7 +645,7 @@ local _ClassConfig = {
             name = 'CombatBuffs',
             state = 1,
             steps = 1,
-            targetId = function(self) return Casting.GetBuffableIDs() end,
+            targetId = function(self) return Casting.GetBuffableTankingIDs() end, -- change back to buffableIDs if we ever add non-tank stuff here
             cond = function(self, combat_state)
                 return combat_state == "Combat" and Core.CombatActionsCheck()
             end,
@@ -725,7 +725,7 @@ local _ClassConfig = {
                 load_cond = function(self) return Config:GetSetting('DoDivineBuff') end,
                 cond = function(self, spell, target)
                     if not Casting.CastReady(spell) then return false end --avoid constant group buff checks
-                    return Targeting.TargetIsATank(target) and Casting.GroupBuffCheck(spell, target)
+                    return Casting.GroupBuffCheck(spell, target)
                 end,
             },
             {
@@ -733,7 +733,6 @@ local _ClassConfig = {
                 type = "Item",
                 load_cond = function(self) return Config:GetSetting('VieBuffMode') > 2 and not self.Helpers.PreferAegisSpell(self) end,
                 cond = function(self, itemName, target)
-                    if not Targeting.TargetIsATank(target) then return false end
                     return Casting.GroupBuffItemCheck(itemName, target) and Casting.AddedBuffCheck(43037, target) -- Bulwark of the Pegasus
                 end,
             },
@@ -742,7 +741,6 @@ local _ClassConfig = {
                 type = "Spell",
                 load_cond = function(self) return Config:GetSetting('VieBuffMode') > 2 and self.Helpers.PreferAegisSpell(self) end,
                 cond = function(self, spell, target)
-                    if not Targeting.TargetIsATank(target) then return false end
                     return Casting.GroupBuffCheck(spell, target) and Casting.AddedBuffCheck(43037, target) -- Bulwark of the Pegasus
                 end,
             },
@@ -888,7 +886,7 @@ local _ClassConfig = {
                 name = "Divine Guardian",
                 type = "AA",
                 cond = function(self, aaName, target)
-                    if not Targeting.TargetIsATank(target) then return false end
+                    if not Targeting.TargetIsTanking(target) then return false end
                     return Casting.GroupBuffAACheck(aaName, target)
                 end,
             },
@@ -918,7 +916,7 @@ local _ClassConfig = {
                 type = "Spell",
                 load_cond = function() return mq.TLO.Me.Level() < 68 or not mq.TLO.FindItem("=Legendary Armband of Mithaniel")() end,
                 cond = function(self, spell, target)
-                    if Config:GetSetting('AegoSymbol') == 1 or Config:GetSetting('AegoSymbol') == 4 or ((spell.TargetType() or ""):lower() == "single" and target.ID() ~= Core.GetMainAssistId()) then return false end
+                    if Config:GetSetting('AegoSymbol') == 1 or Config:GetSetting('AegoSymbol') == 4 or ((spell.TargetType() or ""):lower() == "single" and not Targeting.TargetIsTanking(target)) then return false end
                     return Casting.GroupBuffCheck(spell, target)
                 end,
             },
@@ -935,7 +933,7 @@ local _ClassConfig = {
                 type = "Spell",
                 load_cond = function(self) return Config:GetSetting('DoACBuff') end,
                 cond = function(self, spell, target)
-                    if (spell.TargetType() or ""):lower() == "single" and not Targeting.TargetIsATank(target) then return false end
+                    if (spell.TargetType() or ""):lower() == "single" and not Targeting.TargetIsTanking(target) then return false end
                     return Casting.GroupBuffCheck(spell, target)
                 end,
             },
@@ -960,7 +958,7 @@ local _ClassConfig = {
                 type = "Spell",
                 load_cond = function(self) return Config:GetSetting('DoDivineBuff') end,
                 cond = function(self, spell, target)
-                    if not Targeting.TargetIsATank(target) then return false end
+                    if not Targeting.TargetIsTanking(target) then return false end
                     return Casting.CastReady(spell) and Casting.GroupBuffCheck(spell, target)
                 end,
             },

@@ -841,7 +841,7 @@ local _ClassConfig    = {
                 type = "Spell",
                 load_cond = function() return Config:GetSetting('DoHateBuff') end,
                 cond = function(self, spell, target)
-                    if not Targeting.TargetIsATank(target) then return false end
+                    if not Targeting.TargetIsTanking(target) then return false end
                     return Casting.CastReady(spell) and Casting.GroupBuffCheck(spell, target)
                 end,
             },
@@ -860,7 +860,7 @@ local _ClassConfig    = {
                 load_cond = function() return Config:GetSetting('DoTankIllusionBuff') end,
                 active_cond = function(self, spell) return mq.TLO.Me.FindBuff("id " .. tostring(spell.ID()))() ~= nil end,
                 cond = function(self, spell, target)
-                    if not Targeting.TargetIsATank(target) then return false end
+                    if not Targeting.TargetIsTanking(target) then return false end
                     return Casting.CastReady(spell) and
                         Casting.GroupBuffCheck(spell, target, false, true) -- skip trigger checks, we are not worried about spells with a seperate illusion trigger
                 end,
@@ -871,7 +871,7 @@ local _ClassConfig    = {
                 load_cond = function() return Config:GetSetting('DoIllusionBuff') end,
                 active_cond = function(self, spell) return mq.TLO.Me.FindBuff("id " .. tostring(spell.ID()))() ~= nil end,
                 cond = function(self, spell, target)
-                    if Config:GetSetting('DoTankIllusionBuff') and Targeting.TargetIsATank(target) and Core.GetResolvedActionMapItem('TankIllusionBuff') then return false end
+                    if Config:GetSetting('DoTankIllusionBuff') and Targeting.TargetIsTanking(target) and Core.GetResolvedActionMapItem('TankIllusionBuff') then return false end
                     return Casting.CastReady(spell) and
                         Casting.GroupBuffCheck(spell, target, false, true) -- skip trigger checks, we are not worried about spells with a seperate illusion trigger
                 end,
@@ -900,7 +900,7 @@ local _ClassConfig    = {
                 type = "Spell",
                 active_cond = function(self, spell) return mq.TLO.Me.FindBuff("id " .. tostring(spell.ID()))() ~= nil end,
                 cond = function(self, spell, target)
-                    if not Targeting.TargetIsATank(target) then return false end
+                    if not Targeting.TargetIsTanking(target) then return false end
                     return Casting.GroupBuffCheck(spell, target)
                 end,
             },
@@ -918,7 +918,7 @@ local _ClassConfig    = {
             --     type = "Spell",
             --     active_cond = function(self, spell) return mq.TLO.Me.FindBuff("id " .. tostring(spell.ID()))() ~= nil end,
             --     cond = function(self, spell, target)
-            --         if not Config:GetSetting('DoAggroRune') or not Targeting.TargetIsATank(target) then return false end
+            --         if not Config:GetSetting('DoAggroRune') or not Targeting.TargetIsTanking(target) then return false end
             --         return Casting.GroupBuffCheck(spell, target)
             --     end,
             -- },
@@ -949,7 +949,7 @@ local _ClassConfig    = {
                 type = "Spell",
                 load_cond = function() return Config:GetSetting('DoSpinStun') > 1 end,
                 cond = function(self, spell, target)
-                    if (Config:GetSetting('DoSpinStun') == 2 and Core.GetMainAssistPctHPs() > Config:GetSetting('EmergencyStart')) then return false end
+                    if Config:GetSetting('DoSpinStun') == 2 and (mq.TLO.Group.Injured(Config:GetSetting('EmergencyStart'))() or 0) < 1 then return false end
                     return Targeting.TargetNotStunned() and not Globals.AutoTargetIsNamed
                 end,
             },
@@ -958,7 +958,7 @@ local _ClassConfig    = {
                 type = "Spell",
                 load_cond = function() return Config:GetSetting('DoAEStun') > 1 end,
                 cond = function(self, spell, target)
-                    if (Config:GetSetting('DoAEStun') == 2 and Core.GetMainAssistPctHPs() > Config:GetSetting('EmergencyStart')) then return false end
+                    if Config:GetSetting('DoAEStun') == 2 and (mq.TLO.Group.Injured(Config:GetSetting('EmergencyStart'))() or 0) < 1 then return false end
                     return Targeting.GetXTHaterCount() >= Config:GetSetting("AECount")
                 end,
             },
@@ -967,7 +967,8 @@ local _ClassConfig    = {
                 type = "AA",
                 load_cond = function() return Config:GetSetting("DoSoothing") end,
                 cond = function(self, aaName, target)
-                    return Globals.AutoTargetIsNamed and (mq.TLO.Me.TargetOfTarget.ID() or Core.GetMainAssistId()) ~= Core.GetMainAssistId()
+                    local tankId = mq.TLO.Group.MainTank.ID() or 0
+                    return Globals.AutoTargetIsNamed and (mq.TLO.Me.TargetOfTarget.ID() or tankId) ~= tankId
                 end,
             },
             {

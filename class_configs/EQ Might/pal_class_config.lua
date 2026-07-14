@@ -789,9 +789,9 @@ return {
             {
                 name = "SymbolBuff",
                 type = "Spell",
-                load_cond = function() return Config:GetSetting('AegoSymbol') == 3 or Config:GetSetting('AegoSymbol') == 3 end,
+                load_cond = function() return Config:GetSetting('AegoSymbol') == 2 or Config:GetSetting('AegoSymbol') == 3 end,
                 cond = function(self, spell, target)
-                    if (spell.TargetType() or ""):lower() == "single" and target.ID() ~= Core.GetMainAssistId() then return false end
+                    if (spell.TargetType() or ""):lower() == "single" and not Targeting.TargetIsTanking(target) then return false end
                     return Casting.GroupBuffCheck(spell, target) and Casting.AddedBuffCheck(3047, target) -- don't try to overwrite Kazad's Mark
                 end,
             },
@@ -816,7 +816,7 @@ return {
                 type = "Spell",
                 load_cond = function() return Config:GetSetting('DoACBuff') end,
                 cond = function(self, spell, target)
-                    if (spell.TargetType() or ""):lower() == "single" and target.ID() ~= Core.GetMainAssistId() then return false end
+                    if (spell.TargetType() or ""):lower() == "single" and not Targeting.TargetIsTanking(target) then return false end
                     return Casting.GroupBuffCheck(spell, target)
                 end,
             },
@@ -825,7 +825,7 @@ return {
                 type = "AA",
                 load_cond = function() return Config:GetSetting('DoSalvation') end,
                 cond = function(self, aaName, target)
-                    return not Targeting.TargetIsATank(target) and Casting.GroupBuffAACheck(aaName, target)
+                    return not Targeting.TargetIsTanking(target) and Casting.GroupBuffAACheck(aaName, target)
                 end,
             },
         },
