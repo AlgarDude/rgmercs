@@ -974,7 +974,7 @@ Config.DefaultConfig                                     = {
         "The stance to use for your merc. Since mercs have different stances, find the one for your current mercenary type.\nNote: an invalid stance selection will default to the first listed.",
         Type = "Combo",
         ComboOptions = { 'Aggressive or Balanced', 'Assist or Reactive or Burn', 'Efficient or BurnAE', },
-        Default = 2,
+        Default = function() return (mq.TLO.Me.MembershipLevel() or ""):lower() == "gold" and 2 or 1 end,
         Min = 1,
         Max = 3,
         ConfigType = "Advanced",
