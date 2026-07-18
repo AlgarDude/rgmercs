@@ -2410,7 +2410,7 @@ function Module:RenderMoveAbilities()
                 ImGui.PushStyleColor(ImGuiCol.Text, Globals.Constants.Colors.Purple)
                 ImGui.PushStyleColor(ImGuiCol.HeaderHovered, Globals.Constants.Colors.NearBlack)
                 local rankSpell = songSpell.RankName
-                local _, clicked = ImGui.Selectable(rankSpell())
+                local _, clicked = ImGui.Selectable(rankSpell() or "Unknown")
                 if clicked then
                     rankSpell.Inspect()
                 end
