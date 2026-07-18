@@ -105,15 +105,17 @@ function Module:Init()
         self.TransportSpells[Globals.CurLoadedChar].Tabs           = {}
         self.TransportSpells[Globals.CurLoadedChar].SortedTabNames = {}
 
+        local tabsTable                                            = {}
+
         for i = 1, Globals.Constants.SpellBookSlots do
             local spell = mq.TLO.Me.Book(i)
             if spell.Category() == "Transport" then
                 Logger.log_debug("\ayFound Transport Spell: <\ay%-15s\ay> => \at'%s'\ay \ao(%d) \ay[\am%s\ay]", spell.Subcategory(), spell.RankName(), spell.ID(),
                     spell.TargetType())
                 local subCat = spell.Subcategory()
-                self.TransportSpells[Globals.CurLoadedChar].Tabs[subCat] = self.TransportSpells[Globals.CurLoadedChar].Tabs[subCat] or {}
+                tabsTable[subCat] = tabsTable[subCat] or {}
                 local heading = math.floor(((((512 - spell.Base(4)()) % 512) / 32) + 1))
-                table.insert(self.TransportSpells[Globals.CurLoadedChar].Tabs[subCat],
+                table.insert(tabsTable[subCat],
                     {
                         Name = spell.RankName(),
                         Type = spell.TargetType(),
@@ -125,6 +127,8 @@ function Module:Init()
                     })
             end
         end
+
+        self.TransportSpells[Globals.CurLoadedChar].Tabs = tabsTable
 
         local sortedTabNames = {}
         for k in pairs(self.TransportSpells[Globals.CurLoadedChar].Tabs) do
