@@ -1,4 +1,4 @@
--- Sample Performance Monitor Class Module
+local mq                  = require("mq")
 local ImPlot              = require('ImPlot')
 local Base                = require("modules.base")
 local Config              = require('utils.config')

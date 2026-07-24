@@ -1,3 +1,4 @@
+local mq           = require("mq")
 local Config       = require('utils.config')
 local Globals      = require("utils.globals")
 local Logger       = require("utils.logger")
