@@ -2,7 +2,6 @@
 local mq        = require('mq')
 local Set       = require("mq.Set")
 local Base      = require("modules.base")
-local Casting   = require("utils.casting")
 local Combat    = require("utils.combat")
 local Config    = require('utils.config')
 local Core      = require("utils.core")
@@ -296,7 +295,7 @@ function Module:GiveTime()
 	if not self:GetSLTLO() or not self:GetSLTLO().IsEnabled() then return end
 	if Globals.PauseMain then return end
 
-	if not Core.OkayToNotHeal() or mq.TLO.Me.Invis() or Casting.IAmFeigning() then return end
+	if not Core.OkayToNotHeal() or mq.TLO.Me.Invis() or Core.IAmFeigning() then return end
 
 	if Combat.CombatNavActive() then return end
 

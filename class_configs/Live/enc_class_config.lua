@@ -1043,7 +1043,7 @@ local _ClassConfig    = {
         end,
     },
     ['Rotations']     = {
-        ['Downtime'] = {
+        ['Downtime']       = {
             {
                 name = "Orator's Unity",
                 type = "AA",
@@ -1152,7 +1152,7 @@ local _ClassConfig    = {
                 end,
             },
         },
-        ['PetSummon'] = {
+        ['PetSummon']      = {
             {
                 name = "PetSpell",
                 type = "Spell",
@@ -1166,7 +1166,7 @@ local _ClassConfig    = {
                 end,
             },
         },
-        ['PetBuff'] = {
+        ['PetBuff']        = {
             {
                 name = "PetBuffSpell",
                 type = "Spell",
@@ -1182,7 +1182,7 @@ local _ClassConfig    = {
             },
 
         },
-        ['GroupBuff'] = {
+        ['GroupBuff']      = {
             {
                 name = "ManaRegen",
                 type = "Spell",
@@ -1276,7 +1276,7 @@ local _ClassConfig    = {
                 end,
             },
         },
-        ['Dispel'] = {
+        ['Dispel']         = {
             {
                 name = "Eradicate Magic",
                 type = "AA",
@@ -1293,7 +1293,7 @@ local _ClassConfig    = {
                 end,
             },
         },
-        ['CombatSupport'] = {
+        ['CombatSupport']  = {
             {
                 name = "Glyph Spray",
                 type = "AA",
@@ -1321,8 +1321,7 @@ local _ClassConfig    = {
                 name = "Self Stasis",
                 type = "AA",
                 cond = function(self, aaName)
-                    if Config:GetSetting('CharmOn') and mq.TLO.Me.Pet.ID() > 0 then return false end
-                    return mq.TLO.Me.TargetOfTarget.ID() == mq.TLO.Me.ID() and mq.TLO.Target.ID() == Globals.AutoTargetID
+                    return Casting.OkayToCombatEscape() and (Core.AtEmergencyHP() or Globals.AutoTargetIsNamed)
                 end,
                 post_activate = function(self, aaName, success)
                     if not success then return end
@@ -1340,23 +1339,6 @@ local _ClassConfig    = {
             --         return mq.TLO.Me.TargetOfTarget.ID() == mq.TLO.Me.ID() and mq.TLO.Target.ID() == Globals.AutoTargetID and mq.TLO.Me.PctHPs() <= 30
             --     end,
             -- },
-            {
-                name = "Beguiler's Directed Banishment",
-                type = "AA",
-                cond = function(self, aaName, target)
-                    if target.ID() == Globals.AutoTargetID then return false end
-                    return mq.TLO.Me.PctAggro() > 99 and mq.TLO.Me.PctHPs() <= Config:GetSetting('EmergencyStart')
-                end,
-
-            },
-            {
-                name = "Beguiler's Banishment",
-                type = "AA",
-                cond = function(self, aaName)
-                    return Targeting.IHaveAggro(100) and mq.TLO.Me.PctHPs() <= Config:GetSetting('EmergencyStart') and mq.TLO.SpawnCount("npc radius 20")() > 2
-                end,
-
-            },
             {
                 name = "Doppelganger",
                 type = "AA",
@@ -1377,7 +1359,6 @@ local _ClassConfig    = {
                 cond = function(self, aaName, target)
                     return Globals.AutoTargetIsNamed and mq.TLO.Me.PctAggro() >= 90
                 end,
-
             },
             {
                 name = "Silent Casting",
@@ -1385,10 +1366,17 @@ local _ClassConfig    = {
                 cond = function(self, aaName, target)
                     return Globals.AutoTargetIsNamed and mq.TLO.Me.PctAggro() >= 60
                 end,
+            },
+            {
+                name = "Beguiler's Banishment",
+                type = "AA",
+                cond = function(self, aaName)
+                    return mq.TLO.Me.PctHPs() <= Config:GetSetting('EmergencyStart') and mq.TLO.SpawnCount("npc radius 20")() > 2
+                end,
 
             },
         },
-        ['DPS(Default)'] = {
+        ['DPS(Default)']   = {
             {
                 name = "MindDot",
                 type = "Spell",
@@ -1482,7 +1470,7 @@ local _ClassConfig    = {
                 end,
             },
         },
-        ['Burn'] = {
+        ['Burn']           = {
             {
                 name = "Illusions of Grandeur",
                 type = "AA",
@@ -1530,7 +1518,7 @@ local _ClassConfig    = {
                 type = "AA",
             },
         },
-        ['Tash'] = {
+        ['Tash']           = {
             {
                 name = "Bite of Tashani",
                 type = "AA",
@@ -1547,7 +1535,7 @@ local _ClassConfig    = {
                 end,
             },
         },
-        ['CripSlow'] = {
+        ['CripSlow']       = {
             {
                 name = "Enveloping Helix",
                 type = "AA",
@@ -1840,18 +1828,6 @@ local _ClassConfig    = {
                 "Disabled: We will use our standard ST Mez in Gem 1.\n" ..
                 "As ST Mez: We will use the Twincast Mez as our ST Mez in Gem 1.\n" ..
                 "As Mez and to Trigger Twincast: As above and we will also use this spell in combat to trigger the twincast effect.",
-        },
-        ['EmergencyStart']     = {
-            DisplayName = "Emergency Start",
-            Group = "Abilities",
-            Header = "Utility",
-            Category = "Emergency",
-            Index = 101,
-            Tooltip = "The HP % emergency abilities will be used (Abilities used depend on whose health is low, the ENC or the MA).",
-            Default = 50,
-            Min = 1,
-            Max = 100,
-            ConfigType = "Advanced",
         },
         ['DoChestClick']       = {
             DisplayName = "Do Chest Click",

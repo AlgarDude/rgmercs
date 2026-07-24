@@ -2,7 +2,6 @@ local mq        = require('mq')
 local Casting   = require("utils.casting")
 local Config    = require('utils.config')
 local Core      = require("utils.core")
-local Globals   = require("utils.globals")
 local Logger    = require("utils.logger")
 local Movement  = require("utils.movement")
 local Strings   = require("utils.strings")
@@ -144,14 +143,23 @@ return {
             end,
         },
         {
-            name = 'Emergency',
+            name = 'Emergency(Health)',
             state = 1,
             steps = 1,
             doFullRotation = true,
             targetId = function(self) return Targeting.CheckForAutoTargetID() end,
             cond = function(self, combat_state)
-                return Targeting.GetXTHaterCount() > 0 and
-                    (mq.TLO.Me.PctHPs() <= Config:GetSetting('EmergencyStart') or (Globals.AutoTargetIsNamed and mq.TLO.Me.PctAggro() > 99))
+                return Targeting.GetXTHaterCount() > 0 and Core.AtEmergencyHP()
+            end,
+        },
+        {
+            name = 'Emergency(Aggro)',
+            state = 1,
+            steps = 1,
+            doFullRotation = true,
+            targetId = function(self) return Targeting.CheckForAutoTargetID() end,
+            cond = function(self, combat_state)
+                return Targeting.IHaveAggro(100)
             end,
         },
         {
@@ -184,7 +192,7 @@ return {
         },
     },
     ['Rotations']     = {
-        ['Burn'] = {
+        ['Burn']              = {
             {
                 name = "OoW_Chest",
                 type = "Item",
@@ -217,7 +225,7 @@ return {
                 load_cond = function(self) return Config:GetSetting('DoVetAA') end,
             },
         },
-        ['BurnDisc'] = {
+        ['BurnDisc']          = {
             {
                 name = "Frenzied",
                 type = "Disc",
@@ -239,7 +247,7 @@ return {
                 type = "Disc",
             },
         },
-        ['Aggro Management'] = {
+        ['Aggro Management']  = {
             {
                 name = "Escape",
                 type = "AA",
@@ -270,7 +278,7 @@ return {
                 type = "AA",
             },
         },
-        ['DPS'] = {
+        ['DPS']               = {
             {
                 name = "Epic",
                 type = "Item",
@@ -320,27 +328,7 @@ return {
                 end,
             },
         },
-        ['Emergency'] = {
-            {
-                name = "Nimble",
-                type = "Disc",
-                cond = function(self, discSpell)
-                    return mq.TLO.Me.PctHPs() < 35
-                end,
-            },
-            {
-                name = "Armor of Experience",
-                type = "AA",
-                load_cond = function(self) return Config:GetSetting('DoVetAA') end,
-                cond = function(self, aaName)
-                    local nimble = Core.GetResolvedActionMapItem('Nimble')
-                    return mq.TLO.Me.PctHPs() < 35 and not (nimble and Casting.IHaveBuff(nimble.Trigger(1)))
-                end,
-            },
-            {
-                name = "Tumble",
-                type = "AA",
-            },
+        ['Emergency(Health)'] = {
             {
                 name = "Blood Drinker's Coating",
                 type = "Item",
@@ -349,15 +337,33 @@ return {
                     return Casting.SelfBuffItemCheck(itemName)
                 end,
             },
+        },
+        ['Emergency(Aggro)']  = {
+            {
+                name = "Nimble",
+                type = "Disc",
+                cond = function(self, discSpell)
+                    return Core.AtCriticalHP()
+                end,
+            },
+            {
+                name = "Tumble",
+                type = "AA",
+            },
             {
                 name = "CADisc",
                 type = "Disc",
-                cond = function(self, discSpell)
-                    return Targeting.IHaveAggro(100)
+            },
+            {
+                name = "Armor of Experience",
+                type = "AA",
+                load_cond = function(self) return Config:GetSetting('DoVetAA') end,
+                cond = function(self, aaName)
+                    return Core.AtCriticalHP() and not Casting.DiscTriggerActive('Nimble')
                 end,
             },
         },
-        ['Downtime'] = {
+        ['Downtime']          = {
             {
                 name = "ThiefBuff",
                 type = "Disc",
@@ -395,7 +401,7 @@ return {
                 end,
             },
         },
-        ['Hide & Sneak'] = {
+        ['Hide & Sneak']      = {
             {
                 name = "Hide & Sneak",
                 type = "CustomFunc",
@@ -454,10 +460,6 @@ return {
                     Strings.BoolToColorString(Config:GetSetting("DoOpener")), Strings.BoolToColorString(mq.TLO.Me.AbilityReady("Hide")()),
                     mq.TLO.Me.AbilityTimer("Hide")(), Strings.BoolToColorString(mq.TLO.Me.Invis()))
             end
-        end,
-        UnwantedAggroCheck = function(self)
-            if Targeting.GetXTHaterCount() == 0 or Core.IsTanking() or mq.TLO.Group.Puller.ID() == mq.TLO.Me.ID() then return false end
-            return Targeting.IHaveAggro(100)
         end,
     },
     ['DefaultConfig'] = {
@@ -520,18 +522,6 @@ return {
             Index = 101,
             Tooltip = "Use Sneak Attack line to start combat (e.g, Daggerslash).",
             Default = true,
-        },
-        ['EmergencyStart']  = {
-            DisplayName = "Emergency HP%",
-            Group = "Abilities",
-            Header = "Damage",
-            Category = "AE",
-            Index = 101,
-            Tooltip = "Your HP % before we begin to use emergency mitigation abilities.",
-            Default = 50,
-            Min = 1,
-            Max = 100,
-            ConfigType = "Advanced",
         },
         ['HideAggro']       = {
             DisplayName = "Hide Aggro%",

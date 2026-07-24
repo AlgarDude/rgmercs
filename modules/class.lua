@@ -905,7 +905,7 @@ function Module:ReconcileLoadout()
     if not Combat.CombatSettled(1000) then return end
 
     local me = mq.TLO.Me
-    if me.Feigning() then return end
+    if Core.IAmFeigning() then return end
 
     local numGems = me.NumGems()
     for gem = 1, numGems do
@@ -929,7 +929,7 @@ function Module:PromptRestoreSwapSlot()
     if Targeting.GetXTHaterCount() > 0 then return end
 
     local me = mq.TLO.Me
-    if me.Feigning() then return end
+    if Core.IAmFeigning() then return end
 
     local swapGem = Casting.UseGem
     for gem = 1, me.NumGems() do

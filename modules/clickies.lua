@@ -2108,7 +2108,7 @@ function Module:GiveTime()
         return
     end
 
-    if Casting.IAmFeigning() then
+    if Core.IAmFeigning() then
         Logger.log_super_verbose("\ayClicky: \aw\t|->\aw \arSkipping, currently feigned!")
         return
     end

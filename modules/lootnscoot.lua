@@ -2,7 +2,6 @@
 local mq              = require('mq')
 local Actors          = require("actors")
 local Base            = require("modules.base")
-local Casting         = require("utils.casting")
 local Combat          = require("utils.combat")
 local Comms           = require("utils.comms")
 local Config          = require('utils.config')
@@ -314,7 +313,7 @@ function Module:GiveTime()
 
 	suppressWarning = false
 
-	if not Core.OkayToNotHeal() or (not Config:GetSetting('BreakInvisForLooting') and mq.TLO.Me.Invis()) or Casting.IAmFeigning() then return end
+	if not Core.OkayToNotHeal() or (not Config:GetSetting('BreakInvisForLooting') and mq.TLO.Me.Invis()) or Core.IAmFeigning() then return end
 
 	if Combat.CombatNavActive() then return end
 
