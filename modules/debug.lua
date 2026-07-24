@@ -4,7 +4,6 @@ local Base          = require("modules.base")
 local Config        = require('utils.config')
 local Core          = require("utils.core")
 local Globals       = require("utils.globals")
-local Logger        = require("utils.logger")
 local Signatures    = require('utils.signatures')
 local Ui            = require("utils.ui")
 local Zep           = require('Zep')
@@ -481,9 +480,9 @@ function Module:RenderToolbar()
         end
 
         ImGui.TableNextColumn()
-        local enableAutoComplete, pressed = ImGui.Checkbox("Auto Completion",
+        local enableAutoComplete, autoCompletePressed = ImGui.Checkbox("Auto Completion",
             Config:GetSetting('EnableAutoCompletion'))
-        if pressed then
+        if autoCompletePressed then
             Config:SetSetting('EnableAutoCompletion', enableAutoComplete)
         end
         ImGui.TableNextColumn()

@@ -1,4 +1,3 @@
-local mq      = require('mq')
 local lfs     = require("lfs")
 local Logger  = require("utils.logger")
 
