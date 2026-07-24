@@ -2,7 +2,6 @@ local Icons               = require('mq.ICONS')
 local Config              = require('utils.config')
 local Console             = require('utils.console')
 local Globals             = require("utils.globals")
-local Logger              = require("utils.logger")
 local Ui                  = require('utils.ui')
 
 local ConsoleUI           = { _version = '1.0', _name = "ConsoleUI", _author = 'Derple', }
@@ -23,7 +22,7 @@ function ConsoleUI:DrawConsole(showPopout)
             ImGui.PopID()
         end
 
-        local changed
+        local changed, _
         if ImGui.BeginTable("##debugoptions", 2, ImGuiTableFlags.None) then
             ImGui.TableSetupColumn("Opt Name", bit32.bor(ImGuiTableColumnFlags.WidthFixed, ImGuiTableColumnFlags.NoResize), 150)
             ImGui.TableSetupColumn("Opt Value", ImGuiTableColumnFlags.WidthStretch)

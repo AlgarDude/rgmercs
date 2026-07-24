@@ -617,7 +617,7 @@ end
 --- @param skipBlockCheck boolean|nil whether to skip checking the peers blocked spells, this needs to be skipped for certain manual stacking checks
 --- @param skipTriggerCheck boolean|nil whether to skip a check for spell triggers, to be used for cost savings when we know the spell does not have triggers
 --- @return boolean True if the PC checking should cast the buff, false otherwise.
-function Casting.ActorBuffCheck(spellId, target, skipBlockCheck, skipTriggerCheck, heartbeat, spell)
+function Casting.ActorBuffCheck(spellId, target, skipBlockCheck, skipTriggerCheck, providedHeartbeat, spell)
     if not spellId then return false end
     if not (target and target()) then return false end
 
@@ -628,7 +628,7 @@ function Casting.ActorBuffCheck(spellId, target, skipBlockCheck, skipTriggerChec
 
     if not spellName then return false end
 
-    local heartbeat = heartbeat or Comms.GetPeerHeartbeatByName(targetName)
+    local heartbeat = providedHeartbeat or Comms.GetPeerHeartbeatByName(targetName)
 
     if not heartbeat or not heartbeat.Data then
         Logger.log_error(
@@ -744,7 +744,7 @@ end
 --- @param skipBlockCheck boolean|nil whether to skip checking the peers blocked spells, this needs to be skipped for certain manual stacking checks
 --- @param skipTriggerCheck boolean|nil whether to skip a check for spell triggers, to be used for cost savings when we know the spell does not have triggers
 --- @return boolean True if the PC checking should cast the buff, false otherwise.
-function Casting.ActorPetBuffCheck(spellId, target, skipBlockCheck, skipTriggerCheck, heartbeat, spell)
+function Casting.ActorPetBuffCheck(spellId, target, skipBlockCheck, skipTriggerCheck, providedHeartbeat, spell)
     if not spellId then return false end
     if not (target and target()) then return false end
 
@@ -757,7 +757,7 @@ function Casting.ActorPetBuffCheck(spellId, target, skipBlockCheck, skipTriggerC
 
     local masterName = target.Master() and target.Master.DisplayName() or nil
 
-    local heartbeat = heartbeat or (masterName and Comms.GetPeerHeartbeatByName(masterName) or nil)
+    local heartbeat = providedHeartbeat or (masterName and Comms.GetPeerHeartbeatByName(masterName) or nil)
 
     if not heartbeat or not heartbeat.Data then
         Logger.log_error(
@@ -2114,7 +2114,7 @@ function Casting.UseSong(songName, targetId, bAllowMem, retryCount)
     retryCount = retryCount or Config:GetSetting('CastRetryCount')
 
     local cancel = false
-    local castStarted = false
+    local castStarted
     local songCastTime = songSpell.MyCastTime() or 0
     local readyCheck = function() return me.SpellReady(songName)() end
 

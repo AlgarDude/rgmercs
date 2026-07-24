@@ -3458,8 +3458,7 @@ end
 --- @param tempOnly boolean?: The new value to assign to the setting.
 --- @param noCallback boolean?: If true, the setting will be updated without triggering the OnChange callback.
 function Config:SetSetting(setting, value, tempOnly, noCallback)
-    local settingModuleName = "Core"
-    local beforeUpdate = ""
+    local settingModuleName
 
     settingModuleName, setting = self:MakeValidSettingName(setting)
 
@@ -3472,7 +3471,7 @@ function Config:SetSetting(setting, value, tempOnly, noCallback)
     local defaultConfig = self:GetModuleDefaultSettings(settingModuleName)
 
     local cleanValue = self:MakeValidSetting(settingModuleName, setting, value)
-    _, beforeUpdate = Config:GetUsageText(setting, false, defaultConfig, true)
+    local _, beforeUpdate = Config:GetUsageText(setting, false, defaultConfig, true)
     if cleanValue ~= nil then
         if tempOnly then
             self.moduleTempSettings[settingModuleName][setting] = cleanValue
@@ -3633,7 +3632,7 @@ function Config:RegisterModuleSettings(module, settings, defaultSettings, faq, f
         return
     end
 
-    local settingsChanged = false
+    local settingsChanged
 
     --Centralize category creation and setup the FAQs
     local settingCategories = Set.new({})

@@ -509,15 +509,9 @@ function Ui.RenderAAOverlay()
                                 return a.CostNum, b.CostNum
                             end,
                             render = function(entry)
-                                local color = Globals.Constants.Colors.ConditionPassColor
-
-                                if entry.CostNum == 999 then
-                                    color = Globals.Constants.Colors.ConditionPassColor
-                                elseif entry.CostNum > mq.TLO.Me.AAPoints() then
-                                    color = Globals.Constants.Colors.ConditionFailColor
-                                else
-                                    color = Globals.Constants.Colors.ConditionPassColor
-                                end
+                                local color = (entry.CostNum ~= 999 and entry.CostNum > mq.TLO.Me.AAPoints())
+                                    and Globals.Constants.Colors.ConditionFailColor
+                                    or Globals.Constants.Colors.ConditionPassColor
 
                                 ImGui.TextColored(color, entry.CostNum == 999 and Icons.MD_CHECK or entry.Cost)
                             end,
@@ -2123,7 +2117,7 @@ function Ui.RenderRotationTable(name, rotationTable, resolvedActionMap, rotation
             end
             ImGui.TableNextColumn()
             if isResolved then
-                local changed = false
+                local changed
                 enabledRotationEntries[entry.name], changed = Ui.RenderOptionToggle(string.format("rot_%s_tggl_%d", name, idx), "",
                     enabledRotationEntries[entry.name] == nil and true or enabledRotationEntries[entry.name])
                 if changed then enabledRotationEntriesChanged = true end
@@ -2412,7 +2406,7 @@ function Ui.RenderFancyToggle(id, label, value, size, on_color, off_color, knob_
             if alpha > 0.01 then
                 local pulse_col = Globals.Constants.Colors.TogglePulseColor
                 local a = math.floor(alpha * 200)
-                draw_list:AddCircle(thumb_center, radius, Ui.ImVec4ToColor(pulse_col))
+                draw_list:AddCircle(thumb_center, radius, IM_COL32(math.floor(pulse_col.x * 255), math.floor(pulse_col.y * 255), math.floor(pulse_col.z * 255), a))
             end
         end
     end
@@ -2859,7 +2853,7 @@ function Ui.RenderOptionNumber(id, text, cur, min, max, step)
     ImGui.PushStyleColor(ImGuiCol.Button, Globals.Constants.Colors.Grey)
     ImGui.PushStyleColor(ImGuiCol.FrameBg, Globals.Constants.Colors.Black)
     ImGui.SetNextItemWidth(ImGui.GetContentRegionAvailVec().x)
-    local input, changed = ImGui.InputInt(text, cur, step, 1, ImGuiInputTextFlags.None)
+    local input = ImGui.InputInt(text, cur, step, 1, ImGuiInputTextFlags.None)
     ImGui.PopStyleColor(4)
     ImGui.PopID()
 
@@ -2870,7 +2864,7 @@ function Ui.RenderOptionNumber(id, text, cur, min, max, step)
     if input > max then input = max end
     if input < min then input = min end
 
-    changed = cur ~= input
+    local changed = cur ~= input
     return input, changed
 end
 
@@ -3177,8 +3171,8 @@ function Ui.RenderThemeConfigElement(id, themeElement)
 
         ImGui.TableNextColumn()
 
-        local settingColor, _, pressed = Ui.RenderOption("Color", themeElement.color, tostring(id) .. "_color", false, true)
-        any_pressed = any_pressed or (pressed or false)
+        local settingColor, _, colorPressed = Ui.RenderOption("Color", themeElement.color, tostring(id) .. "_color", false, true)
+        any_pressed = any_pressed or (colorPressed or false)
 
         if any_pressed then
             local userConfig = Config:GetSetting('UserTheme')
@@ -3205,8 +3199,8 @@ function Ui.RenderThemeConfigElement(id, themeElement)
             return any_pressed, delete_pressed
         end
 
-        local settingStyle, _, pressed = Ui.RenderOption(elementType == 'number' and 'number' or 'ImVec2', themeElement.value, id .. "_style")
-        any_pressed = any_pressed or (pressed or false)
+        local settingStyle, _, stylePressed = Ui.RenderOption(elementType == 'number' and 'number' or 'ImVec2', themeElement.value, id .. "_style")
+        any_pressed = any_pressed or (stylePressed or false)
         if any_pressed then
             local userConfig = Config:GetSetting('UserTheme')
             userConfig[id].element = Ui.ImGuiStyleVarNames[(tonumber(settingNum) or 1) - 1]
@@ -3235,7 +3229,7 @@ function Ui.RenderImportThemez()
         ImGuiWindowFlags.None)
     Ui.RenderText("Import from Themez: ")
     ImGui.SameLine()
-    Ui.SelectedThemezImport, _ = Ui.SearchableCombo("import_themez", Ui.SelectedThemezImport, Ui.ThemezNames)
+    Ui.SelectedThemezImport = Ui.SearchableCombo("import_themez", Ui.SelectedThemezImport, Ui.ThemezNames)
     ImGui.SameLine()
     if ImGui.SmallButton("Import") then
         local newUserTheme = Ui.ConvertFromThemez(Ui.SelectedThemezImport or "Default")
@@ -3278,7 +3272,7 @@ function Ui.RenderPopupModal()
         end
 
         -- Input field
-        local pressed = false
+        local pressed
         Ui.ModalText, pressed = ImGui.InputText("##UiPopupModalInput", Ui.ModalText, bit32.bor(ImGuiInputTextFlags.EnterReturnsTrue))
 
         ImGui.Separator()
@@ -3310,7 +3304,7 @@ function Ui.RenderImportMercThemes()
         ImGuiWindowFlags.None)
     Ui.RenderText("Import from File: ")
     ImGui.SameLine()
-    Ui.SelectedMercThemeImport, _ = Ui.SearchableCombo("import_merc_themes", Ui.SelectedMercThemeImport, Ui.MercThemeNames)
+    Ui.SelectedMercThemeImport = Ui.SearchableCombo("import_merc_themes", Ui.SelectedMercThemeImport, Ui.MercThemeNames)
     ImGui.SameLine()
     if ImGui.SmallButton("Load") then
         local newUserTheme = Ui.MercThemes[Ui.MercThemeNames[Ui.SelectedMercThemeImport] or "Default"]
@@ -3363,8 +3357,8 @@ function Ui.RenderThemeConfig(searchFilter)
         Config:SetSetting('UserThemeOverrideClassTheme', overrideClass)
     end
 
-    local disableClass, changed = Ui.RenderOptionToggle("DisableClassTheme", "Disable Class Theme Colors", Config:GetSetting('DisableClassTheme'), true)
-    if changed then
+    local disableClass, disableClassChanged = Ui.RenderOptionToggle("DisableClassTheme", "Disable Class Theme Colors", Config:GetSetting('DisableClassTheme'), true)
+    if disableClassChanged then
         Config:SetSetting('DisableClassTheme', disableClass)
     end
 
@@ -3759,8 +3753,8 @@ end
 ---@param navLocOverride string? Nav YXZ string to use for /nav if the loc text is not compatible with the nav command
 function Ui.NavEnabledLoc(loc, navLocOverride)
     ImGui.PushStyleColor(ImGuiCol.Text, Globals.Constants.Colors.Yellow)
-    ImGui.PushStyleColor(ImGuiCol.HeaderHovered, Ui.ChangeColorAlpoha(Globals.Constants.Colors.Grey, 0.1))
-    ImGui.PushStyleColor(ImGuiCol.HeaderActive, Ui.ChangeColorAlpoha(Globals.Constants.Colors.Green, 0.1))
+    ImGui.PushStyleColor(ImGuiCol.HeaderHovered, Ui.ChangeColorAlpha(Globals.Constants.Colors.Grey, 0.1))
+    ImGui.PushStyleColor(ImGuiCol.HeaderActive, Ui.ChangeColorAlpha(Globals.Constants.Colors.Green, 0.1))
     local navLoc = ImGui.Selectable(loc, false, ImGuiSelectableFlags.AllowDoubleClick)
     ImGui.PopStyleColor(3)
     if loc ~= "0,0,0" then
@@ -4178,8 +4172,8 @@ function Ui.AnimatedButton(id, text, size, callbackFn)
     local draw_list = ImGui.GetWindowDrawList()
 
     -- Button states
-    local hovered = false
-    local pressed = false
+    local hovered
+    local pressed
 
     local cursor = ImGui.GetCursorScreenPosVec()
 
@@ -4302,7 +4296,7 @@ end
 ---@param color ImVec4 Source color.
 ---@param newAlpha number New alpha value in [0,1].
 ---@return ImVec4 New ImVec4 with the updated alpha.
-function Ui.ChangeColorAlpoha(color, newAlpha)
+function Ui.ChangeColorAlpha(color, newAlpha)
     return ImVec4(color.x, color.y, color.z, newAlpha)
 end
 

@@ -117,8 +117,8 @@ function Module:GiveTime()
                     local currentSearch = string.format(corpseSearch, peer)
                     local numCorpses = mq.TLO.SpawnCount(currentSearch)()
 
-                    for i = numCorpses, 1, -1 do
-                        local corpse = mq.TLO.NearestSpawn(i, currentSearch)
+                    for corpseIndex = numCorpses, 1, -1 do
+                        local corpse = mq.TLO.NearestSpawn(corpseIndex, currentSearch)
                         self:Drag(corpse)
                     end
                 end
