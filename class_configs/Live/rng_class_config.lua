@@ -13,10 +13,19 @@ local _ClassConfig = {
     _version              = "2.0 - Live",
     _author               = "Algar",
     ['ModeChecks']        = {
-        IsHealing = function()
+        IsHealing    = function()
             return Config:GetSetting('DoHealSpell') or Config:GetSetting('DoBurstHeal') or Casting.CanUseAA("Convergence of Spirits")
         end,
-        IsCuring  = function() return Config:GetSetting('DoCures') end,
+        IsCuring     = function() return Config:GetSetting('DoCures') end,
+        IsDispelling = function() return Config:GetSetting('DoDispel') end,
+    },
+    ['Dispel']            = {
+        { name = "Entropy of Nature", type = "AA", },
+        {
+            name = "Dispel",
+            type = "Spell",
+            load_cond = function(self) return not Casting.CanUseAA("Entropy of Nature") end,
+        },
     },
     ['Modes']             = {
         'DPS',
@@ -869,17 +878,7 @@ local _ClassConfig = {
             targetId = function(self) return Targeting.CheckForAutoTargetID() end,
             cond = function(self, combat_state)
                 return combat_state == "Combat" and Core.CombatActionsCheck() and not Globals.AutoTargetIsNamed and
-                    Targeting.GetXTHaterCount() <= Config:GetSetting('SnareCount')
-            end,
-        },
-        {
-            name = 'Dispel',
-            state = 1,
-            steps = 1,
-            load_cond = function(self) return Config:GetSetting('DoDispel') end,
-            targetId = function(self) return Targeting.CheckForAutoTargetID() end,
-            cond = function(self, combat_state)
-                return combat_state == "Combat" and Casting.OkayToDebuff() and Core.CombatActionsCheck()
+                    Targeting.HasXTHatersMax(Config:GetSetting('SnareCount'))
             end,
         },
         {
@@ -1251,23 +1250,6 @@ local _ClassConfig = {
                 load_cond = function(self) return not Casting.CanUseAA("Entrap") end,
                 cond = function(self, spell, target)
                     return Casting.DetSpellCheck(spell) and not Casting.SnareImmuneTarget(target)
-                end,
-            },
-        },
-        ['Dispel']             = {
-            {
-                name = "Entropy of Nature",
-                type = "AA",
-                cond = function(self, aaName, target)
-                    return mq.TLO.Target.Beneficial() ~= nil
-                end,
-            },
-            {
-                name = "Dispel",
-                type = "Spell",
-                load_cond = function(self) return not Casting.CanUseAA("Entropy of Nature") end,
-                cond = function(self, spell, target)
-                    return mq.TLO.Target.Beneficial() ~= nil
                 end,
             },
         },

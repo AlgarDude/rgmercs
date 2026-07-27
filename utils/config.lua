@@ -256,12 +256,32 @@ Config.DefaultConfig                                     = {
         Tooltip = "Announces cure use to /gsay.",
         ConfigType = "Advanced",
     },
+    ['DispelAnnounce']             = {
+        DisplayName = "Dispel Announce",
+        Group = "General",
+        Header = "Announcements",
+        Category = "Announcements",
+        Index = 11,
+        Default = false,
+        Tooltip = "Announces dispel use.",
+        ConfigType = "Advanced",
+    },
+    ['DispelAnnounceGroup']        = {
+        DisplayName = "Dispel Announce to Group",
+        Group = "General",
+        Header = "Announcements",
+        Category = "Announcements",
+        Index = 12,
+        Default = false,
+        Tooltip = "Announces dispel use to /gsay.",
+        ConfigType = "Advanced",
+    },
     ['ReagentAnnounce']            = {
         DisplayName = "Reagent Announce",
         Group = "General",
         Header = "Announcements",
         Category = "Announcements",
-        Index = 11,
+        Index = 13,
         Default = false,
         Tooltip = "Announces an aborted cast due to missing spell reagent.",
         ConfigType = "Advanced",
@@ -271,7 +291,7 @@ Config.DefaultConfig                                     = {
         Group = "General",
         Header = "Announcements",
         Category = "Announcements",
-        Index = 12,
+        Index = 14,
         Default = false,
         Tooltip = "Announces an aborted cast due to missing spell reagent to /gsay. (Warning: Often spammy.)",
         ConfigType = "Advanced",
@@ -281,7 +301,7 @@ Config.DefaultConfig                                     = {
         Group = "General",
         Header = "Announcements",
         Category = "Announcements",
-        Index = 13,
+        Index = 15,
         Default = false,
         Tooltip = "Announce pull-related messages.",
         ConfigType = "Advanced",
@@ -291,7 +311,7 @@ Config.DefaultConfig                                     = {
         Group = "General",
         Header = "Announcements",
         Category = "Announcements",
-        Index = 14,
+        Index = 16,
         Default = false,
         Tooltip = "Announce pull-related messages in /gsay. (Warning: Often spammy.)",
         ConfigType = "Advanced",
@@ -301,7 +321,7 @@ Config.DefaultConfig                                     = {
         Group = "General",
         Header = "Announcements",
         Category = "Announcements",
-        Index = 15,
+        Index = 17,
         Default = false,
         Tooltip = "Announce burn-related messages.",
         ConfigType = "Advanced",
@@ -311,7 +331,7 @@ Config.DefaultConfig                                     = {
         Group = "General",
         Header = "Announcements",
         Category = "Announcements",
-        Index = 16,
+        Index = 18,
         Default = false,
         Tooltip = "Announce burn-related messages in /gsay. (Warning: Often spammy.)",
         ConfigType = "Advanced",
@@ -321,7 +341,7 @@ Config.DefaultConfig                                     = {
         Group = "General",
         Header = "Announcements",
         Category = "Announcements",
-        Index = 17,
+        Index = 19,
         Default = false,
         Tooltip = "Announces when a character flag is received.",
         ConfigType = "Advanced",
@@ -331,7 +351,7 @@ Config.DefaultConfig                                     = {
         Group = "General",
         Header = "Announcements",
         Category = "Announcements",
-        Index = 17,
+        Index = 20,
         Default = false,
         Tooltip = "Announces when a character flag is received.",
         ConfigType = "Advanced",
@@ -342,7 +362,7 @@ Config.DefaultConfig                                     = {
         Header = "Announcements",
         Category = "Announcements",
         Type = "Custom",
-        Index = 18,
+        Index = 21,
         Default = false,
         Tooltip = "Announces received heartbeats in /gsay. (Warning: spammy.)",
         ConfigType = "Advanced",
@@ -370,7 +390,7 @@ Config.DefaultConfig                                     = {
         Tooltip = "Choose if/when to meditate.\nMay interfere with bard songs (refer to FAQ for 'Bard Meditation').",
         Type = "Combo",
         ComboOptions = { 'Off', 'Out of Combat', 'In and Out of Combat', },
-        Default = Globals.CurLoadedClass == "BRD" and 1 or 2,
+        Default = function() return Globals.CurLoadedClass == "BRD" and 1 or 2 end,
         Min = 1,
         Max = 3,
         ConfigType = "Normal",
@@ -382,7 +402,7 @@ Config.DefaultConfig                                     = {
         Category = "Med Rules",
         Index = 2,
         Tooltip = "Force a stand to end meditation when thresholds are reached.",
-        Default = Globals.CurLoadedClass == "BRD",
+        Default = function() return Globals.CurLoadedClass == "BRD" end,
     },
     ['AfterCombatMedDelay']        = {
         DisplayName = "After Combat Med Delay",
@@ -841,7 +861,7 @@ Config.DefaultConfig                                     = {
         Category = "Assisting",
         Index = 4,
         Tooltip = "Auto attack the combat target. (Ranger Only: Disable to use ranged combat.)",
-        Default = Globals.Constants.RGMelee:contains(Globals.CurLoadedClass),
+        Default = function() return Globals.Constants.RGMelee:contains(Globals.CurLoadedClass) end,
         ConfigType = "Normal",
     },
     ['AllowMezBreak']              = {
@@ -851,7 +871,7 @@ Config.DefaultConfig                                     = {
         Category = "Assisting",
         Index = 5,
         Tooltip = "Allow combat actions if the target is mezzed.",
-        Default = (Globals.Constants.RGTank:contains(mq.TLO.Me.Class.ShortName())),
+        Default = function() return Globals.Constants.RGTank:contains(Globals.CurLoadedClass) end,
         ConfigType = "Advanced",
     },
     ['SkipFireSpells']             = {
@@ -1272,7 +1292,7 @@ Config.DefaultConfig                                     = {
         Category = "Under the Hood",
         Index = 1,
         Tooltip = "The amount of times to try to recast a spell, song, AA, or item due to a fizzle, interrupt, or similar. Note that queued actions already have a retry built-in.",
-        Default = Globals.CurLoadedClass == "BRD" and 1 or 0,
+        Default = function() return Globals.CurLoadedClass == "BRD" and 1 or 0 end,
         Min = 0,
         Max = 5,
         ConfigType = "Advanced",
@@ -1435,6 +1455,33 @@ Config.DefaultConfig                                     = {
         ComboOptions = Globals.Constants.DebuffChoice,
         ConfigType = "Advanced",
     },
+    ['DispelAllowList']            = {
+        DisplayName = "Dispel Allow List",
+        Type = "Custom",
+        Default = {},
+    },
+    ['DispelDenyList']             = {
+        DisplayName = "Dispel Deny List",
+        Type = "Custom",
+        Default = {},
+    },
+    ['DispelAllowListShared']      = {
+        DisplayName = "Shared Dispel Allow List",
+        Type = "Custom",
+        Default = {},
+        Scope = "server",
+    },
+    ['DispelDenyListShared']       = {
+        DisplayName = "Shared Dispel Deny List",
+        Type = "Custom",
+        Default = {},
+        Scope = "server",
+    },
+    ['UseSharedDispelLists']       = {
+        DisplayName = "Use Shared Dispel Lists",
+        Type = "Custom",
+        Default = true,
+    },
 
     -- Emergency
     ['StandFailedFD']              = {
@@ -1454,7 +1501,7 @@ Config.DefaultConfig                                     = {
         Category = "Emergency",
         Index = 2,
         Tooltip = "Your HP % before we begin to use emergency mitigation abilities.",
-        Default = Globals.Constants.RGTank:contains(mq.TLO.Me.Class.ShortName()) and 40 or 50,
+        Default = function() return Globals.Constants.RGTank:contains(Globals.CurLoadedClass) and 40 or 50 end,
         Min = 1,
         Max = 100,
     },
@@ -1465,7 +1512,7 @@ Config.DefaultConfig                                     = {
         Category = "Emergency",
         Index = 3,
         Tooltip = "Your HP % before we resort to our deepest emergency abilities.",
-        Default = Globals.Constants.RGTank:contains(mq.TLO.Me.Class.ShortName()) and 20 or 30,
+        Default = function() return Globals.Constants.RGTank:contains(Globals.CurLoadedClass) and 20 or 30 end,
         Min = 1,
         Max = 100,
     },
@@ -1640,7 +1687,7 @@ Config.DefaultConfig                                     = {
         Category = "Healing Thresholds",
         Index = 2,
         Tooltip = "Minimum PctHPs to use the Light Heal Rotation or actions that check whether Light Heals are needed.",
-        Default = mq.TLO.Me.Class.ShortName() == "CLR" and 95 or 90,
+        Default = function() return Globals.CurLoadedClass == "CLR" and 95 or 90 end,
         Min = 1,
         Max = 99,
         ConfigType = "Advanced",
@@ -3583,8 +3630,12 @@ function Config.ResolveDefaults(defaults, settings, module)
     end
 
     for k, v in pairs(defaults) do
-        if v.Default and type(v.Default):lower() == "function" then
-            v.Default = v.Default()
+        if type(v.Default) == "function" then
+            v.DefaultFn = v.Default
+        end
+
+        if v.DefaultFn then
+            v.Default = v.DefaultFn()
         end
 
         if settings[k] == nil then
@@ -3907,10 +3958,15 @@ end
 --- @param name string: The name of the PC to be added.
 --- @param listName string: The list of PCs to add to.
 function Config:ListAdd(name, listName)
+    if not name or name == "" then
+        Logger.log_error("\ar%s Add: this command requires a valid argument!", listName)
+        return
+    end
+
     local addList = Config:GetSetting(listName)
 
     for _, cur_name in ipairs(addList or {}) do
-        if cur_name == name then
+        if cur_name:lower() == name:lower() then
             return
         end
     end

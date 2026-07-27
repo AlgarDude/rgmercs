@@ -45,10 +45,14 @@ local _ClassConfig = {
         'General',
     },
     ['ModeChecks']        = {
-        CanMez    = function() return true end,
-        CanCharm  = function() return true end,
-        IsMezzing = function() return Config:GetSetting('MezOn') end,
-        IsCuring  = function() return Config:GetSetting('UseCure') end,
+        CanMez       = function() return true end,
+        CanCharm     = function() return true end,
+        IsMezzing    = function() return Config:GetSetting('MezOn') end,
+        IsCuring     = function() return Config:GetSetting('UseCure') end,
+        IsDispelling = function() return Config:GetSetting('DoDispel') end,
+    },
+    ['Dispel']            = {
+        { name = "DispelSong", type = "Song", },
     },
     ['Cure']              = {
         ['Poison'] = {
@@ -98,7 +102,7 @@ local _ClassConfig = {
             "Tarew's Aquatic Ayre", -- Level 16
         },
         ['AriaSong'] = {
-            -- "Ancient: Draconic Might", -- Level 71 Laz Custom, verify existence and source
+            "Ancient: Draconic Might",   -- Level 71 Laz Custom
             "Ancient: Call of Power",    -- Level 70
             "Eriki's Psalm of Power",    -- Level 69
             "Yelhun's Mystic Call",      -- Level 68
@@ -242,11 +246,11 @@ local _ClassConfig = {
             "Occlusion of Sound", -- Level 55
         },
         ['BellowSong'] = {
-            -- "Bellow of Shadows", -- Level 71 Laz Custom, verify existence and source
-            "Bellow of Chaos", -- Level 66
+            "Bellow of Shadows", -- Level 71 Laz Custom
+            "Bellow of Chaos",   -- Level 66
         },
-        ['ReprisalDisc'] = {   -- Manual use only for now, reprisal does not fire unless the rune is broken
-            "Arcane Reprisal", -- Level 71 Laz Custom
+        ['ReprisalDisc'] = {     -- Manual use only for now, reprisal does not fire unless the rune is broken
+            "Arcane Reprisal",   -- Level 71 Laz Custom
         },
         ['SpellMitSong'] = {
             "Niv's Symphonic", -- Level 71 Laz Custom
@@ -412,7 +416,7 @@ local _ClassConfig = {
             doFullRotation = true,
             targetId = function(self) return { mq.TLO.Me.ID(), } end,
             cond = function(self, combat_state)
-                return Targeting.GetXTHaterCount() > 0 and Core.AtEmergencyHP()
+                return Targeting.HasXTHaters() and Core.AtEmergencyHP()
             end,
         },
         {
@@ -430,7 +434,7 @@ local _ClassConfig = {
             name = 'Debuff',
             state = 1,
             steps = 1,
-            load_cond = function() return Config:GetSetting("DoSTSlow") or Config:GetSetting("DoAESlow") or Config:GetSetting("DoResistDebuff") or Config:GetSetting("DoDispel") end,
+            load_cond = function() return Config:GetSetting("DoSTSlow") or Config:GetSetting("DoAESlow") or Config:GetSetting("DoResistDebuff") end,
             targetId = function(self) return Targeting.CheckForAutoTargetID() end,
             cond = function(self, combat_state)
                 return combat_state == "Combat" and Casting.OkayToDebuff() and Core.CombatActionsCheck()
@@ -583,7 +587,7 @@ local _ClassConfig = {
                 type = "Song",
                 load_cond = function() return Config:GetSetting('DoAESlow') end,
                 cond = function(self, songSpell, target)
-                    return Casting.DetSpellCheck(songSpell) and Targeting.GetXTHaterCount() > 2 and not mq.TLO.Target.Slowed() and
+                    return Casting.DetSpellCheck(songSpell) and Targeting.HasXTHaters(3) and not mq.TLO.Target.Slowed() and
                         not Casting.SlowImmuneTarget(target)
                 end,
             },
@@ -601,14 +605,6 @@ local _ClassConfig = {
                 load_cond = function() return Config:GetSetting('DoResistDebuff') end,
                 cond = function(self, songSpell)
                     return Casting.DetSpellCheck(songSpell)
-                end,
-            },
-            {
-                name = "DispelSong",
-                type = "Song",
-                load_cond = function() return Config:GetSetting('DoDispel') end,
-                cond = function(self, songSpell)
-                    return mq.TLO.Target.Beneficial() ~= nil
                 end,
             },
         },

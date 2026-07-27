@@ -14,7 +14,7 @@ local _ClassConfig = {
         IsHealing = function() return true end,
         IsCuring = function() return Config:GetSetting('DoCures') end,
         IsRezing = function()
-            return (Core.GetResolvedActionMapItem('RezSpell') and Targeting.GetXTHaterCount() == 0) or
+            return (Core.GetResolvedActionMapItem('RezSpell') and not Targeting.HasXTHaters()) or
                 ((Casting.CanUseAA("Call of the Wild") or mq.TLO.FindItem("=Staff of Forbidden Rites")()) and Config:GetSetting('DoBattleRez'))
         end,
     },
@@ -113,7 +113,7 @@ local _ClassConfig = {
         },
         ['HealSpell'] = {
             -- Long Heal >= 1 -- skipped 10s cast heals.
-            -- "Ancient: Chlorobalm", -- Level 71 Laz Custom, verify existence and source
+            "Ancient: Chlorobalm",         -- Level 71 Laz Custom
             "Ancient: Chlorobon",          -- Level 70
             "Chlorotrope",                 -- Level 68
             "Sylvan Infusion",             -- Level 65
@@ -526,7 +526,7 @@ local _ClassConfig = {
             targetId = function(self) return Targeting.CheckForAutoTargetID() end,
             cond = function(self, combat_state)
                 return combat_state == "Combat" and Core.CombatActionsCheck() and not Globals.AutoTargetIsNamed and
-                    Targeting.GetXTHaterCount() <= Config:GetSetting('SnareCount')
+                    Targeting.HasXTHatersMax(Config:GetSetting('SnareCount'))
             end,
         },
         {

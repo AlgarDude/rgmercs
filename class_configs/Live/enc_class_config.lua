@@ -33,9 +33,20 @@ local _ClassConfig    = {
     _version          = "1.5 - Live",
     _author           = "Derple, Grimmier, Algar",
     ['ModeChecks']    = {
-        CanMez    = function() return true end,
-        CanCharm  = function() return true end,
-        IsMezzing = function() return Config:GetSetting('MezOn') end,
+        CanMez       = function() return true end,
+        CanCharm     = function() return true end,
+        IsMezzing    = function() return Config:GetSetting('MezOn') end,
+        IsDispelling = function() return Config:GetSetting('DoDispel') end,
+    },
+    ['Dispel']        = {
+        { name = "Eradicate Magic", type = "AA", },
+        {
+            name = "Dispel",
+            type = "Spell",
+            cond = function(self)
+                return not Casting.CanUseAA("Eradicate Magic")
+            end,
+        },
     },
     ['Modes']         = {
         'Default',
@@ -966,16 +977,6 @@ local _ClassConfig    = {
             end,
         },
         {
-            name = 'Dispel',
-            state = 1,
-            steps = 1,
-            load_cond = function() return Config:GetSetting('DoDispel') end,
-            targetId = function(self) return Targeting.CheckForAutoTargetID() end,
-            cond = function(self, combat_state)
-                return combat_state == "Combat" and Casting.OkayToDebuff() and Core.CombatActionsCheck()
-            end,
-        },
-        {
             name = 'Emergency(Aggro)',
             state = 1,
             steps = 1,
@@ -1286,23 +1287,6 @@ local _ClassConfig    = {
                 end,
             },
         },
-        ['Dispel']           = {
-            {
-                name = "Eradicate Magic",
-                type = "AA",
-                cond = function(self, aaName, target)
-                    return mq.TLO.Target.Beneficial() ~= nil
-                end,
-            },
-            {
-                name = "Dispel",
-                type = "Spell",
-                cond = function(self, spell, target)
-                    if Casting.CanUseAA("Eradicate Magic") then return false end
-                    return mq.TLO.Target.Beneficial() ~= nil
-                end,
-            },
-        },
         ['Emergency(Aggro)'] = {
             {
                 name = "Self Stasis",
@@ -1359,7 +1343,7 @@ local _ClassConfig    = {
                 type = "Spell",
                 cond = function(self, spell, target)
                     if (Config:GetSetting('DoAEStun') == 2 and Core.GetMainAssistPctHPs() > Config:GetSetting('EmergencyStart')) or Config:GetSetting('DoAEStun') == 1 then return false end
-                    return Casting.DetSpellCheck(spell) and Targeting.GetXTHaterCount() >= Config:GetSetting('AECount')
+                    return Casting.DetSpellCheck(spell) and Targeting.HasXTHaters(Config:GetSetting('AECount'))
                 end,
             },
             {
@@ -1517,7 +1501,7 @@ local _ClassConfig    = {
                 name = "Bite of Tashani",
                 type = "AA",
                 cond = function(self, aaName)
-                    if Targeting.GetXTHaterCount() < Config:GetSetting('AECount') then return false end
+                    if not Targeting.HasXTHaters(Config:GetSetting('AECount')) then return false end
                     return Casting.DetAACheck(aaName)
                 end,
             },
@@ -1534,7 +1518,7 @@ local _ClassConfig    = {
                 name = "Enveloping Helix",
                 type = "AA",
                 cond = function(self, aaName, target)
-                    if Targeting.GetXTHaterCount() < Config:GetSetting('AECount') then return false end
+                    if not Targeting.HasXTHaters(Config:GetSetting('AECount')) then return false end
                     return Casting.DetAACheck(aaName)
                 end,
             },

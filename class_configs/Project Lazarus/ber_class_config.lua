@@ -57,9 +57,9 @@ return {
             "Overpowering Frenzy", -- Level 65
         },
         ['VolleyDisc'] = {
-            -- "Ancient: Annihilator's Volley", -- Level 71 Laz Custom, verify existence and source
-            "Destroyer's Volley", -- Level 69
-            "Rage Volley",        -- Level 61
+            "Ancient: Annihilator's Volley", -- Level 71 Laz Custom
+            "Destroyer's Volley",            -- Level 69
+            "Rage Volley",                   -- Level 61
         },
         ['FlurryDisc'] = {
             "Rancorous Flurry Discipline", -- Level 71 Laz Custom
@@ -107,7 +107,7 @@ return {
             "Unpredictable Rage Discipline", -- Level 66, defensive proc when struck
         },
         ['BattleFocus'] = {
-            -- "Combat Focus Discipline", -- Level 71 Laz Custom, verify existence and source
+            "Combat Focus Discipline", -- Level 71 Laz Custom
             "Battle Focus Discipline", -- Level 59
         },
         ['ReprisalDisc'] = {           -- Manual use only for now, reprisal does not fire unless the rune is broken
@@ -142,7 +142,7 @@ return {
             doFullRotation = true,
             targetId = function(self) return Targeting.CheckForAutoTargetID() end,
             cond = function(self, combat_state)
-                return Targeting.GetXTHaterCount() > 0 and Core.AtEmergencyHP()
+                return Targeting.HasXTHaters() and Core.AtEmergencyHP()
             end,
         },
         {
@@ -162,7 +162,7 @@ return {
             load_cond = function() return Config:GetSetting('DoSnare') end,
             targetId = function(self) return Targeting.CheckForAutoTargetID() end,
             cond = function(self, combat_state)
-                return combat_state == "Combat" and not Globals.AutoTargetIsNamed and Targeting.GetXTHaterCount() <= Config:GetSetting('SnareCount')
+                return combat_state == "Combat" and not Globals.AutoTargetIsNamed and Targeting.HasXTHatersMax(Config:GetSetting('SnareCount'))
             end,
         },
         {

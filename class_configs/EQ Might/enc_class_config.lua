@@ -20,10 +20,14 @@ local _ClassConfig    = {
     _version          = "1.6 - EQ Might",
     _author           = "Derple, Grimmier, Algar, Robban",
     ['ModeChecks']    = {
-        CanMez    = function() return true end,
-        CanCharm  = function() return true end,
-        IsMezzing = function() return Config:GetSetting('MezOn') end,
-        IsRezing  = function() return Core.GetResolvedActionMapItem('RezStaff') ~= nil and (Config:GetSetting('DoBattleRez') or Targeting.GetXTHaterCount() == 0) end,
+        CanMez       = function() return true end,
+        CanCharm     = function() return true end,
+        IsMezzing    = function() return Config:GetSetting('MezOn') end,
+        IsDispelling = function() return Config:GetSetting('DoDispel') end,
+        IsRezing     = function() return Core.GetResolvedActionMapItem('RezStaff') ~= nil and (Config:GetSetting('DoBattleRez') or not Targeting.HasXTHaters()) end,
+    },
+    ['Dispel']        = {
+        { name = "Dispel", type = "Spell", },
     },
     ['Rez']           = {
         ['Combat']   = {
@@ -534,16 +538,6 @@ local _ClassConfig    = {
             end,
         },
         {
-            name = 'Dispel',
-            state = 1,
-            steps = 1,
-            load_cond = function() return Config:GetSetting('DoDispel') end,
-            targetId = function(self) return Targeting.CheckForAutoTargetID() end,
-            cond = function(self, combat_state)
-                return combat_state == "Combat" and Casting.OkayToDebuff() and Core.CombatActionsCheck()
-            end,
-        },
-        {
             name = 'Emergency(Aggro)',
             state = 1,
             steps = 1,
@@ -968,7 +962,7 @@ local _ClassConfig    = {
                 load_cond = function() return Config:GetSetting('DoAEStun') > 1 end,
                 cond = function(self, spell, target)
                     if Config:GetSetting('DoAEStun') == 2 and (mq.TLO.Group.Injured(Config:GetSetting('EmergencyStart'))() or 0) < 1 then return false end
-                    return Targeting.GetXTHaterCount() >= Config:GetSetting("AECount")
+                    return Targeting.HasXTHaters(Config:GetSetting("AECount"))
                 end,
             },
             {
@@ -1058,16 +1052,6 @@ local _ClassConfig    = {
                 load_cond = function() return Config:GetSetting("DoBeguilers") end,
                 cond = function(self, aaName)
                     return mq.TLO.SpawnCount("npc radius 20")() > 2
-                end,
-            },
-        },
-        ['Dispel']           = {
-            {
-                name = "Dispel",
-                type = "Spell",
-                cond = function(self, spell, target)
-                    if mq.TLO.Target.ID() == 0 then return false end
-                    return mq.TLO.Target.Beneficial() ~= nil
                 end,
             },
         },
@@ -1187,7 +1171,7 @@ local _ClassConfig    = {
                 name = "Bite of Tashani",
                 type = "AA",
                 cond = function(self, aaName)
-                    if Targeting.GetXTHaterCount() < Config:GetSetting('AECount') then return false end
+                    if not Targeting.HasXTHaters(Config:GetSetting('AECount')) then return false end
                     return Casting.DetAACheck(aaName)
                 end,
             },
@@ -1222,7 +1206,7 @@ local _ClassConfig    = {
                 name = "Enveloping Helix",
                 type = "AA",
                 cond = function(self, aaName, target)
-                    if Targeting.GetXTHaterCount() < Config:GetSetting('AECount') then return false end
+                    if not Targeting.HasXTHaters(Config:GetSetting('AECount')) then return false end
                     return Casting.DetAACheck(aaName) and not Casting.SlowImmuneTarget(target)
                 end,
             },
