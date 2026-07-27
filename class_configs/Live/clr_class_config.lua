@@ -387,7 +387,6 @@ local _ClassConfig = {
             "Divine Response",    -- Level 102
         },
         ['AegoBuff'] = {
-            ----Use HP Type one until Temperance at 40... Group Buff at 45 (Blessing of Temperance)
             "Unified Hand of Aegolism XV",   -- Level 130
             "Unified Hand of Infallibility", -- Level 125
             "Unified Hand of Persistence",   -- Level 120
@@ -407,11 +406,6 @@ local _ClassConfig = {
             "Blessing of Aegolism",          -- Level 60
             "Blessing of Temperance",        -- Level 45
             "Temperance",                    -- Level 40
-            "Valor",                         -- Level 32
-            "Bravery",                       -- Level 22
-            "Daring",                        -- Level 17
-            "Center",                        -- Level 7
-            "Courage",                       -- Level 1
         },
         ['ACBuff'] = {                       --Sometimes single, sometimes group, used on tank before Aego or until it is rolled into Unified (Symbol)
             "Order of the Earnest",          -- Level 90
@@ -429,6 +423,17 @@ local _ClassConfig = {
             "Guard",                         -- Level 25
             "Spirit Armor",                  -- Level 15
             "Holy Armor",                    -- Level 1
+        },
+        ['HPTypeOne'] = {
+            -- "Fortitude", -- Level 55, weaker but longer duration
+            "Heroic Bond", -- Level 52 Group
+            "Heroism",     -- Level 52
+            "Resolution",  -- Level 42
+            "Valor",       -- Level 32
+            "Bravery",     -- Level 22
+            "Daring",      -- Level 17
+            "Center",      -- Level 7
+            "Courage",     -- Level 1
         },
         ['ShiningBuff'] = {
             --Tank Buff Traditionally Shining Series of Buffs
@@ -1458,7 +1463,7 @@ local _ClassConfig = {
                 end,
             },
             {
-                name = "AegoBuff",
+                name_func = function(self) return Casting.GetFirstMapItem({ 'AegoBuff', 'HPTypeOne', }) end,
                 type = "Spell",
                 load_cond = function(self) return Config:GetSetting('AegoSymbol') <= 2 end,
                 cond = function(self, spell, target)
