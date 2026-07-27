@@ -82,8 +82,8 @@ return {
             "Ether Flame", -- Level 70
         },
         ['ChaosNuke'] = {
-            -- "Ancient: Chaos Elements", -- Level 71 Laz Custom, verify existence and source
-            "Chaos Flame", -- Level 70
+            "Ancient: Chaos Elements", -- Level 71 Laz Custom
+            "Chaos Flame",             -- Level 70
         },
         ['WildNuke'] = {
             "Wildmagic Salvo", -- Level 71 Laz Custom
@@ -361,7 +361,7 @@ return {
             load_cond = function() return Config:GetSetting('DoSnare') end,
             targetId = function(self) return Targeting.CheckForAutoTargetID() end,
             cond = function(self, combat_state)
-                return combat_state == "Combat" and not Globals.AutoTargetIsNamed and Targeting.GetXTHaterCount() <= Config:GetSetting('SnareCount')
+                return combat_state == "Combat" and not Globals.AutoTargetIsNamed and Targeting.HasXTHatersMax(Config:GetSetting('SnareCount'))
             end,
         },
         { --Keep things from doing

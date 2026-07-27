@@ -224,10 +224,10 @@ local _ClassConfig = {
             "Spike of Disease", -- Level 1
         },
         ['AESpearNuke'] = {
-            -- "Ancient: Spear of Lanys", -- Level 71 Laz Custom, verify existence and source
-            "Spear of Muram", -- Level 69
-            "Miasmic Spear",  -- Level 65
-            "Spear of Decay", -- Level 64
+            "Ancient: Spear of Lanys", -- Level 71 Laz Custom
+            "Spear of Muram",          -- Level 69
+            "Miasmic Spear",           -- Level 65
+            "Spear of Decay",          -- Level 64
         },
         ['BondTap'] = {
             "Bond of Inruku", -- Level 66
@@ -488,7 +488,7 @@ local _ClassConfig = {
             targetId = function(self) return Targeting.CheckForAutoTargetID() end,
             cond = function(self, combat_state)
                 if Core.AtEmergencyHP() then return false end
-                return combat_state == "Combat" and not Globals.AutoTargetIsNamed and Targeting.GetXTHaterCount() <= Config:GetSetting('SnareCount')
+                return combat_state == "Combat" and not Globals.AutoTargetIsNamed and Targeting.HasXTHatersMax(Config:GetSetting('SnareCount'))
             end,
         },
         { --Offensive actions to temporarily boost damage dealt

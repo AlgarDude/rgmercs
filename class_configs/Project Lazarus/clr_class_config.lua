@@ -14,7 +14,7 @@ local _ClassConfig = {
         IsCuring = function() return Config:GetSetting('DoCures') end,
         IsRezing = function()
             local rezAction = Casting.CanUseAA("Blessing of Resurrection") or mq.TLO.FindItem("=Water Sprinkler of Nem Ankh")()
-            return ((Core.GetResolvedActionMapItem('RezSpell') or rezAction) and Targeting.GetXTHaterCount() == 0) or (Config:GetSetting('DoBattleRez') and rezAction)
+            return ((Core.GetResolvedActionMapItem('RezSpell') or rezAction) and not Targeting.HasXTHaters()) or (Config:GetSetting('DoBattleRez') and rezAction)
         end,
     },
     ['Rez']               = {
@@ -102,7 +102,7 @@ local _ClassConfig = {
         --     "Ward of Retribution", -- Level 69
         -- },
         ['HealingLight'] = {
-            -- "Ancient: Sacred Remedy", -- Level 71, verify existence and source
+            "Ancient: Sacred Remedy",  -- Level 71
             "Ancient: Hallowed Light", -- Level 70
             "Pious Light",             -- Level 68
             "Holy Light",              -- Level 65

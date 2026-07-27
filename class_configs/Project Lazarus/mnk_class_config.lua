@@ -64,9 +64,9 @@ local _ClassConfig = {
             "Disciple's Aura",    -- Level 55
         },
         ['Fang'] = {
-            -- "Ancient: Arachnid Fang", -- Level 71 Laz Custom, verify existence and source
-            "Dragon Fang",          -- Level 69
-            "Clawstriker's Flurry", -- Level 65
+            "Ancient: Arachnid Fang", -- Level 71 Laz Custom
+            "Dragon Fang",            -- Level 69
+            "Clawstriker's Flurry",   -- Level 65
         },
         ['FistsOfWu'] = {
             "Fists of Thundercrest", -- Level 71 Laz Custom
@@ -128,7 +128,7 @@ local _ClassConfig = {
             doFullRotation = true,
             targetId = function(self) return Targeting.CheckForAutoTargetID() end,
             cond = function(self, combat_state)
-                return Targeting.GetXTHaterCount() > 0 and not mq.TLO.Me.Feigning() and Core.AtEmergencyHP()
+                return Targeting.HasXTHaters() and not mq.TLO.Me.Feigning() and Core.AtEmergencyHP()
             end,
         },
         {
