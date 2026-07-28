@@ -270,6 +270,10 @@ return {
         ['Spire'] = {
             "Fundament: First Spire of the Savage Lord",
         },
+        ['PetHeal'] = {
+            "Replenish Companion",
+            "Mend Companion",
+        },
     },
     ['HealRotationOrder'] = {
         { -- configured as a backup healer, will not cast in the mainpoint
@@ -537,7 +541,7 @@ return {
                 end,
             },
             {
-                name_func = function() return Casting.CanUseAA("Replenish Companion") and "Replenish Companion" or "Mend Companion" end,
+                name = "PetHeal",
                 type = "AA",
             },
             {
@@ -707,8 +711,6 @@ return {
                     -- Only use the single target versions on classes that need it
                     if (spell.TargetType() or ""):lower() ~= "group v2" and not Targeting.TargetIsAMelee(target) then return false end
                     return Casting.GroupBuffCheck(spell, target)
-                        --laz specific deconflict with brell's vibrant barricade
-                        and Casting.AddedBuffCheck(40583, target)
                 end,
             },
             {

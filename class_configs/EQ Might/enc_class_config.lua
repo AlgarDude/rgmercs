@@ -826,8 +826,7 @@ local _ClassConfig    = {
                 active_cond = function(self, spell) return mq.TLO.Me.FindBuff("id " .. tostring(spell.ID()))() ~= nil end,
                 cond = function(self, spell, target)
                     if not Targeting.TargetIsAMelee(target) then return false end
-                    -- Don't cast if we have Hastening of Salik
-                    return Casting.GroupBuffCheck(spell, target) and Casting.AddedBuffCheck(5521, target)
+                    return Casting.AddedBuffCheck(5521, target) and Casting.GroupBuffCheck(spell, target) -- Hastening of Salik
                 end,
             },
             {
@@ -971,7 +970,7 @@ local _ClassConfig    = {
                 load_cond = function() return Config:GetSetting("DoSoothing") end,
                 cond = function(self, aaName, target)
                     local tankId = mq.TLO.Group.MainTank.ID() or 0
-                    return Globals.AutoTargetIsNamed and (mq.TLO.Me.TargetOfTarget.ID() or tankId) ~= tankId
+                    return Globals.AutoTargetIsNamed and tankId > 0 and (mq.TLO.Me.TargetOfTarget.ID() or tankId) ~= tankId
                 end,
             },
             {
@@ -1021,7 +1020,7 @@ local _ClassConfig    = {
                 name = "Arcane Whisper",
                 type = "AA",
                 cond = function(self, aaName, target)
-                    return Globals.AutoTargetIsNamed
+                    return Globals.AutoTargetIsNamed and Casting.OkayToCombatEscape()
                 end,
             },
             {
@@ -1051,7 +1050,7 @@ local _ClassConfig    = {
                 type = "AA",
                 load_cond = function() return Config:GetSetting("DoBeguilers") end,
                 cond = function(self, aaName)
-                    return mq.TLO.SpawnCount("npc radius 20")() > 2
+                    return Casting.OkayToCombatEscape() and mq.TLO.SpawnCount("npc radius 20")() > 2
                 end,
             },
         },

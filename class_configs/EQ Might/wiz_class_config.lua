@@ -336,6 +336,11 @@ return {
             if mode == 4 then return "Magic" end
             return "Fire"
         end,
+
+        CurrentFamiliarName = function(self)
+            local familiars = { Fire = "Ro's Flaming Familiar", Cold = "E'ci's Icy Familiar", Magic = "Druzzil's Mystical Familiar", }
+            return familiars[self.Helpers.PickFamiliarElement()] or "Unknown Error"
+        end,
     },
     ['Charm']         = {
         ['Assist'] = {
@@ -375,7 +380,7 @@ return {
             doFullRotation = true,
             targetId = function(self) return Targeting.CheckForAutoTargetID() end,
             cond = function(self, combat_state)
-                return combat_state == "Combat" and mq.TLO.Me.PctAggro() > (Config:GetSetting('JoltAggro') or 90)
+                return combat_state == "Combat" and mq.TLO.Me.PctAggro() > (Config:GetSetting('JoltAggro') or 90) and Casting.OkayToCombatEscape()
             end,
         },
         {
@@ -557,23 +562,20 @@ return {
                 name = "Mind Crash",
                 type = "AA",
                 cond = function(self, aaName, target)
-                    return Globals.AutoTargetIsNamed and mq.TLO.Me.PctAggro() > 90
+                    return Globals.AutoTargetIsNamed and Targeting.IHaveAggro(100)
                 end,
             },
             {
                 name = "Arcane Whisper",
                 type = "AA",
                 cond = function(self, aaName, target)
-                    return Globals.AutoTargetIsNamed and mq.TLO.Me.PctAggro() > 90
+                    return Globals.AutoTargetIsNamed and Targeting.IHaveAggro(100)
                 end,
             },
             {
                 name = "JoltSpell",
                 type = "Spell",
                 load_cond = function(self) return Config:GetSetting('DoJoltSpell') end,
-                cond = function(self)
-                    return mq.TLO.Me.PctAggro() > Config:GetSetting('JoltAggro')
-                end,
             },
         },
         ['Snare'] = {
@@ -774,17 +776,18 @@ return {
             {
                 name = "Improved Familiar",
                 type = "AA",
-                load_cond = function(self) return Casting.CanUseAA("Improved Familiar") and Config:GetSetting('FamiliarChoice') == 1 end,
+                load_cond = function(self)
+                    return Casting.CanUseAA("Improved Familiar") and
+                        (Config:GetSetting('FamiliarChoice') == 1 or not Casting.CanUseAA(self.Helpers.CurrentFamiliarName(self)))
+                end,
                 active_cond = function(self, aaName) return Casting.IHaveBuff(aaName) end,
                 cond = function(self, aaName)
                     return not mq.TLO.Me.Buff(aaName)()
                 end,
             },
-            { --Familiar AA, will use the correct element, and fallback to improved
+            { --Familiar AA, will use the correct element; Improved above covers the fallback
                 name_func = function(self)
-                    local familiars = { Fire = "Ro's Flaming Familiar", Cold = "E'ci's Icy Familiar", Magic = "Druzzil's Mystical Familiar", }
-                    local currentFam = familiars[self.Helpers.PickFamiliarElement()] or "Unknown Error"
-                    return Casting.CanUseAA(currentFam) and currentFam or "Improved Familiar"
+                    return self.Helpers.CurrentFamiliarName(self)
                 end,
                 type = "AA",
                 active_cond = function(self, aaName) return Casting.IHaveBuff(aaName) end,
