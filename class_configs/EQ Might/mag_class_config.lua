@@ -347,6 +347,14 @@ local _ClassConfig = {
             "Medium Modulation Shard",
             "Small Modulation Shard",
         },
+        ['PetHeal'] = {
+            "Replenish Companion",
+            "Mend Companion",
+        },
+        ['FireCore'] = {
+            "Fire Core",
+            "Heart of Flames",
+        },
     },
     ['Charm']         = {
         ['Assist'] = {
@@ -627,7 +635,7 @@ local _ClassConfig = {
                 end,
             },
             {
-                name_func = function() return Casting.CanUseAA("Replenish Companion") and "Replenish Companion" or "Mend Companion" end,
+                name = "PetHeal",
                 type = "AA",
             },
             {
@@ -711,7 +719,7 @@ local _ClassConfig = {
                 type = "AA",
             },
             {
-                name_func = function() return Casting.CanUseAA("Fire Core") and "Fire Core" or "Heart of Flames" end,
+                name = "FireCore",
                 type = "AA",
             },
             {
@@ -746,7 +754,7 @@ local _ClassConfig = {
                 name = "Arcane Whisper",
                 type = "AA",
                 cond = function(self, aaName, target)
-                    return Globals.AutoTargetIsNamed and mq.TLO.Me.PctAggro() > 90
+                    return Globals.AutoTargetIsNamed and mq.TLO.Me.PctAggro() > 90 and Casting.OkayToCombatEscape()
                 end,
             },
         },
@@ -855,10 +863,7 @@ local _ClassConfig = {
                 type = "Spell",
                 cond = function(self, spell, target)
                     if not Targeting.TargetIsTanking(target) then return false end
-                    return Casting.GroupBuffCheck(spell, target)
-                        -- workarounds for laz
-                        and Casting.AddedBuffCheck(19847, target) -- necrotic pustules
-                        and Casting.AddedBuffCheck(5521, target)  -- decrepit skin
+                    return Casting.AddedBuffCheck({ 8484, 19847, }, target) and Casting.GroupBuffCheck(spell, target) -- Decrepit Skin, Necrotic Pustules
                 end,
                 post_activate = function(self, spell, success)
                     local petName = mq.TLO.Me.Pet.CleanName() or "None"
