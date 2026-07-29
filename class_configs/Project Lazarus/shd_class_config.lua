@@ -78,7 +78,7 @@ local Tooltips     = {
 }
 
 local _ClassConfig = {
-    _version          = "2.7 - Project Lazarus",
+    _version          = "2.8 - Project Lazarus",
     _author           = "Algar, Derple",
     ['ModeChecks']    = {
         IsTanking = function() return Core.IsModeActive("Tank") end,
@@ -342,12 +342,13 @@ local _ClassConfig = {
     ['Helpers']       = {
         --function to determine if we have enough mobs in range to use a defensive disc
         DefensiveDiscCheck = function(printDebug)
-            local xtCount = mq.TLO.Me.XTarget() or 0
-            if xtCount < Config:GetSetting('DiscCount') then return false end
+            local occupiedCount = mq.TLO.Me.XTarget() or 0
+            if occupiedCount < Config:GetSetting('DiscCount') then return false end
             local haters = Set.new({})
-            for i = 1, xtCount do
+            local slotCount = mq.TLO.Me.XTargetSlots() or 0
+            for i = 1, slotCount do
                 local xtarg = mq.TLO.Me.XTarget(i)
-                if xtarg and xtarg.ID() > 0 and ((xtarg.Aggressive() or xtarg.TargetType():lower() == "auto hater")) and (xtarg.Distance() or 999) <= 30 then
+                if Targeting.IsXTHater(xtarg) and (xtarg.Distance() or 999) <= 30 then
                     if printDebug then
                         Logger.log_verbose("DefensiveDiscCheck(): XT(%d) Counting %s(%d) as a hater in range.", i, xtarg.CleanName() or "None", xtarg.ID())
                     end
@@ -669,7 +670,7 @@ local _ClassConfig = {
                 type = "Disc",
                 tooltip = Tooltips.BlockDisc,
                 pre_activate = function(self)
-                    if Config:GetSetting('UseBandolier') then
+                    if Config:GetSetting('UseBandolier') and not Core.ShieldEquipped() then
                         Core.SafeCallFunc("Equip Shield", ItemManager.BandolierSwap, "Shield")
                     end
                 end,
@@ -690,7 +691,7 @@ local _ClassConfig = {
                 type = "Disc",
                 tooltip = Tooltips.UnholyAura,
                 cond = function(self, discSpell, target)
-                    return Casting.NoDiscActive()
+                    return Casting.NoDiscActive() and not mq.TLO.Me.Song("Rampart")()
                 end,
             },
             {
@@ -785,11 +786,13 @@ local _ClassConfig = {
                 name = "Explosion of Hatred",
                 type = "AA",
                 tooltip = Tooltips.ExplosionOfHatred,
+                load_cond = function(self) return Config:GetSetting('AETauntAA') end,
             },
             {
                 name = "Explosion of Spite",
                 type = "AA",
                 tooltip = Tooltips.ExplosionOfSpite,
+                load_cond = function(self) return Config:GetSetting('AETauntAA') end,
             },
             {
                 name = "AETaunt",
@@ -837,6 +840,7 @@ local _ClassConfig = {
             {
                 name = "Leech Touch",
                 type = "AA",
+                IgnoreImmuneCheck = true,
                 tooltip = Tooltips.ThoughtLeech,
                 cond = function(self, aaName, target)
                     return Config:GetSetting('DoLeechTouch') ~= 1
@@ -911,6 +915,7 @@ local _ClassConfig = {
                 type = "Item",
                 tooltip = Tooltips.Epic,
                 cond = function(self, itemName, target)
+                    if Config:GetSetting('HoldEpicForNoDisc') and not (Casting.NoDiscActive() and not mq.TLO.Me.Song("Rampart")()) then return false end
                     return self.Helpers.LeechCheck(self) or Targeting.TankingXTNamed()
                 end,
             },
@@ -928,6 +933,7 @@ local _ClassConfig = {
             {
                 name = "Leech Touch",
                 type = "AA",
+                IgnoreImmuneCheck = true,
                 tooltip = Tooltips.LeechTouch,
                 cond = function(self, aaName, target)
                     if Config:GetSetting('DoLeechTouch') == 2 then return false end
@@ -986,7 +992,9 @@ local _ClassConfig = {
                 name = "AEPoisonDot",
                 type = "Spell",
                 tooltip = Tooltips.PoisonDot,
-                load_cond = function(self) return Config:GetSetting('DoPoisonDot') and Core.GetResolvedActionMapItem('AEPoisonDot') end,
+                load_cond = function(self)
+                    return Config:GetSetting('DoPoisonDot') and Config:GetSetting('DoAEPoisonDot') and Core.GetResolvedActionMapItem('AEPoisonDot')
+                end,
                 cond = function(self, spell, target)
                     if not Config:GetSetting('DoAEDamage') then return false end
                     if Config:GetSetting('DotNamedOnly') and not Globals.AutoTargetIsNamed then return false end
@@ -997,7 +1005,10 @@ local _ClassConfig = {
                 name = "PoisonDot",
                 type = "Spell",
                 tooltip = Tooltips.PoisonDot,
-                load_cond = function(self) return Config:GetSetting('DoPoisonDot') and not Core.GetResolvedActionMapItem('AEPoisonDot') end,
+                load_cond = function(self)
+                    return Config:GetSetting('DoPoisonDot') and
+                        not (Config:GetSetting('DoAEPoisonDot') and Core.GetResolvedActionMapItem('AEPoisonDot'))
+                end,
                 cond = function(self, spell, target)
                     if Config:GetSetting('DotNamedOnly') and not Globals.AutoTargetIsNamed then return false end
                     return Casting.HaveManaToDot() and Casting.DotSpellCheck(spell)
@@ -1036,6 +1047,7 @@ local _ClassConfig = {
             {
                 name = "Unbridled Strike of Fear",
                 type = "AA",
+                IgnoreImmuneCheck = true,
             },
             {
                 name = "PowerTapAC",
@@ -1114,12 +1126,17 @@ local _ClassConfig = {
                     end, -- This will set the spell name to "AESpearNuke" if the setting is enabled and we have a valid spell in our book.
                 },
                 { name = "LifeTap", },
-                { name = "SnareDot",    cond = function(self) return Config:GetSetting('DoSnare') and not Casting.CanUseAA("Encroaching Darkness") end, },
-                { name = "Terror",      cond = function(self) return Config:GetSetting('DoTerror') end, },
-                { name = "AETaunt",     cond = function(self) return Config:GetSetting('AETauntSpell') end, },
+                { name = "SnareDot", cond = function(self) return Config:GetSetting('DoSnare') and not Casting.CanUseAA("Encroaching Darkness") end, },
+                { name = "Terror",   cond = function(self) return Config:GetSetting('DoTerror') end, },
+                { name = "AETaunt",  cond = function(self) return Config:GetSetting('AETauntSpell') end, },
                 { name = "BiteTap", },
-                { name = "BondTap",     cond = function(self) return Config:GetSetting('DoBondTap') end, },
-                { name = "PoisonDot",   cond = function(self) return Config:GetSetting('DoPoisonDot') end, },
+                { name = "BondTap",  cond = function(self) return Config:GetSetting('DoBondTap') end, },
+                {
+                    name_func = function(self)
+                        return (Config:GetSetting('DoAEPoisonDot') and Core.GetResolvedActionMapItem('AEPoisonDot')) and "AEPoisonDot" or "PoisonDot"
+                    end,
+                    cond = function(self) return Config:GetSetting('DoPoisonDot') end,
+                },
                 { name = "DireDot",     cond = function(self) return Config:GetSetting('DoDireDot') end, },
                 { name = "PowerTapAC",  cond = function(self) return Config:GetSetting('DoACTap') end, },
                 { name = "PowerTapAtk", cond = function(self) return Config:GetSetting('DoAtkTap') end, },
@@ -1195,7 +1212,7 @@ local _ClassConfig = {
     },
     ['DefaultConfig'] = {
         --Mode
-        ['Mode']            = {
+        ['Mode']              = {
             DisplayName = "Mode",
             Category = "Mode",
             Tooltip = "Select the active Combat Mode for this PC.",
@@ -1209,7 +1226,7 @@ local _ClassConfig = {
         },
 
         --Buffs and Debuffs
-        ['DoSnare']         = {
+        ['DoSnare']           = {
             DisplayName = "Use Snares",
             Group = "Abilities",
             Header = "Debuffs",
@@ -1219,7 +1236,7 @@ local _ClassConfig = {
             Default = false,
             RequiresLoadoutChange = true,
         },
-        ['SnareCount']      = {
+        ['SnareCount']        = {
             DisplayName = "Snare Max Mob Count",
             Group = "Abilities",
             Header = "Debuffs",
@@ -1230,7 +1247,7 @@ local _ClassConfig = {
             Min = 1,
             Max = 99,
         },
-        ['ProcChoice']      = {
+        ['ProcChoice']        = {
             DisplayName = "Buff Slot 1 Proc:",
             Group = "Abilities",
             Header = "Buffs",
@@ -1244,7 +1261,7 @@ local _ClassConfig = {
             Max = 3,
             RequiresLoadoutChange = true,
         },
-        ['DoCallBuff']      = {
+        ['DoCallBuff']        = {
             DisplayName = "Use Call of Darkness",
             Group = "Abilities",
             Header = "Buffs",
@@ -1254,7 +1271,7 @@ local _ClassConfig = {
             Default = false,
             RequiresLoadoutChange = true,
         },
-        ['DoVisage']        = {
+        ['DoVisage']          = {
             DisplayName = "Use Visage of Death",
             Group = "Abilities",
             Header = "Buffs",
@@ -1266,12 +1283,12 @@ local _ClassConfig = {
             Answer =
             "You may have Visage of Death enabled, which has a sizable self-damage component. While we will attempt to autocancel this at low health in downtime, you can disable VoD use in the Class options.",
         },
-        ['DoVetAA']         = {
+        ['DoVetAA']           = {
             DisplayName = "Use Vet AA",
             Group = "Abilities",
             Header = "Buffs",
             Category = "Self",
-            Index = 103,
+            Index = 105,
             Tooltip = "Use Veteran AA such as Intensity of the Resolute or Armor of Experience as necessary.",
             Default = true,
             ConfigType = "Advanced",
@@ -1279,7 +1296,7 @@ local _ClassConfig = {
         },
 
         --Taps
-        ['StartLifeTap']    = {
+        ['StartLifeTap']      = {
             DisplayName = "HP % for LifeTaps",
             Group = "Abilities",
             Header = "Damage",
@@ -1290,7 +1307,7 @@ local _ClassConfig = {
             Min = 1,
             Max = 100,
         },
-        ['DoACTap']         = {
+        ['DoACTap']           = {
             DisplayName = "Use AC Tap",
             Group = "Abilities",
             Header = "Damage",
@@ -1301,7 +1318,7 @@ local _ClassConfig = {
             Default = true,
             ConfigType = "Advanced",
         },
-        ['DoAtkTap']        = {
+        ['DoAtkTap']          = {
             DisplayName = "Use Attack Tap",
             Group = "Abilities",
             Header = "Damage",
@@ -1312,7 +1329,7 @@ local _ClassConfig = {
             Default = true,
             ConfigType = "Advanced",
         },
-        ['DoLeechTouch']    = {
+        ['DoLeechTouch']      = {
             DisplayName = "Leech Touch Use:",
             Group = "Abilities",
             Header = "Damage",
@@ -1328,7 +1345,7 @@ local _ClassConfig = {
         },
 
         --DoT Spells
-        ['DoBondTap']       = {
+        ['DoBondTap']         = {
             DisplayName = "Use Bond Dot",
             Group = "Abilities",
             Header = "Damage",
@@ -1338,17 +1355,17 @@ local _ClassConfig = {
             RequiresLoadoutChange = true,
             Default = false,
         },
-        ['DoPoisonDot']     = {
+        ['DoPoisonDot']       = {
             DisplayName = "Use Poison Dot",
             Group = "Abilities",
             Header = "Damage",
             Category = "Over Time",
             Index = 102,
-            ToolTip = function() return Ui.GetDynamicTooltipForSpell("PoisonDot") end,
-            RequiresLoadoutChange = false,
+            Tooltip = function() return Ui.GetDynamicTooltipForSpell("PoisonDot") end,
+            RequiresLoadoutChange = true,
             Default = true,
         },
-        ['DoDireDot']       = {
+        ['DoDireDot']         = {
             DisplayName = "Use Dire Dot",
             Group = "Abilities",
             Header = "Damage",
@@ -1358,7 +1375,7 @@ local _ClassConfig = {
             RequiresLoadoutChange = true,
             Default = false,
         },
-        ['DotNamedOnly']    = {
+        ['DotNamedOnly']      = {
             DisplayName = "Only Dot Named",
             Group = "Abilities",
             Header = "Damage",
@@ -1369,7 +1386,7 @@ local _ClassConfig = {
         },
 
         -- AE Damage
-        ['DoAESpearNuke']   = {
+        ['DoAESpearNuke']     = {
             DisplayName = "Use AE Spear",
             Group = "Abilities",
             Header = "Damage",
@@ -1383,7 +1400,7 @@ local _ClassConfig = {
             Answer =
             "The three best Spears on Laz have been converted to AE spells. Enable Use AE Spear for these spells to be memorized.\nAE Damage must also be enabled for them to be used.",
         },
-        ['DoAELifeTap']     = {
+        ['DoAELifeTap']       = {
             DisplayName = "Use AE Hate/LifeTap",
             Group = "Abilities",
             Header = "Damage",
@@ -1393,21 +1410,35 @@ local _ClassConfig = {
             RequiresLoadoutChange = true,
             Default = false,
         },
+        ['DoAEPoisonDot']     = {
+            DisplayName = "Use AE Poison Dot",
+            Group = "Abilities",
+            Header = "Damage",
+            Category = "AE",
+            Index = 103,
+            Tooltip = function() return Ui.GetDynamicTooltipForSpell("AEPoisonDot") end,
+            Default = false,
+            RequiresLoadoutChange = true,
+            ConfigType = "Advanced",
+            FAQ = "Why am I still using a lower-level poison dot?",
+            Answer =
+            "The best Poison Dots on Laz have been converted to AE spells. Enable Use AE Poison Dot for these spells to be memorized.\nAE Damage must also be enabled for them to be used.",
+        },
 
         --Hate Tools
-        ['DoHateBuff']      = {
+        ['DoHateBuff']        = {
             DisplayName = "Use Hate Buff",
             Group = "Abilities",
             Header = "Buffs",
             Category = "Self",
-            Index = 103,
+            Index = 104,
             Tooltip =
             "Use your Visage buff (Voice of ... line). We will continue to use the spell if slots are available (for the damage shield). The spell can be disabled directly in rotations.",
             Default = true,
             ConfigType = "Advanced",
             RequiresLoadoutChange = true,
         },
-        ['DoTerror']        = {
+        ['DoTerror']          = {
             DisplayName = "Use Terror Taunts",
             Group = "Abilities",
             Header = "Tanking",
@@ -1418,7 +1449,7 @@ local _ClassConfig = {
             ConfigType = "Advanced",
             RequiresLoadoutChange = true,
         },
-        ['AETauntAA']       = {
+        ['AETauntAA']         = {
             DisplayName = "Use AE Taunt AA",
             Group = "Abilities",
             Header = "Tanking",
@@ -1431,7 +1462,7 @@ local _ClassConfig = {
             FAQ = "Why do we treat the Explosions the same? One is targeted, one is PBAE",
             Answer = "There are currently no scripted conditions where Hatred would be used at long range, thus, for ease of use, we can treat them similarly.",
         },
-        ['AETauntSpell']    = {
+        ['AETauntSpell']      = {
             DisplayName = "Use AE Taunt Spell",
             Group = "Abilities",
             Header = "Tanking",
@@ -1444,7 +1475,7 @@ local _ClassConfig = {
         },
 
         --Defenses
-        ['DiscCount']       = {
+        ['DiscCount']         = {
             DisplayName = "Def. Disc. Count",
             Group = "Abilities",
             Header = "Tanking",
@@ -1456,7 +1487,7 @@ local _ClassConfig = {
             Max = 10,
             ConfigType = "Advanced",
         },
-        ['DefenseStart']    = {
+        ['DefenseStart']      = {
             DisplayName = "Defense HP",
             Group = "Abilities",
             Header = "Tanking",
@@ -1468,9 +1499,18 @@ local _ClassConfig = {
             Max = 100,
             ConfigType = "Advanced",
         },
+        ['HoldEpicForNoDisc'] = {
+            DisplayName = "Epic Only Without Disc",
+            Group = "Abilities",
+            Header = "Tanking",
+            Category = "Defenses",
+            Index = 103,
+            Tooltip = "Only use your epic if you have no defensive disc active.\nNote: Epic already has a check to not be used when other leech effects are active.",
+            Default = true,
+        },
 
         --Equipment
-        ['DoCoating']       = {
+        ['DoCoating']         = {
             DisplayName = "Use Coating",
             Group = "Items",
             Header = "Clickies",
@@ -1479,7 +1519,7 @@ local _ClassConfig = {
             Tooltip = "Click your Blood Drinker's Coating when defenses are triggered.",
             Default = false,
         },
-        ['UseBandolier']    = {
+        ['UseBandolier']      = {
             DisplayName = "Dynamic Weapon Swap",
             Group = "Items",
             Header = "Bandolier",
@@ -1489,7 +1529,7 @@ local _ClassConfig = {
             Default = false,
             RequiresLoadoutChange = true,
         },
-        ['EquipShield']     = {
+        ['EquipShield']       = {
             DisplayName = "Equip Shield",
             Group = "Items",
             Header = "Bandolier",
@@ -1501,7 +1541,7 @@ local _ClassConfig = {
             Max = 100,
             ConfigType = "Advanced",
         },
-        ['Equip2Hand']      = {
+        ['Equip2Hand']        = {
             DisplayName = "Equip 2Hand",
             Group = "Items",
             Header = "Bandolier",
@@ -1513,7 +1553,7 @@ local _ClassConfig = {
             Max = 100,
             ConfigType = "Advanced",
         },
-        ['NamedShieldLock'] = {
+        ['NamedShieldLock']   = {
             DisplayName = "Shield on Named",
             Group = "Items",
             Header = "Bandolier",
