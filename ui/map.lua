@@ -353,9 +353,13 @@ function MapUI:RenderCanvas(canvasWidth, canvasHeight)
                 hoveredSpawn.Class.ShortName() or '?',
                 hoveredSpawn.Distance() or 0))
             ImGui.Text(hoveredInside and 'Inside safe area' or 'Outside safe area')
-            local pullIcon, pullText, pullColor = Modules.ModuleList["Pull"]:GetSpawnPullStatus(hoveredSpawn.ID() or 0)
+            local pullIcon, pullText, pullColor, pullQueue = Modules.ModuleList["Pull"]:GetSpawnPullStatus(hoveredSpawn.ID() or 0)
             if pullText then
-                Ui.RenderColoredText(pullColor, "%s %s", pullIcon, pullText)
+                if pullQueue then
+                    Ui.RenderColoredText(pullColor, "%s %s (#%d)", pullIcon, pullText, pullQueue)
+                else
+                    Ui.RenderColoredText(pullColor, "%s %s", pullIcon, pullText)
+                end
             end
             ImGui.EndTooltip()
         elseif editMode then
