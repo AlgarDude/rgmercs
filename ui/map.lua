@@ -346,12 +346,18 @@ function MapUI:RenderCanvas(canvasWidth, canvasHeight)
 
     if isHovered then
         if hoveredSpawn then
-            ImGui.SetTooltip('%s\nLevel %d %s | %.0f away\n%s',
-                hoveredSpawn.CleanName() or hoveredSpawn.Name() or '?',
+            ImGui.BeginTooltip()
+            ImGui.Text(hoveredSpawn.CleanName() or hoveredSpawn.Name() or '?')
+            ImGui.Text(string.format('Level %d %s | %.0f away',
                 hoveredSpawn.Level() or 0,
                 hoveredSpawn.Class.ShortName() or '?',
-                hoveredSpawn.Distance() or 0,
-                hoveredInside and 'Inside safe area' or 'Outside safe area')
+                hoveredSpawn.Distance() or 0))
+            ImGui.Text(hoveredInside and 'Inside safe area' or 'Outside safe area')
+            local pullIcon, pullText, pullColor = Modules.ModuleList["Pull"]:GetSpawnPullStatus(hoveredSpawn.ID() or 0)
+            if pullText then
+                Ui.RenderColoredText(pullColor, "%s %s", pullIcon, pullText)
+            end
+            ImGui.EndTooltip()
         elseif editMode then
             local worldX, worldY = screenToWorld(mouseX, mouseY)
             ImGui.SetTooltip('World: %.1f, %.1f | Drag to pan | %s',

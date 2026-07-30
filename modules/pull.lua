@@ -40,6 +40,7 @@ Module.TempSettings.LastTooFarAnnounce    = 0
 -- Targets & Scanning
 Module.TempSettings.TargetSpawnID         = 0
 Module.TempSettings.PullTargets           = {}
+Module.TempSettings.PullMetaData          = {}
 Module.TempSettings.PullIgnoreTargets     = {}
 Module.TempSettings.PullListUpdated       = false
 Module.TempSettings.PullAllowSet          = {}
@@ -137,6 +138,51 @@ Module.Constants.PullStateDisplayStrings  = {
 
 Module.Constants.PullStatesIDToName       = {}
 for k, v in pairs(Module.Constants.PullStates) do Module.Constants.PullStatesIDToName[v] = k end
+
+Module.Constants.PullFilterReasons              = {
+    ['PULLABLE']            = 1,
+    ['NOT_TARGETABLE']      = 2,
+    ['Z_TOO_FAR']           = 3,
+    ['TOO_FAR']             = 4,
+    ['NOT_NPC']             = 5,
+    ['CHARMED_PET']         = 6,
+    ['TEMP_PET']            = 7,
+    ['ON_XTARGET']          = 8,
+    ['NOT_ON_ALLOW_LIST']   = 9,
+    ['ON_DENY_LIST']        = 10,
+    ['ON_IGNORE_LIST']      = 11,
+    ['IN_WATER']            = 12,
+    ['LEVEL_TOO_LOW']       = 13,
+    ['LEVEL_TOO_HIGH']      = 14,
+    ['CON_OUT_OF_RANGE']    = 15,
+    ['LEVEL_DIFF_TOO_HIGH'] = 16,
+    ['NO_PATH']             = 17,
+    ['FIGHTING_STRANGER']   = 18,
+}
+
+Module.Constants.PullFilterReasonDisplayStrings = {
+    ['PULLABLE']            = { Display = Icons.FA_BULLSEYE, Text = "Pullable", Color = 'Green', },
+    ['NOT_TARGETABLE']      = { Display = Icons.FA_BAN, Text = "Not Targetable", Color = 'Grey', },
+    ['Z_TOO_FAR']           = { Display = Icons.FA_ARROW_RIGHT, Text = "Z Distance Too Far", Color = 'Grey', },
+    ['TOO_FAR']             = { Display = Icons.FA_ARROW_RIGHT, Text = "Out of Pull Radius", Color = 'Grey', },
+    ['NOT_NPC']             = { Display = Icons.MD_PEOPLE, Text = "Not an NPC", Color = 'Grey', },
+    ['CHARMED_PET']         = { Display = Icons.MD_PETS, Text = "Charmed Pet", Color = 'Grey', },
+    ['TEMP_PET']            = { Display = Icons.MD_PETS, Text = "Temp / Swarm Pet", Color = 'Grey', },
+    ['ON_XTARGET']          = { Display = Icons.FA_FIRE, Text = "Already on XTarget", Color = 'Yellow', },
+    ['NOT_ON_ALLOW_LIST']   = { Display = Icons.MD_NOT_INTERESTED, Text = "Not on Allow List", Color = 'Yellow', },
+    ['ON_DENY_LIST']        = { Display = Icons.MD_DO_NOT_DISTURB, Text = "On Deny List", Color = 'Red', },
+    ['ON_IGNORE_LIST']      = { Display = Icons.FA_EYE_SLASH, Text = "On Ignore List", Color = 'Yellow', },
+    ['IN_WATER']            = { Display = Icons.MD_WARNING, Text = "In Water", Color = 'Yellow', },
+    ['LEVEL_TOO_LOW']       = { Display = Icons.FA_CHEVRON_DOWN, Text = "Level Too Low", Color = 'Yellow', },
+    ['LEVEL_TOO_HIGH']      = { Display = Icons.FA_CHEVRON_UP, Text = "Level Too High", Color = 'Yellow', },
+    ['CON_OUT_OF_RANGE']    = { Display = Icons.FA_EXCLAMATION, Text = "Con Out of Range", Color = 'Yellow', },
+    ['LEVEL_DIFF_TOO_HIGH'] = { Display = Icons.FA_CHEVRON_UP, Text = "Level Difference Too High", Color = 'Red', },
+    ['NO_PATH']             = { Display = Icons.MD_CLEAR, Text = "No Path / Unreachable", Color = 'Red', },
+    ['FIGHTING_STRANGER']   = { Display = Icons.FA_FIRE, Text = "Fighting a Stranger", Color = 'Red', },
+}
+
+Module.Constants.PullFilterReasonsIDToName      = {}
+for k, v in pairs(Module.Constants.PullFilterReasons) do Module.Constants.PullFilterReasonsIDToName[v] = k end
 
 Module.Constants.PullModes          = {
     "PullToCamp",
@@ -1604,6 +1650,79 @@ function Module:RenderPullTargets()
     self:RenderTargetTable("PullTargets", self.TempSettings.PullTargets)
 end
 
+function Module:RenderScannedTargets()
+    local rows = {}
+    for _, entry in pairs(self.TempSettings.PullMetaData) do
+        table.insert(rows, entry)
+    end
+
+    table.sort(rows, function(a, b)
+        local aPull = a.reason == Module.Constants.PullFilterReasons.PULLABLE
+        local bPull = b.reason == Module.Constants.PullFilterReasons.PULLABLE
+        if aPull ~= bPull then return aPull end
+        return a.distance < b.distance
+    end)
+
+    if ImGui.BeginChild("PullScanChild", ImVec2(0, 0), ImGuiChildFlags.AutoResizeY, ImGuiWindowFlags.None) then
+        if ImGui.BeginTable("PullScan", 6, bit32.bor(ImGuiTableFlags.Resizable, ImGuiTableFlags.Borders)) then
+            ImGui.TableSetupColumn('Index', (ImGuiTableColumnFlags.WidthFixed), 20.0)
+            ImGui.TableSetupColumn('Name', (ImGuiTableColumnFlags.WidthStretch), 200.0)
+            ImGui.TableSetupColumn('Level', (ImGuiTableColumnFlags.WidthFixed), 45.0)
+            ImGui.TableSetupColumn('Distance', (ImGuiTableColumnFlags.WidthFixed), 60.0)
+            ImGui.TableSetupColumn('Status', (ImGuiTableColumnFlags.WidthStretch), 180.0)
+            ImGui.TableSetupColumn('Loc', (ImGuiTableColumnFlags.WidthStretch), 160.0)
+            ImGui.TableHeadersRow()
+
+            for idx, entry in ipairs(rows) do
+                ImGui.PushID(string.format("##scan_npc_%d", entry.id))
+                local reasonData = Module.Constants.PullFilterReasonDisplayStrings[Module.Constants.PullFilterReasonsIDToName[entry.reason]]
+                local reasonColor = reasonData and (Globals.Constants.Colors[reasonData.Color] or Globals.Constants.Colors.White) or Globals.Constants.Colors.White
+                local conColor = Globals.Constants.ConColorsNameToVec4[(entry.conColor or "GREY"):upper()] or Globals.Constants.Colors.White
+                ImGui.TableNextColumn()
+                Ui.RenderText("%d", idx)
+                ImGui.TableNextColumn()
+                ImGui.PushStyleColor(ImGuiCol.Text, conColor)
+                ImGui.PushID(string.format("##select_scan_npc_%d", entry.id))
+                local _, clicked = ImGui.Selectable(entry.name)
+                if clicked then
+                    mq.TLO.Spawn("id " .. entry.id).DoTarget()
+                end
+                ImGui.PopID()
+                ImGui.PopStyleColor()
+                Ui.MultilineTooltipWithColors({
+                    { text = entry.name,                                                                 color = conColor, },
+                    { text = "Status: ",                                                                 color = Globals.Constants.Colors.Grey, },
+                    { text = reasonData and (reasonData.Display .. " " .. reasonData.Text) or "Unknown", color = reasonColor,                    sameLine = true, },
+                    { text = "Level: ",                                                                  color = Globals.Constants.Colors.Grey, },
+                    { text = tostring(entry.level),                                                      color = Globals.Constants.Colors.White, sameLine = true, },
+                    { text = "Distance: ",                                                               color = Globals.Constants.Colors.Grey, },
+                    { text = string.format("%0.2f", entry.distance),                                     color = Globals.Constants.Colors.White, sameLine = true, },
+                    { text = "Loc: ",                                                                    color = Globals.Constants.Colors.Grey, },
+                    { text = entry.loc,                                                                  color = Globals.Constants.Colors.White, sameLine = true, },
+                })
+                ImGui.TableNextColumn()
+                Ui.RenderText("%d", entry.level)
+                ImGui.TableNextColumn()
+                Ui.RenderText("%0.2f", entry.distance)
+                ImGui.TableNextColumn()
+                if reasonData then
+                    ImGui.PushStyleColor(ImGuiCol.Text, reasonColor)
+                    Ui.RenderText(reasonData.Display .. " " .. reasonData.Text)
+                    ImGui.PopStyleColor()
+                else
+                    Ui.RenderText("Unknown")
+                end
+                ImGui.TableNextColumn()
+                Ui.NavEnabledLoc(entry.loc)
+                ImGui.PopID()
+            end
+
+            ImGui.EndTable()
+        end
+    end
+    ImGui.EndChild()
+end
+
 function Module:RenderIgnoreTargets()
     ImGui.PushID("##_small_btn_clear_ignore_list")
     if ImGui.SmallButton("Clear Pull Ignore List") then
@@ -2354,6 +2473,9 @@ function Module:Render()
         if Config:GetSetting('DoPull') then
             if ImGui.CollapsingHeader("Pull Targets") then
                 self:RenderPullTargets()
+            end
+            if ImGui.CollapsingHeader("Scanned Targets") then
+                self:RenderScannedTargets()
             end
             if ImGui.CollapsingHeader("Ignored Targets") then
                 self:RenderIgnoreTargets()
@@ -3453,6 +3575,19 @@ function Module:GetPullableSpawns()
     local policy = self:GetModePolicy()
 
     local metaDataCache = {}
+    local reasons = Module.Constants.PullFilterReasons
+
+    local recordReason = function(spawn, reason, distance)
+        metaDataCache[spawn.ID()] = {
+            id       = spawn.ID(),
+            reason   = reason,
+            distance = distance or spawn.Distance() or 0,
+            name     = spawn.CleanName() or "Unknown",
+            level    = spawn.Level() or 0,
+            conColor = spawn.ConColor() or "GREY",
+            loc      = spawn.LocYXZ() or "0,0,0",
+        }
+    end
 
     local pullRadius = Config:GetSetting(policy.radiusSetting)
 
@@ -3471,7 +3606,11 @@ function Module:GetPullableSpawns()
 
     local spawnFilter = function(spawn)
         if not spawn() or spawn.ID() == 0 then return false end
-        if not spawn.Targetable() then return false end
+        if (spawn.Type() or "") == "Corpse" then return false end
+        if not spawn.Targetable() then
+            recordReason(spawn, reasons.NOT_TARGETABLE)
+            return false
+        end
 
         local spawnName = logSpawnNames and spawn.CleanName() or ""
 
@@ -3480,6 +3619,7 @@ function Module:GetPullableSpawns()
             Logger.log_verbose("\atPULL::FindPullTarget \awSpawn \am%s\aw (\at%d\aw) \aoZDistance too far - %d > %d", spawnName, spawn.ID(),
                 math.abs(spawn.Z() - checkZ),
                 Config:GetSetting('PullZRadius'))
+            recordReason(spawn, reasons.Z_TOO_FAR)
             return false
         end
 
@@ -3489,28 +3629,33 @@ function Module:GetPullableSpawns()
             Logger.log_verbose("\atPULL::FindPullTarget \awSpawn \am%s\aw (\at%d\aw) \aoDistance too far - distSq(%d) > pullRadiusSq(%d)",
                 spawnName, spawn.ID(), distSqr,
                 pullRadiusSqr)
+            recordReason(spawn, reasons.TOO_FAR)
             return false
         end
 
         if spawn.Type() ~= "NPC" and spawn.Type() ~= "NPCPET" then
             Logger.log_verbose("\atPULL::FindPullTarget \awSpawn \am%s\aw (\at%d\aw) \aois type %s not an NPC or NPCPET -- Skipping", spawnName, spawn.ID(),
                 spawn.Type())
+            recordReason(spawn, reasons.NOT_NPC)
             return false
         end
 
         if spawn.Master.Type() == 'PC' then
             Logger.log_verbose("\atPULL::FindPullTarget \awSpawn \am%s\aw (\at%d\aw) \aois Charmed Pet -- Skipping", spawnName, spawn.ID())
+            recordReason(spawn, reasons.CHARMED_PET)
             return false
         end
 
         if Targeting.IsTempPet(spawn) then
             Logger.log_verbose("\atPULL::FindPullTarget \awSpawn \am%s\aw (\at%d\aw) \aois Temp or Swarm Pet -- Skipping", spawnName, spawn.ID())
+            recordReason(spawn, reasons.TEMP_PET)
             return false
         end
 
         if policy.successCheck == 'chainCount' then
             if Targeting.IsSpawnXTHater(spawn.ID()) then
                 Logger.log_verbose("\atPULL::FindPullTarget \awSpawn \am%s\aw (\at%d\aw) \aoAlready on XTarget -- Skipping", spawnName, spawn.ID())
+                recordReason(spawn, reasons.ON_XTARGET)
                 return false
             end
         end
@@ -3518,11 +3663,13 @@ function Module:GetPullableSpawns()
         if self.TempSettings.HavePullAllowEntries then
             if not self.TempSettings.PullAllowSet[Strings.TrimSpaces(spawn.CleanName() or ""):lower()] then
                 Logger.log_verbose("\atPULL::FindPullTarget \awSpawn \am%s\aw (\at%d\aw) \ar -> Not Found in Allow List!", spawnName, spawn.ID())
+                recordReason(spawn, reasons.NOT_ON_ALLOW_LIST)
                 return false
             end
         elseif self.TempSettings.HavePullDenyEntries then
             if self.TempSettings.PullDenySet[Strings.TrimSpaces(spawn.CleanName() or ""):lower()] then
                 Logger.log_verbose("\atPULL::FindPullTarget \awSpawn \am%s\aw (\at%d\aw) \ar -> Found in Deny List!", spawnName, spawn.ID())
+                recordReason(spawn, reasons.ON_DENY_LIST)
                 return false
             end
         end
@@ -3530,12 +3677,14 @@ function Module:GetPullableSpawns()
         for _, ignoredMob in ipairs(self.TempSettings.PullIgnoreTargets) do
             if spawn.ID() == ignoredMob.ID() then
                 Logger.log_verbose("\atPULL::FindPullTarget \awSpawn \am%s\aw (\at%d\aw) \ar -> Found in Ignore List!", spawnName, spawn.ID())
+                recordReason(spawn, reasons.ON_IGNORE_LIST)
                 return false
             end
         end
 
         if spawn.FeetWet() and not Config:GetSetting('PullMobsInWater') then
             Logger.log_verbose("\atPULL::FindPullTarget \awSpawn \am%s\aw (\at%d\aw) \agIgnoring mob in water", spawnName, spawn.ID())
+            recordReason(spawn, reasons.IN_WATER)
             return false
         end
 
@@ -3544,11 +3693,13 @@ function Module:GetPullableSpawns()
             if spawn.Level() < Config:GetSetting('PullMinLevel') then
                 Logger.log_verbose("\atPULL::FindPullTarget \awSpawn \am%s\aw (\at%d\aw) \aoLevel too low - %d", spawnName, spawn.ID(),
                     spawn.Level())
+                recordReason(spawn, reasons.LEVEL_TOO_LOW)
                 return false
             end
             if spawn.Level() > Config:GetSetting('PullMaxLevel') then
                 Logger.log_verbose("\atPULL::FindPullTarget \awSpawn \am%s\aw (\at%d\aw) \aoLevel too high - %d", spawnName, spawn.ID(),
                     spawn.Level())
+                recordReason(spawn, reasons.LEVEL_TOO_HIGH)
                 return false
             end
         else
@@ -3559,6 +3710,7 @@ function Module:GetPullableSpawns()
                     spawnName, spawn.ID(),
                     Config:GetSetting('PullMinCon'),
                     Config:GetSetting('PullMaxCon'), conLevel, spawn.ConColor())
+                recordReason(spawn, reasons.CON_OUT_OF_RANGE)
                 return false
             end
             -- check max level difference
@@ -3566,6 +3718,7 @@ function Module:GetPullableSpawns()
             if spawn.Level() > maxLvl then
                 Logger.log_verbose("\atPULL::FindPullTarget \awSpawn \am%s\aw (\at%d\aw)  - Ignoring mob due to max level difference. Max Level = %d, Mob = %d",
                     spawnName, spawn.ID(), maxLvl, spawn.Level())
+                recordReason(spawn, reasons.LEVEL_DIFF_TOO_HIGH)
                 return false
             end
         end
@@ -3583,18 +3736,20 @@ function Module:GetPullableSpawns()
         if not canPath or navDist > maxPathRange then
             Logger.log_verbose("\atPULL::FindPullTarget \awSpawn \am%s\aw (\at%d\aw) \aoPath check failed - dist(%d) canPath(%s)", spawnName,
                 spawn.ID(), navDist, Strings.BoolToColorString(canPath))
+            recordReason(spawn, reasons.NO_PATH)
             return false
         end
 
         if Config:GetSetting('SafeTargeting') and Targeting.IsSpawnFightingStranger(spawn, 500) then
             Logger.log_verbose("\atPULL::FindPullTarget \awSpawn \am%s\aw (\at%d\aw) \ar mob is fighting a stranger and safe targeting is enabled!",
                 spawnName, spawn.ID())
+            recordReason(spawn, reasons.FIGHTING_STRANGER)
             return false
         end
 
         Logger.log_debug("\atPULL::FindPullTarget \awSpawn \am%s\aw (\at%d\aw) \agPotential Pull Added to List", spawn.CleanName(), spawn.ID())
 
-        metaDataCache[spawn.ID()] = { distance = navDist, }
+        recordReason(spawn, reasons.PULLABLE, navDist)
 
         return true
     end
@@ -3616,6 +3771,7 @@ function Module:FindTarget()
     local pullTargets, metaData = self:GetPullableSpawns()
 
     self.TempSettings.PullTargets = pullTargets
+    self.TempSettings.PullMetaData = metaData
 
     if #pullTargets > 0 then
         local pullTarget = pullTargets[1]
@@ -3626,6 +3782,15 @@ function Module:FindTarget()
     end
 
     return 0
+end
+
+-- Returns the icon, text, and resolved color for a spawn's last-scanned pull status, or nil if not scanned.
+function Module:GetSpawnPullStatus(spawnId)
+    local entry = self.TempSettings.PullMetaData[spawnId]
+    if not entry then return nil end
+    local reasonData = Module.Constants.PullFilterReasonDisplayStrings[Module.Constants.PullFilterReasonsIDToName[entry.reason]]
+    if not reasonData then return nil end
+    return reasonData.Display, reasonData.Text, Globals.Constants.Colors[reasonData.Color] or Globals.Constants.Colors.White
 end
 
 -- Attempt Abort Checks
