@@ -1707,7 +1707,11 @@ function Module:RenderScannedTargets()
                 ImGui.TableNextColumn()
                 if reasonData then
                     ImGui.PushStyleColor(ImGuiCol.Text, reasonColor)
-                    Ui.RenderText(reasonData.Display .. " " .. reasonData.Text)
+                    if entry.queuePos then
+                        Ui.RenderText("%s %s (#%d)", reasonData.Display, reasonData.Text, entry.queuePos)
+                    else
+                        Ui.RenderText(reasonData.Display .. " " .. reasonData.Text)
+                    end
                     ImGui.PopStyleColor()
                 else
                     Ui.RenderText("Unknown")
@@ -3764,6 +3768,10 @@ function Module:GetPullableSpawns()
         return metaDataCache[a.ID()].distance < metaDataCache[b.ID()].distance
     end)
 
+    for idx, target in ipairs(pullTargets) do
+        metaDataCache[target.ID()].queuePos = idx
+    end
+
     return pullTargets, metaDataCache
 end
 
@@ -3784,13 +3792,13 @@ function Module:FindTarget()
     return 0
 end
 
--- Returns the icon, text, and resolved color for a spawn's last-scanned pull status, or nil if not scanned.
+-- Returns the icon, text, resolved color, and queue position (pullable only) for a spawn's last-scanned pull status, or nil if not scanned.
 function Module:GetSpawnPullStatus(spawnId)
     local entry = self.TempSettings.PullMetaData[spawnId]
     if not entry then return nil end
     local reasonData = Module.Constants.PullFilterReasonDisplayStrings[Module.Constants.PullFilterReasonsIDToName[entry.reason]]
     if not reasonData then return nil end
-    return reasonData.Display, reasonData.Text, Globals.Constants.Colors[reasonData.Color] or Globals.Constants.Colors.White
+    return reasonData.Display, reasonData.Text, Globals.Constants.Colors[reasonData.Color] or Globals.Constants.Colors.White, entry.queuePos
 end
 
 -- Attempt Abort Checks
