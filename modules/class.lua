@@ -959,7 +959,8 @@ function Module:SetCombatMode(mode)
 end
 
 function Module:ComputedLoadoutMatchesCurrent()
-    if not self.ClassConfig or not self.ClassConfig.SpellList then return false end
+    if not self.ClassConfig then return false end
+    if not self.ClassConfig.SpellList then return self.ClassConfig.Spells == nil end
 
     local now = Globals.GetTimeMS()
     if (now - self.TempSettings.LastFastPathTime) < 1000 then return false end
