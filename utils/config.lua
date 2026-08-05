@@ -21,7 +21,7 @@ Config.Db:setCollectStats(true)
 Config.moduleDefaultSettings                             = {}
 Config.moduleTempSettings                                = {}
 Config.moduleSettingCategories                           = {}
-Config.currentPeer                                       = ""
+Config.observedPeer                                      = ""
 Config.peerModuleSettings                                = {}
 Config.peerModuleDefaultSettings                         = {}
 Config.peerModuleSettingCategories                       = {}
@@ -3214,8 +3214,8 @@ function Config:PeerGetModuleDefaultSettings(peer, module)
         return self:GetModuleDefaultSettings(module)
     end
 
-    if self.currentPeer ~= peer then
-        Logger.log_error("PeerGetModuleDefaultSettings called for %s but current peer is %s", peer, self.currentPeer or "nil")
+    if self.observedPeer ~= peer then
+        Logger.log_error("PeerGetModuleDefaultSettings called for %s but observed peer is %s", peer, self.observedPeer or "nil")
         return {}
     end
 
@@ -3231,8 +3231,8 @@ function Config:PeerGetModuleSettingCategories(peer, module)
         return self:GetModuleSettingCategories(module)
     end
 
-    if self.currentPeer ~= peer then
-        Logger.log_error("PeerGetModuleSettingCategories called for %s but current peer is %s", peer, self.currentPeer or "nil")
+    if self.observedPeer ~= peer then
+        Logger.log_error("PeerGetModuleSettingCategories called for %s but observed peer is %s", peer, self.observedPeer or "nil")
         return {}
     end
 
@@ -3269,8 +3269,8 @@ function Config:PeerGetAllModuleDefaultSettings(peer)
         return self:GetAllModuleDefaultSettings()
     end
 
-    if self.currentPeer ~= peer then
-        Logger.log_error("PeerGetAllModuleDefaultSettings called for %s but current peer is %s", peer, self.currentPeer or "nil")
+    if self.observedPeer ~= peer then
+        Logger.log_error("PeerGetAllModuleDefaultSettings called for %s but observed peer is %s", peer, self.observedPeer or "nil")
         return {}
     end
 
@@ -3286,8 +3286,8 @@ function Config:PeerGetAllModuleSettingCategories(peer)
         return self:GetAllModuleSettingCategories()
     end
 
-    if self.currentPeer ~= peer then
-        Logger.log_error("PeerGetAllModuleSettingCategories called for %s but current peer is %s", peer, self.currentPeer or "nil")
+    if self.observedPeer ~= peer then
+        Logger.log_error("PeerGetAllModuleSettingCategories called for %s but observed peer is %s", peer, self.observedPeer or "nil")
         return {}
     end
 
@@ -3303,8 +3303,8 @@ function Config:PeerGetAllSettingsForCategory(peer, category)
         return self:GetAllSettingsForCategory(category)
     end
 
-    if self.currentPeer ~= peer then
-        Logger.log_error("PeerGetAllSettingsForCategory called for %s but current peer is %s", peer, self.currentPeer or "nil")
+    if self.observedPeer ~= peer then
+        Logger.log_error("PeerGetAllSettingsForCategory called for %s but observed peer is %s", peer, self.observedPeer or "nil")
         return {}
     end
 
@@ -3320,8 +3320,8 @@ function Config:PeerGetModuleForSetting(peer, setting)
         return self:GetModuleForSetting(setting)
     end
 
-    if self.currentPeer ~= peer then
-        Logger.log_error("PeerGetModuleForSetting called for %s but current peer is %s", peer, self.currentPeer or "nil")
+    if self.observedPeer ~= peer then
+        Logger.log_error("PeerGetModuleForSetting called for %s but observed peer is %s", peer, self.observedPeer or "nil")
         return {}
     end
 
@@ -3349,8 +3349,8 @@ function Config:PeerGetSetting(peer, setting, failOk)
         return self:GetSetting(setting, failOk)
     end
 
-    if self.currentPeer ~= peer then
-        Logger.log_error("PeerGetSetting called for %s but current peer is %s", peer, self.currentPeer or "nil")
+    if self.observedPeer ~= peer then
+        Logger.log_error("PeerGetSetting called for %s but observed peer is %s", peer, self.observedPeer or "nil")
         return nil
     end
 
@@ -3432,8 +3432,8 @@ function Config:PeerGetSettingDefaults(peer, setting)
         return self:GetSettingDefaults(setting)
     end
 
-    if self.currentPeer ~= peer then
-        Logger.log_error("PeerGetSettingDefaults called for %s but current peer is %s", peer, self.currentPeer or "nil")
+    if self.observedPeer ~= peer then
+        Logger.log_error("PeerGetSettingDefaults called for %s but observed peer is %s", peer, self.observedPeer or "nil")
         return nil
     end
 
@@ -3845,8 +3845,8 @@ function Config:BroadcastConfigs()
     end
 end
 
-function Config:GetCurrentPeer()
-    return self.currentPeer
+function Config:GetobservedPeer()
+    return self.observedPeer
 end
 
 function Config:GetLastModuleRegisteredTime()
@@ -3886,26 +3886,26 @@ end
 function Config:ValidatePeers()
     Comms.ValidatePeers(Config:GetSetting("ActorPeerTimeout"))
 
-    if not Comms.IsValidPeer(self.currentPeer) then
+    if not Comms.IsValidPeer(self.observedPeer) then
         self.peerModuleSettings                                = {}
         self.peerModuleDefaultSettings                         = {}
         self.peerModuleSettingCategories                       = {}
         self.TempSettings.PeerModuleSettingsLowerToNameCache   = {}
         self.TempSettings.PeerSettingToModuleCache             = {}
         self.TempSettings.PeerSettingsCategoryToSettingMapping = {}
-        self.currentPeer                                       = nil
+        self.observedPeer                                      = nil
     end
 end
 
 function Config:SetRemotePeer(peer)
-    if self.currentPeer ~= peer then
+    if self.observedPeer ~= peer then
         self.peerModuleSettings                                = {}
         self.peerModuleDefaultSettings                         = {}
         self.peerModuleSettingCategories                       = {}
         self.TempSettings.PeerModuleSettingsLowerToNameCache   = {}
         self.TempSettings.PeerSettingToModuleCache             = {}
         self.TempSettings.PeerSettingsCategoryToSettingMapping = {}
-        self.currentPeer                                       = peer
+        self.observedPeer                                      = peer
         self.TempSettings.LastPeerConfigReceivedTime           = 0
 
         self:RequestPeerConfigs(peer)
@@ -3918,7 +3918,7 @@ function Config:UpdatePeerSetSetting(data)
     local setting = data.setting
     local value   = data.value
 
-    if self.currentPeer ~= peer then
+    if self.observedPeer ~= peer then
         return
     end
     Logger.log_debug("Received UpdatePeerSetSetting from %s for module %s, setting %s", peer, module, setting)
@@ -3940,7 +3940,7 @@ function Config:UpdatePeerSettings(data)
     local peer   = data.peer
     local module = data.module
 
-    if self.currentPeer ~= peer then
+    if self.observedPeer ~= peer then
         return
     end
 
@@ -3976,7 +3976,7 @@ function Config:UpdatePeerSettings(data)
 end
 
 function Config:GetPeerLastConfigReceivedTime(peer)
-    if peer ~= self.currentPeer then
+    if peer ~= self.observedPeer then
         return 0
     end
 
