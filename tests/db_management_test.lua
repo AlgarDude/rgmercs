@@ -234,7 +234,7 @@ function M.RunAll()
 
         -- 5b) Reset: a busy db is reported to the caller rather than reloading stale settings
         ---@diagnostic disable-next-line: duplicate-set-field
-        Config.Db.deleteModule = function() return false end
+        Config.Db.deleteModule = function(_, _, _, _, _) return false end
         local busy = DBManagement.ResetSettings("h", SRV, CLS, "All Modules")
         Config.Db.deleteModule = sv.deleteModule
         check("Reset busy: reports the busy db, not another bail", busy.ok == false and busy.refusedRunning ~= true,

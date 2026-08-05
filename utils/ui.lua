@@ -2189,6 +2189,8 @@ function Ui.RenderRotationTable(name, rotationTable, resolvedActionMap, rotation
                     ImGui.PushStyleColor(ImGuiCol.Text, Globals.Constants.Colors.LightOrange)
                     ImGui.PushStyleColor(ImGuiCol.HeaderHovered, Globals.Constants.Colors.NearBlack)
                     local _, clicked = ImGui.Selectable(itemName)
+                    -- we don't need a nil check because isResolved already guarantees that resolvedItem and resolvedItem.Clicky exist
+                    ---@diagnostic disable-next-line: need-check-nil
                     local clickySpell = resolvedItem.Clicky.Spell
                     if clickySpell() and clicked then
                         clickySpell.Inspect()
