@@ -23,8 +23,8 @@ return {
     },
     ['Rez']               = {
         ['Combat'] = {
-            { type = "AA",   name = "Gift of Resurrection", },
-            { type = "Item", name = "RezStaff", },
+            { type = "AA",   name = "Gift of Resurrection", cond = function(self) return not self.Helpers.PriorityTankingHold() end, },
+            { type = "Item", name = "RezStaff",             cond = function(self) return not self.Helpers.PriorityTankingHold() end, },
         },
         ['Downtime'] = {
             { type = "AA",   name = "Gift of Resurrection", },
@@ -45,21 +45,21 @@ return {
     },
     ['Cure']              = {
         ['DetDispel'] = {
-            { type = "AA", name = "Radiant Cure", },
+            { type = "AA", name = "Radiant Cure", cond = function(self) return not self.Helpers.PriorityTankingHold() end, },
             { type = "AA", name = "Purification", selfOnly = true, },
         },
         ['Poison'] = {
-            { type = "Spell", name = "PurityCure", },
+            { type = "Spell", name = "PurityCure", cond = function(self) return not self.Helpers.PriorityTankingHold() end, },
         },
         ['Disease'] = {
-            { type = "Spell", name = "PurityCure", },
+            { type = "Spell", name = "PurityCure", cond = function(self) return not self.Helpers.PriorityTankingHold() end, },
         },
         ['Curse'] = {
-            { type = "Spell", name = "CureCurse",  cond = function(self) return Config:GetSetting('KeepCurseMemmed') end, },
-            { type = "Spell", name = "PurityCure", cond = function(self) return not Config:GetSetting('KeepCurseMemmed') end, },
+            { type = "Spell", name = "CureCurse",  cond = function(self) return Config:GetSetting('KeepCurseMemmed') and not self.Helpers.PriorityTankingHold() end, },
+            { type = "Spell", name = "PurityCure", cond = function(self) return not Config:GetSetting('KeepCurseMemmed') and not self.Helpers.PriorityTankingHold() end, },
         },
         ['Corruption'] = {
-            { type = "Spell", name = "CureCorrupt", },
+            { type = "Spell", name = "CureCorrupt", cond = function(self) return not self.Helpers.PriorityTankingHold() end, },
         },
     },
     ['Themes']            = {
@@ -426,6 +426,21 @@ return {
             end
             return false
         end,
+        PriorityTankingHold = function()
+            if not Config:GetSetting('PriorityTanking') or Globals.BackOffFlag then return false end
+            if not Core.IsTanking() or Core.AtCriticalHP() then return false end
+
+            local enabledRotations = Config:GetSetting('EnabledRotations') or {}
+
+            if Config:GetSetting('TankAggroScan') and (Globals.AggroTargetID or 0) > 0
+                and (enabledRotations['AEHateTools'] ~= false or enabledRotations['HateTools(AggroTarget)'] ~= false) then
+                return true
+            end
+
+            if enabledRotations['HateTools(AutoTarget)'] == false then return false end
+            if (Globals.AutoTargetID or 0) == 0 or Globals.NoHateTargetIDs:contains(Globals.AutoTargetID) then return false end
+            return Targeting.GetAutoTargetAggroPct() < 100
+        end,
         shieldNeeded = function()
             -- check for exactly 100% to help ensure the mob is targeting us, over 100% can indicate another is still targeted
             return (mq.TLO.Me.PctHPs() <= Config:GetSetting('EquipShield')) or mq.TLO.Me.ActiveDisc() == "Deflection Discipline" or
@@ -477,6 +492,9 @@ return {
                 name = "Mantle of the Wyrmguard",
                 type = "Item",
                 load_cond = function(self) return mq.TLO.FindItem("=Mantle of the Wyrmguard")() end,
+                cond = function(self, itemName, target)
+                    return not self.Helpers.PriorityTankingHold()
+                end,
             },
             {
                 name = "BlueBand",
@@ -494,11 +512,17 @@ return {
                 name = "WaveHeal",
                 type = "Spell",
                 load_cond = function(self) return Config:GetSetting('DoWaveHeal') < 3 end,
+                cond = function(self, spell, target)
+                    return not self.Helpers.PriorityTankingHold()
+                end,
             },
             {
                 name = "WaveHeal2",
                 type = "Spell",
                 load_cond = function(self) return Config:GetSetting('DoWaveHeal') == 2 end,
+                cond = function(self, spell, target)
+                    return not self.Helpers.PriorityTankingHold()
+                end,
             },
         },
         ['BigHeal'] = {
@@ -534,6 +558,9 @@ return {
             {
                 name = "BurstHeal",
                 type = "Spell",
+                cond = function(self, spell, target)
+                    return not self.Helpers.PriorityTankingHold()
+                end,
             },
             {
                 name = "VampiricBlueBand",
@@ -558,23 +585,32 @@ return {
                 type = "Spell",
                 load_cond = function() return Config:GetSetting('DoCleansing') == 1 end,
                 cond = function(self, spell, target)
-                    return not Targeting.BigHealsNeeded(target) and Casting.GroupBuffCheck(spell, target)
+                    return not Targeting.BigHealsNeeded(target) and Casting.GroupBuffCheck(spell, target) and not self.Helpers.PriorityTankingHold()
                 end,
             },
             {
                 name = "LightHeal",
                 type = "Spell",
                 load_cond = function(self) return Config:GetSetting('DoLightHeal') < 3 end,
+                cond = function(self, spell, target)
+                    return not self.Helpers.PriorityTankingHold()
+                end,
             },
             {
                 name = "LightHeal2",
                 type = "Spell",
                 load_cond = function(self) return Config:GetSetting('DoLightHeal') == 2 end,
+                cond = function(self, spell, target)
+                    return not self.Helpers.PriorityTankingHold()
+                end,
             },
             {
                 name = "TouchHeal",
                 type = "Spell",
                 load_cond = function(self) return Config:GetSetting('DoTouchHeal') end,
+                cond = function(self, spell, target)
+                    return not self.Helpers.PriorityTankingHold()
+                end,
             },
         },
     },
@@ -1248,6 +1284,16 @@ return {
             Index = 101,
             Tooltip = "Use Beacon of the Righteous to regain AE aggro in Tank Mode.",
             RequiresLoadoutChange = true,
+            Default = true,
+            ConfigType = "Advanced",
+        },
+        ['PriorityTanking']   = {
+            DisplayName = "Priority Tanking",
+            Group = "Abilities",
+            Header = "Tanking",
+            Category = "Hate Tools",
+            Index = 102,
+            Tooltip = "Delay most heals, cures and rezzes with a cast time until you have full aggro on your Auto Target and any Aggro Target.",
             Default = true,
             ConfigType = "Advanced",
         },
