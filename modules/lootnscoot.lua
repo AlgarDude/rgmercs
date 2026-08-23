@@ -1,6 +1,5 @@
 -- Sample Basic Class Module
 local mq              = require('mq')
-local Actors          = require("actors")
 local Base            = require("modules.base")
 local Combat          = require("utils.combat")
 local Comms           = require("utils.comms")
@@ -46,7 +45,6 @@ Module.DefaultConfig   = {
             if newValue == true and mq.TLO.Lua.Script('lootnscoot').Status() ~= 'RUNNING' then
                 Core.DoCmd("/lua run lootnscoot directed rgmercs")
                 suppressWarning = true
-                if not Module.Actor then Module:LootMessageHandler() end
             elseif newValue == false and mq.TLO.Lua.Script('lootnscoot').Status() == 'RUNNING' then
                 Core.DoCmd("/lua stop lootnscoot")
             end
@@ -233,7 +231,7 @@ function Module.DoLooting()
 end
 
 function Module:LootMessageHandler()
-    self.Actor = Actors.register('loot_module', function(message)
+    self.Actor = self:RegisterActor('loot_module', function(message)
         local mail = message()
         local subject = mail.Subject or ''
         local who = mail.Who or ''
@@ -246,6 +244,13 @@ function Module:LootMessageHandler()
             Module.TempSettings.Looting = true
         end
     end)
+end
+
+function Module:Shutdown()
+    Logger.log_debug("\ay[LOOT]: \axLootNScoot Integration Module Unloaded.")
+    if Config:GetSetting('DoLoot') and mq.TLO.Lua.Script('lootnscoot').Status() == 'RUNNING' then
+        Core.DoCmd("/lua stop lootnscoot")
+    end
 end
 
 function Module:CheckChaseTargetInRange()
@@ -349,7 +354,6 @@ function Module:GiveTime()
     local myCorpseCount = mq.TLO.SpawnCount(string.format("pccorpse %s radius 100 zradius 50", mq.TLO.Me.CleanName()))()
     if myCorpseCount > 0 then deadCount = deadCount + 1 end
     Logger.log_verbose("\ay[LOOT]: \agFound %d corpses within range.", deadCount)
-    if self.Actor == nil then self:LootMessageHandler() end
 
     local settled = Config:GetSetting('CombatLooting') or Combat.CombatSettled(Config:GetSetting('LootDelay') * 1000)
 
