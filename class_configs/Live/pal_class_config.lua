@@ -24,7 +24,7 @@ local _ClassConfig = {
     },
     ['Rez']               = {
         ['Combat'] = {
-            { type = "AA", name = "Gift of Resurrection", },
+            { type = "AA", name = "Gift of Resurrection", cond = function(self) return not self.Helpers.PriorityTankingHold() end, },
         },
         ['Downtime'] = {
             { type = "AA", name = "Gift of Resurrection", },
@@ -44,24 +44,44 @@ local _ClassConfig = {
     },
     ['Cure']              = {
         ['DetDispel'] = {
-            { type = "AA", name = "Radiant Cure", },
+            { type = "AA", name = "Radiant Cure", cond = function(self) return not self.Helpers.PriorityTankingHold() end, },
             { type = "AA", name = "Purification", selfOnly = true, },
         },
         ['Poison'] = {
-            { type = "Spell", name = "SplashHeal", load_cond = function(self) return self.Helpers.UseSplashHealCure(self) end, },
-            { type = "Spell", name = "PurityCure", },
+            {
+                type = "Spell",
+                name = "SplashHeal",
+                load_cond = function(self) return self.Helpers.UseSplashHealCure(self) end,
+                cond = function(self) return not self.Helpers.PriorityTankingHold() end,
+            },
+            { type = "Spell", name = "PurityCure", cond = function(self) return not self.Helpers.PriorityTankingHold() end, },
         },
         ['Disease'] = {
-            { type = "Spell", name = "SplashHeal", load_cond = function(self) return self.Helpers.UseSplashHealCure(self) end, },
-            { type = "Spell", name = "PurityCure", },
+            {
+                type = "Spell",
+                name = "SplashHeal",
+                load_cond = function(self) return self.Helpers.UseSplashHealCure(self) end,
+                cond = function(self) return not self.Helpers.PriorityTankingHold() end,
+            },
+            { type = "Spell", name = "PurityCure", cond = function(self) return not self.Helpers.PriorityTankingHold() end, },
         },
         ['Curse'] = {
-            { type = "Spell", name = "SplashHeal", load_cond = function(self) return self.Helpers.UseSplashHealCure(self) end, },
-            { type = "Spell", name = "PurityCure", },
+            {
+                type = "Spell",
+                name = "SplashHeal",
+                load_cond = function(self) return self.Helpers.UseSplashHealCure(self) end,
+                cond = function(self) return not self.Helpers.PriorityTankingHold() end,
+            },
+            { type = "Spell", name = "PurityCure", cond = function(self) return not self.Helpers.PriorityTankingHold() end, },
         },
         ['Corruption'] = {
-            { type = "Spell", name = "SplashHeal",  load_cond = function(self) return self.Helpers.UseSplashHealCure(self) end, },
-            { type = "Spell", name = "CureCorrupt", },
+            {
+                type = "Spell",
+                name = "SplashHeal",
+                load_cond = function(self) return self.Helpers.UseSplashHealCure(self) end,
+                cond = function(self) return not self.Helpers.PriorityTankingHold() end,
+            },
+            { type = "Spell", name = "CureCorrupt", cond = function(self) return not self.Helpers.PriorityTankingHold() end, },
         },
     },
     ['Themes']            = {
@@ -793,6 +813,21 @@ local _ClassConfig = {
             end
             return false
         end,
+        PriorityTankingHold = function()
+            if not Config:GetSetting('PriorityTanking') or Globals.BackOffFlag then return false end
+            if not Core.IsTanking() or Core.AtCriticalHP() then return false end
+
+            local enabledRotations = Config:GetSetting('EnabledRotations') or {}
+
+            if Config:GetSetting('TankAggroScan') and (Globals.AggroTargetID or 0) > 0
+                and (enabledRotations['AEHateTools'] ~= false or enabledRotations['HateTools(AggroTarget)'] ~= false) then
+                return true
+            end
+
+            if enabledRotations['HateTools(AutoTarget)'] == false then return false end
+            if (Globals.AutoTargetID or 0) == 0 or Globals.NoHateTargetIDs:contains(Globals.AutoTargetID) then return false end
+            return Targeting.GetAutoTargetAggroPct() < 100
+        end,
         shieldNeeded = function()
             -- check for exactly 100% to help ensure the mob is targeting us, over 100% can indicate another is still targeted
             return (mq.TLO.Me.PctHPs() <= Config:GetSetting('EquipShield')) or mq.TLO.Me.ActiveDisc.Name() == "Deflection Discipline" or
@@ -848,11 +883,17 @@ local _ClassConfig = {
                 name = "SplashHeal",
                 type = "Spell",
                 load_cond = function(self) return Config:GetSetting('KeepSplashMemmed') end,
+                cond = function(self, spell, target)
+                    return not self.Helpers.PriorityTankingHold()
+                end,
             },
             {
                 name = "WaveHeal",
                 type = "Spell",
                 load_cond = function(self) return Config:GetSetting('DoWaveHeal') end,
+                cond = function(self, spell, target)
+                    return not self.Helpers.PriorityTankingHold()
+                end,
             },
         },
         ['BigHeal'] = {
@@ -860,7 +901,7 @@ local _ClassConfig = {
                 name = "Lay on Hands",
                 type = "AA",
                 cond = function(self, aaName, target)
-                    return self.CombatState == "Combat" and Targeting.GetTargetPctHPs() < Config:GetSetting('HPCritical')
+                    return self.CombatState == "Combat" and Targeting.GetTargetPctHPs(target) < Config:GetSetting('HPCritical')
                 end,
             },
             {
@@ -898,17 +939,26 @@ local _ClassConfig = {
                 name = "TouchHeal",
                 type = "Spell",
                 load_cond = function() return Config:GetSetting("DoTouchHeal") == 1 end,
+                cond = function(self, spell, target)
+                    return not self.Helpers.PriorityTankingHold()
+                end,
             },
         },
         ['MainHeal'] = {
             {
                 name = "BurstHeal",
                 type = "Spell",
+                cond = function(self, spell, target)
+                    return not self.Helpers.PriorityTankingHold()
+                end,
             },
             {
                 name = "TouchHeal",
                 type = "Spell",
                 load_cond = function() return Config:GetSetting("DoTouchHeal") == 2 end,
+                cond = function(self, spell, target)
+                    return not self.Helpers.PriorityTankingHold()
+                end,
             },
         },
     },
@@ -2016,6 +2066,16 @@ local _ClassConfig = {
             Index = 105,
             Tooltip = "Use AE Taunt AA.",
             RequiresLoadoutChange = true,
+            Default = true,
+            ConfigType = "Advanced",
+        },
+        ['PriorityTanking']   = {
+            DisplayName = "Priority Tanking",
+            Group = "Abilities",
+            Header = "Tanking",
+            Category = "Hate Tools",
+            Index = 106,
+            Tooltip = "Delay most heals, cures and rezzes with a cast time until you have full aggro on your Auto Target and any Aggro Target.",
             Default = true,
             ConfigType = "Advanced",
         },
