@@ -38,7 +38,7 @@ OptionsUI.Groups                = { --- Add a default of the same name for any k
             { Name = 'Announcements',   Categories = { "Announcements", }, }, -- group announce stuff-- ui stuff
             { Name = 'Loot(Emu)',       Categories = { "Looting Script", "LNS", "SmartLoot", }, },
             { Name = 'Mercs Internals', Categories = { "Internals", }, },
-            { Name = 'Misc',            Categories = { "Misc", }, },                                                -- ??? profit
+            { Name = 'Misc',            Categories = { "Misc", "Hello World", }, },                                 -- ??? profit
             { Name = 'Uncategorized',   Categories = { "Uncategorized", },                      CatchAll = true, }, -- settings from custom configs that don't have proper group/header
         },
     },
@@ -1057,6 +1057,33 @@ function OptionsUI:ValidateSelectedPeer()
     end
 end
 
+--- Determines if the current search results may be incomplete because advanced
+--- options are being filtered out of the list.
+---@return boolean True if the user is searching while Show Advanced Options is off.
+function OptionsUI:ShouldShowAdvancedHint()
+    return self.configFilter:len() > 0 and not Config:GetSetting('ShowAdvancedOpts')
+end
+
+--- The vertical space reserved at the bottom of the options window for the advanced options hint.
+---@return number The height in pixels.
+function OptionsUI:GetAdvancedHintHeight()
+    local style = ImGui.GetStyle()
+    return ImGui.GetTextLineHeight() + (style.FramePadding.y * 2) + (style.WindowPadding.y * 2)
+end
+
+--- Renders a small banner letting the user know hidden advanced options may match their search.
+function OptionsUI:RenderAdvancedHintBanner()
+    local hintText = string.format("%s Not finding what you are looking for? Try toggling Show Advanced Options to On.", Icons.MD_INFO_OUTLINE)
+
+    if ImGui.BeginChild("advancedhint##RGmercsOptions", 0, self:GetAdvancedHintHeight(), ImGuiChildFlags.Borders) then
+        local availX = ImGui.GetContentRegionAvail()
+        local textX = ImGui.CalcTextSize(hintText)
+        ImGui.SetCursorPosX(ImGui.GetCursorPosX() + math.max(0, (availX - textX) / 2))
+        Ui.RenderColoredText(Globals.Constants.Colors.SearchHighlightColor, hintText)
+    end
+    ImGui.EndChild()
+end
+
 function OptionsUI:RenderMainWindow(_, openGUI, flags)
     if self.FirstRender or self.lastSortTime < Config:GetLastModuleRegisteredTime() or self.lastHighlightTime < Config:GetLastHighlightChangeTime() then
         self.selectedCharacter = Comms.GetPeerName()
@@ -1085,6 +1112,12 @@ function OptionsUI:RenderMainWindow(_, openGUI, flags)
     if shouldDrawGUI then
         ImGui.PushID("##RGMercsUI_" .. Globals.CurLoadedChar)
         local _, y = ImGui.GetContentRegionAvail()
+
+        -- reserve room at the bottom for the advanced options hint so it does not overlap the panels
+        local showAdvancedHint = self:ShouldShowAdvancedHint()
+        if showAdvancedHint then
+            y = y - (self:GetAdvancedHintHeight() + ImGui.GetStyle().ItemSpacing.y)
+        end
 
         if ImGui.BeginChild("left##RGmercsOptions", math.min(ImGui.GetWindowContentRegionWidth() * .3, 205), y - 1, ImGuiChildFlags.Borders) then
             local tableFlags = bit32.bor(ImGuiTableFlags.RowBg, ImGuiTableFlags.BordersOuter, ImGuiTableFlags.ScrollY)
@@ -1214,6 +1247,11 @@ function OptionsUI:RenderMainWindow(_, openGUI, flags)
             end
         end
         ImGui.EndChild()
+
+        if showAdvancedHint then
+            self:RenderAdvancedHintBanner()
+        end
+
         ImGui.PopID()
     end
     Ui.RenderToastNotifications(self.ToastStates)
