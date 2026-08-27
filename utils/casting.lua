@@ -106,6 +106,7 @@ function Casting.GetTriggerSpells(spell)
 
     if #triggerSpells == 0 then
         -- Use autocast to check by ID to avoid duplicate spell name collisions
+        ---@diagnostic disable-next-line: undefined-field
         local recourseId = spell.AutoCast() or 0
         if recourseId > 0 then
             table.insert(triggerSpells, mq.TLO.Spell(recourseId))
@@ -1286,7 +1287,7 @@ function Casting.GetBuffableRaidIDs()
         local peerName = Comms.GetNameFromPeer(peer)
         local raidMember = mq.TLO.Raid.Member(peerName or "")
         if raidMember() and raidMember.Spawn() then
-            if checkCorpses and Casting.HasNearbyCorpse(peerName) then
+            if checkCorpses and peerName and Casting.HasNearbyCorpse(peerName) then
                 Logger.log_debug("Raidmember corpse detected (%s), aborting group buff rotation.", peerName)
                 return {}
             end
