@@ -1,18 +1,23 @@
 name: Pattern Review
 
-# Deterministic "did this reuse what already exists" pass on every PR. Posts one
-# sticky comment plus inline annotations; never blocks the merge.
+# "Did this reuse what already exists" review on every PR, in two layers:
+#   1. a deterministic pass (.github/review/lint.js) that always runs, and
+#   2. a model pass (anthropics/claude-code-action) that argues each finding and
+#      then tries to refute it, when a CLAUDE_CODE_OAUTH_TOKEN secret is set.
+# Posts one sticky comment plus inline annotations; never blocks the merge.
 #
 # pull_request_target (not pull_request) because most PRs come from forks and a
 # plain pull_request run from a fork has a read-only token that cannot comment.
 # The trade-off is that this job runs with base-repo permissions, so it checks
-# out the BASE branch only: the review scripts and the helper index come from
-# trusted code, and the PR head is read purely through `git diff` / `git show`.
-# Nothing from the PR is ever checked out or executed.
+# out the BASE branch only: the review scripts, prompts, and the helper index
+# come from trusted code, and the PR head is read purely through `git diff` /
+# `git show` into review/. Nothing from the PR is ever executed, and the model
+# gets read-only tools (Read, Grep, Glob) and no shell.
 #
-# workflow_dispatch lets a maintainer run it on an existing PR that has not
-# been pushed to since the workflow landed (Actions tab -> Pattern Review ->
-# Run workflow -> PR number).
+# The model pass is skipped by the action itself for PR authors without write
+# access (its own guard against prompt injection from untrusted PRs). For those,
+# workflow_dispatch runs the full review as the maintainer who clicked it:
+# Actions tab -> Pattern Review -> Run workflow -> PR number.
 on:
   pull_request_target:
     types: [opened, synchronize, reopened, ready_for_review]
@@ -32,6 +37,9 @@ permissions:
 concurrency:
   group: pattern-review-${{ github.event.pull_request.number || inputs.pr }}
   cancel-in-progress: true
+
+env:
+  REVIEW_MODEL: ${{ vars.PATTERN_REVIEW_MODEL || 'claude-opus-5' }}
 
 jobs:
   review:
@@ -58,9 +66,10 @@ jobs:
           else
             SHA=$(gh api "repos/$REPO/pulls/$NUMBER" --jq .head.sha)
           fi
+          git fetch --quiet origin "refs/pull/$NUMBER/head"
           echo "number=$NUMBER" >> "$GITHUB_OUTPUT"
           echo "sha=$SHA" >> "$GITHUB_OUTPUT"
-          git fetch --quiet origin "refs/pull/$NUMBER/head"
+          echo "merge_base=$(git merge-base HEAD "$SHA")" >> "$GITHUB_OUTPUT"
 
       - name: Build helper index from base
         run: node .github/review/build-index.js --out review/index.json --markdown review/index.md
@@ -68,27 +77,117 @@ jobs:
       - name: Lint added lines
         env:
           HEAD_SHA: ${{ steps.pr.outputs.sha }}
+          MERGE_BASE: ${{ steps.pr.outputs.merge_base }}
         run: |
-          MERGE_BASE=$(git merge-base HEAD "$HEAD_SHA")
           node .github/review/lint.js --base "$MERGE_BASE" --head "$HEAD_SHA" --index review/index.json \
             --format github --out-md review/report.md --out-json review/report.json
-          cat review/report.md >> "$GITHUB_STEP_SUMMARY"
 
-      - name: Post or update sticky comment
+      - name: Post deterministic findings
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          REPO: ${{ github.repository }}
-          PR: ${{ steps.pr.outputs.number }}
+        run: bash .github/review/post-comment.sh "${{ github.repository }}" "${{ steps.pr.outputs.number }}" review/report.md
+
+      # ---- model pass ---------------------------------------------------------
+
+      - name: Check for model credentials
+        id: key
+        env:
+          KEY: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
         run: |
-          EXISTING=$(gh api "repos/$REPO/issues/$PR/comments" --paginate \
-            --jq '.[] | select(.body | startswith("<!-- rgmercs-pattern-review -->")) | .id' | head -n1)
-          if [ -n "$EXISTING" ]; then
-            gh api -X PATCH "repos/$REPO/issues/comments/$EXISTING" -F body=@review/report.md > /dev/null
+          if [ -n "$KEY" ]; then echo "present=true" >> "$GITHUB_OUTPUT"; else echo "present=false" >> "$GITHUB_OUTPUT"; fi
+
+      - name: Stage PR content for the model
+        if: steps.key.outputs.present == 'true'
+        env:
+          HEAD_SHA: ${{ steps.pr.outputs.sha }}
+          MERGE_BASE: ${{ steps.pr.outputs.merge_base }}
+          NUMBER: ${{ steps.pr.outputs.number }}
+        run: |
+          git diff -U5 --no-color "$MERGE_BASE" "$HEAD_SHA" -- '*.lua' > review/diff.patch
+          git diff --name-only --diff-filter=AMR "$MERGE_BASE" "$HEAD_SHA" -- '*.lua' > review/changed-files.txt
+          while IFS= read -r f; do
+            [ -n "$f" ] || continue
+            mkdir -p "review/head/$(dirname "$f")"
+            git show "$HEAD_SHA:$f" > "review/head/$f"
+          done < review/changed-files.txt
+          {
+            echo "# PR #$NUMBER"
+            echo
+            echo "- base (merge base): $MERGE_BASE"
+            echo "- head: $HEAD_SHA"
+            echo "- changed Lua files:"
+            sed 's/^/  - /' review/changed-files.txt
+          } > review/context.md
+
+      - name: Adversarial review
+        id: review
+        if: steps.key.outputs.present == 'true'
+        continue-on-error: true
+        uses: anthropics/claude-code-action@v1
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          prompt: |
+            Follow the instructions in .github/review/prompts/reviewer.md exactly. Work from the repository root. Do not post anything to GitHub; return the structured output only.
+          claude_args: |
+            --model ${{ env.REVIEW_MODEL }}
+            --max-turns 80
+            --allowedTools "Read,Grep,Glob"
+            --json-schema '{"type":"object","properties":{"findings":{"type":"array","items":{"type":"object","properties":{"file":{"type":"string"},"line":{"type":"integer"},"claim":{"type":"string"},"existing":{"type":"string"},"evidence":{"type":"string"},"confidence":{"type":"string","enum":["high","medium"]}},"required":["file","line","claim","existing","evidence","confidence"]}},"summary":{"type":"string"}},"required":["findings","summary"]}'
+
+      - name: Save findings
+        id: findings
+        if: steps.review.outcome == 'success'
+        env:
+          FINDINGS: ${{ steps.review.outputs.structured_output }}
+        run: |
+          printf '%s' "$FINDINGS" > review/findings.json
+          COUNT=$(node -e "const f=JSON.parse(require('fs').readFileSync('review/findings.json','utf8'));console.log(Array.isArray(f.findings)?f.findings.length:0)")
+          echo "count=$COUNT" >> "$GITHUB_OUTPUT"
+          echo "reviewer returned $COUNT finding(s)"
+
+      - name: Refutation pass
+        id: refute
+        if: steps.findings.outcome == 'success' && steps.findings.outputs.count != '0'
+        continue-on-error: true
+        uses: anthropics/claude-code-action@v1
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          prompt: |
+            Follow the instructions in .github/review/prompts/refuter.md exactly. Work from the repository root. Do not post anything to GitHub; return the structured output only.
+          claude_args: |
+            --model ${{ env.REVIEW_MODEL }}
+            --max-turns 60
+            --allowedTools "Read,Grep,Glob"
+            --json-schema '{"type":"object","properties":{"verdicts":{"type":"array","items":{"type":"object","properties":{"index":{"type":"integer"},"verdict":{"type":"string","enum":["stands","refuted"]},"reason":{"type":"string"}},"required":["index","verdict","reason"]}}},"required":["verdicts"]}'
+
+      - name: Render model section
+        if: always() && steps.pr.outcome == 'success'
+        env:
+          KEY_PRESENT: ${{ steps.key.outputs.present }}
+          REVIEW_OUTCOME: ${{ steps.review.outcome }}
+          REFUTE_OUTCOME: ${{ steps.refute.outcome }}
+          VERDICTS: ${{ steps.refute.outputs.structured_output }}
+        run: |
+          if [ "$KEY_PRESENT" != "true" ]; then
+            node .github/review/render-review.js --report review/report.md --skipped "no CLAUDE_CODE_OAUTH_TOKEN secret is configured for this repository"
+          elif [ "$REVIEW_OUTCOME" != "success" ]; then
+            node .github/review/render-review.js --report review/report.md --skipped "the model pass did not complete (outcome: $REVIEW_OUTCOME). For PRs from authors without write access this is expected; a maintainer can run it from the Actions tab"
           else
-            gh api -X POST "repos/$REPO/issues/$PR/comments" -F body=@review/report.md > /dev/null
+            if [ "$REFUTE_OUTCOME" = "success" ] && [ -n "$VERDICTS" ]; then printf '%s' "$VERDICTS" > review/verdicts.json; fi
+            node .github/review/render-review.js --report review/report.md --findings review/findings.json --verdicts review/verdicts.json --model "$REVIEW_MODEL"
           fi
+          cat review/report.md >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Post full review
+        if: always() && steps.pr.outcome == 'success'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: bash .github/review/post-comment.sh "${{ github.repository }}" "${{ steps.pr.outputs.number }}" review/report.md
 
       - uses: actions/upload-artifact@v4
+        if: always() && steps.pr.outcome == 'success'
         with:
           name: pattern-review-${{ steps.pr.outputs.number }}
           path: review/
