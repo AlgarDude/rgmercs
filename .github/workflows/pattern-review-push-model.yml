@@ -1,0 +1,184 @@
+name: Pattern Review (push model pass)
+
+# Second half of the push review. Triggers on the deterministic push workflow
+# finishing, because claude-code-action treats `push` as an unsupported event
+# type but handles `workflow_run`.
+#
+# Runs the same two model passes as the PR workflow against the staged diff,
+# updates the commit comment with the result, and emails whoever pushed.
+on:
+  workflow_run:
+    workflows: ["Pattern Review (push)"]
+    types: [completed]
+
+permissions:
+  contents: write
+  actions: read
+
+concurrency:
+  group: pattern-review-push-model-${{ github.event.workflow_run.head_sha }}
+  cancel-in-progress: false
+
+env:
+  REVIEW_MODEL: ${{ vars.PATTERN_REVIEW_MODEL || 'claude-opus-5' }}
+
+jobs:
+  model:
+    if: github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    steps:
+      # The base branch, so the model reads trusted scripts and prompts. The
+      # pushed code reaches it only through the staged review/ artifact.
+      - uses: actions/checkout@v4
+
+      - name: Download staged review
+        uses: actions/download-artifact@v4
+        with:
+          name: pattern-review-push-${{ github.event.workflow_run.head_sha }}
+          path: review
+          run-id: ${{ github.event.workflow_run.id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Load push metadata
+        id: meta
+        run: |
+          [ -f review/push.env ] || { echo "::error::staged artifact missing push.env"; exit 1; }
+          cat review/push.env >> "$GITHUB_OUTPUT"
+          cat review/push.env >> "$GITHUB_ENV"
+
+      - name: Check for model credentials
+        id: key
+        env:
+          KEY: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+        run: |
+          if [ -n "$KEY" ]; then echo "present=true" >> "$GITHUB_OUTPUT"; else echo "present=false" >> "$GITHUB_OUTPUT"; fi
+
+      - name: Adversarial review
+        id: review
+        if: steps.key.outputs.present == 'true'
+        continue-on-error: true
+        uses: anthropics/claude-code-action@v1
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          prompt: |
+            Follow the instructions in .github/review/prompts/reviewer.md exactly. Work from the repository root. The change under review was pushed straight to main rather than opened as a PR; review it identically. Do not post anything to GitHub; return the structured output only.
+          claude_args: |
+            --model ${{ env.REVIEW_MODEL }}
+            --max-turns 80
+            --allowedTools "Read,Grep,Glob"
+            --json-schema '{"type":"object","properties":{"findings":{"type":"array","items":{"type":"object","properties":{"file":{"type":"string"},"line":{"type":"integer"},"claim":{"type":"string"},"existing":{"type":"string"},"evidence":{"type":"string"},"confidence":{"type":"string","enum":["high","medium"]}},"required":["file","line","claim","existing","evidence","confidence"]}},"summary":{"type":"string"}},"required":["findings","summary"]}'
+
+      - name: Save findings
+        id: findings
+        if: steps.review.outcome == 'success'
+        env:
+          FINDINGS: ${{ steps.review.outputs.structured_output }}
+        run: |
+          printf '%s' "$FINDINGS" > review/findings.json
+          COUNT=$(node -e "const f=JSON.parse(require('fs').readFileSync('review/findings.json','utf8'));console.log(Array.isArray(f.findings)?f.findings.length:0)")
+          echo "count=$COUNT" >> "$GITHUB_OUTPUT"
+
+      - name: Refutation pass
+        id: refute
+        if: steps.findings.outcome == 'success' && steps.findings.outputs.count != '0'
+        continue-on-error: true
+        uses: anthropics/claude-code-action@v1
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          prompt: |
+            Follow the instructions in .github/review/prompts/refuter.md exactly. Work from the repository root. Do not post anything to GitHub; return the structured output only.
+          claude_args: |
+            --model ${{ env.REVIEW_MODEL }}
+            --max-turns 60
+            --allowedTools "Read,Grep,Glob"
+            --json-schema '{"type":"object","properties":{"verdicts":{"type":"array","items":{"type":"object","properties":{"index":{"type":"integer"},"verdict":{"type":"string","enum":["stands","refuted"]},"reason":{"type":"string"}},"required":["index","verdict","reason"]}}},"required":["verdicts"]}'
+
+      - name: Render model section
+        env:
+          KEY_PRESENT: ${{ steps.key.outputs.present }}
+          REVIEW_OUTCOME: ${{ steps.review.outcome }}
+          REFUTE_OUTCOME: ${{ steps.refute.outcome }}
+          VERDICTS: ${{ steps.refute.outputs.structured_output }}
+        run: |
+          if [ "$KEY_PRESENT" != "true" ]; then
+            node .github/review/render-review.js --report review/report.md --skipped "no CLAUDE_CODE_OAUTH_TOKEN secret is configured for this repository"
+          elif [ "$REVIEW_OUTCOME" != "success" ]; then
+            node .github/review/render-review.js --report review/report.md --skipped "the model pass did not complete (outcome: $REVIEW_OUTCOME)"
+          else
+            if [ "$REFUTE_OUTCOME" = "success" ] && [ -n "$VERDICTS" ]; then printf '%s' "$VERDICTS" > review/verdicts.json; fi
+            node .github/review/render-review.js --report review/report.md --findings review/findings.json --verdicts review/verdicts.json --model "$REVIEW_MODEL"
+          fi
+          cat review/report.md >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Update the commit comment
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if [ -n "$COMMENT_ID" ]; then
+            gh api -X PATCH "repos/${{ github.repository }}/comments/$COMMENT_ID" -F body=@review/report.md > /dev/null
+            echo "updated commit comment $COMMENT_ID"
+          else
+            gh api -X POST "repos/${{ github.repository }}/commits/$HEAD_SHA/comments" -F body=@review/report.md > /dev/null
+          fi
+
+      # ---- email --------------------------------------------------------------
+
+      - name: Build the email
+        id: email
+        continue-on-error: true
+        run: |
+          SUBJECT=$(node .github/review/render-email.js \
+            --report review/report.md --json review/report.json \
+            --findings review/findings.json --verdicts review/verdicts.json \
+            --repo "${{ github.repository }}" --sha "$HEAD_SHA" \
+            --run-url "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}" \
+            --out review/email.html)
+          echo "subject=$SUBJECT" >> "$GITHUB_OUTPUT"
+
+      # noreply.github.com addresses bounce, so only send to a real mailbox.
+      # Also decides here whether SMTP is configured at all, because a step's
+      # own env: block is not visible to that step's if: condition.
+      - name: Decide recipient
+        id: recipient
+        env:
+          FALLBACK: ${{ vars.PATTERN_REVIEW_EMAIL }}
+          SMTP_HOST: ${{ secrets.SMTP_HOST }}
+        run: |
+          TO=""
+          case "$PUSHER_EMAIL" in
+            ""|*noreply.github.com) TO="$FALLBACK" ;;
+            *) TO="$PUSHER_EMAIL" ;;
+          esac
+          if [ -z "$TO" ]; then
+            echo "::notice::no deliverable address for '$PUSHER_EMAIL' and no PATTERN_REVIEW_EMAIL variable set; skipping email"
+          fi
+          if [ -z "$SMTP_HOST" ]; then
+            echo "::notice::no SMTP_HOST secret; skipping email (findings are on the commit)"
+            echo "smtp=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "smtp=true" >> "$GITHUB_OUTPUT"
+          fi
+          echo "to=$TO" >> "$GITHUB_OUTPUT"
+
+      - name: Send it
+        if: steps.email.outcome == 'success' && steps.recipient.outputs.to != '' && steps.recipient.outputs.smtp == 'true'
+        uses: dawidd6/action-send-mail@v18
+        with:
+          server_address: ${{ secrets.SMTP_HOST }}
+          server_port: ${{ secrets.SMTP_PORT || 587 }}
+          secure: false
+          username: ${{ secrets.SMTP_USERNAME }}
+          password: ${{ secrets.SMTP_PASSWORD }}
+          from: rgmercs pattern review <${{ secrets.SMTP_FROM || secrets.SMTP_USERNAME }}>
+          to: ${{ steps.recipient.outputs.to }}
+          subject: ${{ steps.email.outputs.subject }}
+          html_body: file://review/email.html
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: pattern-review-push-model-${{ github.event.workflow_run.head_sha }}
+          path: review/
+          retention-days: 7
