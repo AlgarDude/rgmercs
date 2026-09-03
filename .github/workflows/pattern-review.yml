@@ -22,12 +22,17 @@ on:
   pull_request_target:
     types: [opened, synchronize, reopened, ready_for_review]
     paths:
-      - '**.lua'
+      - "**.lua"
   workflow_dispatch:
     inputs:
       pr:
-        description: 'Pull request number to review'
+        description: "Pull request number to review"
         required: true
+        type: string
+      review_model:
+        description: "Model override (optional)"
+        required: false
+        default: "claude-opus-5"
         type: string
 
 permissions:
@@ -39,7 +44,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  REVIEW_MODEL: ${{ vars.PATTERN_REVIEW_MODEL || 'claude-opus-5' }}
+  REVIEW_MODEL: ${{ inputs.review_model || 'claude-opus-5' }}
 
 jobs:
   review:
