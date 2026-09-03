@@ -1,0 +1,102 @@
+name: Pattern Review (push)
+
+# Same review as the PR workflow, for commits pushed straight to main.
+#
+# This half runs the deterministic pass and stages everything the model needs,
+# then uploads it. The model pass runs in pattern-review-push-model.yml, which
+# triggers on this workflow completing: claude-code-action rejects `push` as an
+# unsupported event type, but supports `workflow_run`.
+#
+# Findings land as a commit comment (which is also what the email links to).
+# Pushes made by GITHUB_TOKEN, such as the release workflow's version bump, do
+# not trigger workflows, so this never fires on its own CI commits.
+on:
+  push:
+    branches: [main]
+    paths:
+      - '**.lua'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: pattern-review-push-${{ github.sha }}
+  cancel-in-progress: false
+
+jobs:
+  review:
+    if: github.repository == 'DerpleDude/rgmercs' && !contains(github.event.head_commit.message, '#noreview')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # `before` is all-zeros on a branch's first push and unreliable after a
+      # force push, so fall back to the first parent of the pushed head.
+      - name: Resolve range
+        id: range
+        env:
+          BEFORE: ${{ github.event.before }}
+          AFTER: ${{ github.sha }}
+        run: |
+          BASE="$BEFORE"
+          if [ -z "$BASE" ] || [ "$BASE" = "0000000000000000000000000000000000000000" ] || ! git cat-file -e "$BASE^{commit}" 2>/dev/null; then
+            BASE=$(git rev-parse "$AFTER^")
+            echo "::notice::before-sha unusable, falling back to $AFTER^"
+          fi
+          echo "base=$BASE" >> "$GITHUB_OUTPUT"
+          echo "pusher=${{ github.event.pusher.email }}" >> "$GITHUB_OUTPUT"
+
+      - name: Build helper index from pre-push tree
+        run: node .github/review/build-index.js --rev "${{ steps.range.outputs.base }}" --out review/index.json --markdown review/index.md
+
+      - name: Lint added lines
+        run: |
+          node .github/review/lint.js --base "${{ steps.range.outputs.base }}" --head "${{ github.sha }}" \
+            --index review/index.json --format github --out-md review/report.md --out-json review/report.json
+          cat review/report.md >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Comment on the commit
+        id: comment
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          ID=$(gh api -X POST "repos/${{ github.repository }}/commits/${{ github.sha }}/comments" \
+            -F body=@review/report.md --jq .id)
+          echo "id=$ID" >> "$GITHUB_OUTPUT"
+          echo "commented on ${{ github.sha }} (comment $ID)"
+
+      # Everything the model pass needs, since workflow_run cannot see this
+      # job's filesystem or the push payload.
+      - name: Stage for the model pass
+        run: |
+          git diff -U5 --no-color "${{ steps.range.outputs.base }}" "${{ github.sha }}" -- '*.lua' > review/diff.patch
+          git diff --name-only --diff-filter=AMR "${{ steps.range.outputs.base }}" "${{ github.sha }}" -- '*.lua' > review/changed-files.txt
+          while IFS= read -r f; do
+            [ -n "$f" ] || continue
+            mkdir -p "review/head/$(dirname "$f")"
+            git show "${{ github.sha }}:$f" > "review/head/$f"
+          done < review/changed-files.txt
+          {
+            echo "# Push to main"
+            echo
+            echo "- base (pre-push): ${{ steps.range.outputs.base }}"
+            echo "- head: ${{ github.sha }}"
+            echo "- pushed by: ${{ github.event.pusher.name }}"
+            echo "- changed Lua files:"
+            sed 's/^/  - /' review/changed-files.txt
+          } > review/context.md
+          cat > review/push.env <<EOF
+          BASE_SHA=${{ steps.range.outputs.base }}
+          HEAD_SHA=${{ github.sha }}
+          COMMENT_ID=${{ steps.comment.outputs.id }}
+          PUSHER_EMAIL=${{ github.event.pusher.email }}
+          PUSHER_NAME=${{ github.event.pusher.name }}
+          EOF
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: pattern-review-push-${{ github.sha }}
+          path: review/
+          retention-days: 7
