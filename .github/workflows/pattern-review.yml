@@ -1,0 +1,94 @@
+name: Pattern Review
+
+# Deterministic "did this reuse what already exists" pass on every PR. Posts one
+# sticky comment plus inline annotations; never blocks the merge.
+#
+# pull_request_target (not pull_request) because most PRs come from forks and a
+# plain pull_request run from a fork has a read-only token that cannot comment.
+# The trade-off is that this job runs with base-repo permissions, so it checks
+# out the BASE branch only: the review scripts and the helper index come from
+# trusted code, and the PR head is read purely through `git diff` / `git show`.
+# Nothing from the PR is ever checked out or executed.
+#
+# workflow_dispatch lets a maintainer run it on an existing PR that has not
+# been pushed to since the workflow landed (Actions tab -> Pattern Review ->
+# Run workflow -> PR number).
+on:
+  pull_request_target:
+    types: [opened, synchronize, reopened, ready_for_review]
+    paths:
+      - '**.lua'
+  workflow_dispatch:
+    inputs:
+      pr:
+        description: 'Pull request number to review'
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  pull-requests: write
+
+concurrency:
+  group: pattern-review-${{ github.event.pull_request.number || inputs.pr }}
+  cancel-in-progress: true
+
+jobs:
+  review:
+    if: github.repository == 'DerpleDude/rgmercs'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Resolve PR
+        id: pr
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+          EVENT_PR: ${{ github.event.pull_request.number }}
+          EVENT_SHA: ${{ github.event.pull_request.head.sha }}
+          INPUT_PR: ${{ inputs.pr }}
+        run: |
+          NUMBER="${EVENT_PR:-$INPUT_PR}"
+          [ -n "$NUMBER" ] || { echo "::error::no pull request number"; exit 1; }
+          if [ -n "$EVENT_SHA" ]; then
+            SHA="$EVENT_SHA"
+          else
+            SHA=$(gh api "repos/$REPO/pulls/$NUMBER" --jq .head.sha)
+          fi
+          echo "number=$NUMBER" >> "$GITHUB_OUTPUT"
+          echo "sha=$SHA" >> "$GITHUB_OUTPUT"
+          git fetch --quiet origin "refs/pull/$NUMBER/head"
+
+      - name: Build helper index from base
+        run: node .github/review/build-index.js --out review/index.json --markdown review/index.md
+
+      - name: Lint added lines
+        env:
+          HEAD_SHA: ${{ steps.pr.outputs.sha }}
+        run: |
+          MERGE_BASE=$(git merge-base HEAD "$HEAD_SHA")
+          node .github/review/lint.js --base "$MERGE_BASE" --head "$HEAD_SHA" --index review/index.json \
+            --format github --out-md review/report.md --out-json review/report.json
+          cat review/report.md >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Post or update sticky comment
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+          PR: ${{ steps.pr.outputs.number }}
+        run: |
+          EXISTING=$(gh api "repos/$REPO/issues/$PR/comments" --paginate \
+            --jq '.[] | select(.body | startswith("<!-- rgmercs-pattern-review -->")) | .id' | head -n1)
+          if [ -n "$EXISTING" ]; then
+            gh api -X PATCH "repos/$REPO/issues/comments/$EXISTING" -F body=@review/report.md > /dev/null
+          else
+            gh api -X POST "repos/$REPO/issues/$PR/comments" -F body=@review/report.md > /dev/null
+          fi
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: pattern-review-${{ steps.pr.outputs.number }}
+          path: review/
