@@ -37,6 +37,7 @@ Config.TempSettings.SettingToModuleCache                 = {}
 Config.TempSettings.SettingToScopeCache                  = {}
 Config.TempSettings.SettingsLowerToNameCache             = {}
 Config.TempSettings.SettingsCategoryToSettingMapping     = {}
+Config.TempSettings.UnknownSettingLogged                 = {}
 Config.TempSettings.PeerModuleSettingsLowerToNameCache   = {}
 Config.TempSettings.PeerSettingToModuleCache             = {}
 Config.TempSettings.PeerSettingsCategoryToSettingMapping = {}
@@ -1884,7 +1885,7 @@ Config.DefaultConfig                                     = {
         Header = "Recovery",
         Category = "Curing",
         Index = 4,
-        Tooltip = "The delay in seconds between making cure checks during downtime (to prevent unnecessary queries).",
+        Tooltip = "The delay in seconds between making cure checks during downtime.",
         Default = 5,
         Min = 1,
         Max = 30,
@@ -2968,25 +2969,6 @@ Config.DefaultConfig                                     = {
     },
 
     --Deprecated/Need Adjusted to Custom/Etc
-    -- DEPRECATED 7/26 - sunset 9/1/26. Replaced by the single 'DoCures' master toggle. Kept hidden (Custom) so custom
-    -- cure configs predating the ['Cure'] table keep gating through their own IsCuring/CureNow. DELETE at sunset.
-    ['DoCureSpells']                     = {
-        DisplayName = "Do Cure Spells",
-        Type = "Custom",
-        Default = true,
-    },
-    ['DoCureAA']                         = {
-        DisplayName = "Do Cure AA",
-        Type = "Custom",
-        Default = true,
-    },
-    -- DEPRECATED 7/26 - sunset 9/1/26. Split into StickDistance/StickArgs (auto-migrated by Config:MigrateStickHow at load);
-    -- non-blank values set mid-session are honored verbatim by DoStick until sunset. DELETE at sunset with MigrateStickHow.
-    ['StickHow']                         = {
-        DisplayName = "Stick How",
-        Type = "Custom",
-        Default = "",
-    },
     ['FullUI']                           = {
         DisplayName = "Use Full UI",
         Group = "General",
@@ -3084,33 +3066,6 @@ function Config.GetConfigFileName(moduleName, returnExisting)
     return latest
 end
 
--- DEPRECATED 7/26 - sunset 9/1/26. Splits legacy StickHow into StickDistance + StickArgs. DELETE at sunset.
-function Config:MigrateStickHow()
-    local stickHow = Config:GetSetting('StickHow') or ""
-    if stickHow == "" then return end
-
-    local distance = nil
-    local argTokens = {}
-    local lastToken = ""
-    for token in stickHow:gmatch("%S+") do
-        if not distance and lastToken:lower() ~= "id" and (token:match("^%d+$") or token:match("^%d+%%$")) then
-            distance = token
-        else
-            table.insert(argTokens, token)
-        end
-        lastToken = token
-    end
-
-    local migratedArgs = table.concat(argTokens, " ")
-    -- distance-only strings had no flags; bare uw keeps them positionally identical (blank would add role defaults)
-    if migratedArgs == "" and distance then migratedArgs = "uw" end
-
-    Config:SetSetting('StickDistance', distance or "")
-    Config:SetSetting('StickArgs', migratedArgs)
-    Config:SetSetting('StickHow', "")
-    Logger.log_info("\ayStick How has been split: Stick Distance = '\at%s\ay', Stick Arguments = '\at%s\ay'.", distance or "", migratedArgs)
-end
-
 function Config:LoadSettings()
     -- handle update to db before anything else.
     if not self:CharacterExistsInDb() then
@@ -3134,8 +3089,6 @@ function Config:LoadSettings()
     local settings, firstSaveRequired = Config:GetAllModuleSettingsFromDb(coreModuleName, Config.DefaultConfig)
 
     Config:RegisterModuleSettings(coreModuleName, settings, Config.DefaultConfig, Config.FAQ, firstSaveRequired)
-
-    Config:MigrateStickHow()
 
     -- setup our script path for later usage since getting it kind of sucks, but only on the first run (personas)
     if Globals.ScriptDir == "" then
@@ -3446,7 +3399,8 @@ end
 --- @return any The value of the setting, or nil if the setting is not found and failOk is true.
 function Config:GetSetting(setting, failOk)
     if not Config.TempSettings.SettingToModuleCache[setting] then
-        if not failOk then
+        if not failOk and not Config.TempSettings.UnknownSettingLogged[setting] then
+            Config.TempSettings.UnknownSettingLogged[setting] = true
             Logger.log_error("Setting %s was not found in the module cache!", setting)
         end
         return nil
@@ -3940,6 +3894,7 @@ function Config:ClearAllModuleSettings()
     self.TempSettings.SettingToScopeCache = {}
     self.TempSettings.SettingsLowerToNameCache = {}
     self.TempSettings.SettingsCategoryToSettingMapping = {}
+    self.TempSettings.UnknownSettingLogged = {}
     self.SettingsLoadComplete = false
 end
 
