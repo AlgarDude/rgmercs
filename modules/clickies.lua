@@ -2284,8 +2284,7 @@ function Module:RenderClickyData(clicky, clickyIdx)
             ImGui.PushStyleColor(ImGuiCol.HeaderHovered, Globals.Constants.Colors.NearBlack)
             local _, clicked = ImGui.Selectable(spellName)
             if clicked then
-                local item = mq.TLO.FindItem("=" .. clicky.itemName)
-                local itemSpell = item and item.Clicky and item.Clicky.Spell
+                local itemSpell = Casting.GetClickySpell(clicky.itemName)
                 if itemSpell and itemSpell() then itemSpell.Inspect() end
             end
             ImGui.PopStyleColor(2)
@@ -2771,8 +2770,7 @@ function Module:GetClickiesForRotations(clickyCombatState, rotationName)
                 cond = function(caller, itemName, targetSpawn)
                     if not Casting.ItemReady(itemName) then return false end
 
-                    local item = mq.TLO.FindItem("=" .. itemName)
-                    local itemSpell = item and item.Clicky and item.Clicky.Spell
+                    local itemSpell = Casting.GetClickySpell(itemName)
                     if not (itemSpell and itemSpell()) then return false end
 
                     local buffCheckPassed
