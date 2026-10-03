@@ -1109,7 +1109,11 @@ function OptionsUI:RenderButtonMasterIntegration()
             ImGui.EndDragDropSource()
         end
         if ImGui.IsItemHovered() then
-            Ui.Tooltip(string.format("%s\n\n%s", button.Label, ButtonMaster.GetResolvedButton(entry.Key).Cmd or ""))
+            Ui.MultilineTooltipWithColors({
+                { text = button.Label .. "\n", },
+                { text = (ButtonMaster.GetResolvedButton(entry.Key).Cmd or "") .. "\n", },
+                { text = Icons.MD_OPEN_WITH .. " Drag onto a ButtonMaster slot to import.", color = Globals.Constants.BasicColors.Cyan, },
+            })
         end
 
         if button.ShowLabel ~= false then
