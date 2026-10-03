@@ -119,6 +119,12 @@ Config.DefaultConfig                                     = {
         Type = "Custom",
         Default = {},
     },
+    ['ButtonMasterNames']          = {
+        DisplayName = "Button Master Character Names",
+        Type = "Custom",
+        Default = {},
+        Scope = "server",
+    },
     -- DEPRECATED 9/26 - sunset 12/6/26. DELETE with Config:DiscardStaleMezOn.
     ['StaleMezOnDiscarded']        = {
         DisplayName = "Stale MezOn Discarded",
