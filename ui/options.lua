@@ -1046,7 +1046,7 @@ function OptionsUI:RenderButtonMasterIntegration()
             ImGui.TableNextColumn()
             ImGui.SetNextItemWidth(-1)
             local editedName = ImGui.InputTextWithHint("##bmname" .. character.Name, character.Name,
-                                                       self.bmNameEdits[character.Name] or characterNames[character.Name] or "")
+                self.bmNameEdits[character.Name] or characterNames[character.Name] or "")
             if ImGui.IsItemDeactivatedAfterEdit() then
                 ButtonMaster.SetCharacterName(character.Name, editedName)
             end
@@ -1097,7 +1097,7 @@ function OptionsUI:RenderButtonMasterIntegration()
         else
             local red, green, blue = (button.ButtonColorRGB or ""):match("(%d+),(%d+),(%d+)")
             drawList:AddRectFilled(screenPos, cellMax,
-                                   red and IM_COL32(tonumber(red), tonumber(green), tonumber(blue), 255) or Ui.ImVec4ToColor(ImGui.GetStyleColorVec4(ImGuiCol.Button)))
+                red and IM_COL32(tonumber(red) or 0, tonumber(green) or 0, tonumber(blue) or 0, 255) or Ui.ImVec4ToColor(ImGui.GetStyleColorVec4(ImGuiCol.Button)))
         end
 
         if ImGui.Selectable("##bmbutton" .. entry.Key, self.bmSelectedButton == entry.Key, ImGuiSelectableFlags.None, buttonSize, buttonSize) then
@@ -1122,7 +1122,7 @@ function OptionsUI:RenderButtonMasterIntegration()
             local red, green, blue = (button.TextColorRGB or ""):match("(%d+),(%d+),(%d+)")
             drawList:PushClipRect(screenPos, cellMax, true)
             drawList:AddText(ImVec2(screenPos.x + math.max(math.floor((buttonSize - labelWidth) / 2), 0), screenPos.y + math.floor((buttonSize - labelHeight) / 2)),
-                             IM_COL32(tonumber(red) or 255, tonumber(green) or 255, tonumber(blue) or 255, 255), label)
+                IM_COL32(tonumber(red) or 255, tonumber(green) or 255, tonumber(blue) or 255, 255), label)
             drawList:PopClipRect()
         end
 
