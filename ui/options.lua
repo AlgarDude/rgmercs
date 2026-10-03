@@ -3,6 +3,8 @@ mq = require('mq')
 local Icons = require('mq.ICONS')
 local Set = require("mq.Set")
 local ImGui = require('ImGui')
+local Zep = require('Zep')
+local ButtonMaster = require('utils.buttonmaster')
 local Comms = require('utils.comms')
 local Config = require('utils.config')
 local DBManagement = require('utils.db_management')
@@ -10,6 +12,9 @@ local Globals = require("utils.globals")
 local Logger = require('utils.logger')
 local Modules = require('utils.modules')
 local Ui = require('utils.ui')
+
+local animSpellIcons = mq.FindTextureAnimation('A_SpellIcons')
+local animItems = mq.FindTextureAnimation('A_DragItem')
 
 local OptionsUI = { _version = '1.0', _name = "OptionsUI", _author = 'Derple', 'Algar', }
 OptionsUI.__index = OptionsUI
@@ -23,6 +28,14 @@ OptionsUI.selectedCharacter = ""
 OptionsUI.lastPeerUpdate = 0
 OptionsUI.bgImg = mq.CreateTexture(mq.TLO.Lua.Dir() .. "/rgmercs/extras/options_bg.png")
 OptionsUI.ToastStates = {}
+OptionsUI.bmSetIdx = 1
+OptionsUI.bmSelectedButton = nil
+OptionsUI.bmCmdText = nil
+OptionsUI.bmNameEdits = {}
+OptionsUI.bmCmdEditor = Zep.Editor.new('##RGBMCmdViewer')
+OptionsUI.bmCmdBuffer = OptionsUI.bmCmdEditor:CreateBuffer("[ButtonCmd]")
+OptionsUI.bmCmdBuffer.syntax = 'lua'
+OptionsUI.bmCmdBuffer:SetFlags(Zep.BufferFlags.ReadOnly)
 
 function OptionsUI.LoadIcon(icon)
     return mq.CreateTexture(mq.TLO.Lua.Dir() .. "/rgmercs/extras/" .. icon .. ".png")
@@ -175,6 +188,18 @@ OptionsUI.Groups                = { --- Add a default of the same name for any k
         },
         HeaderRender = function(self)
             return OptionsUI:RenderDBManagement()
+        end,
+    },
+    {
+        Name = "Button Master\nIntegration",
+        Description = "Preview and import RGMercs button sets into ButtonMaster",
+        Icon = Icons.MD_APPS,
+        IconImage = OptionsUI.LoadIcon("buttonmastericon"),
+        HiddenOnSearch = function(self) return true end,
+        Headers = {
+        },
+        HeaderRender = function(self)
+            return OptionsUI:RenderButtonMasterIntegration()
         end,
     },
     {
@@ -976,6 +1001,157 @@ function OptionsUI:RenderDBManagement()
     Config.Db:renderTelemetry()
     ImGui.Spacing()
     Config.Db:renderTelemetryGraph()
+end
+
+function OptionsUI:RenderButtonMasterIntegration()
+    local bmRunning = ButtonMaster.IsRunning()
+    local setNames  = ButtonMaster.GetSortedSetNames()
+
+    ImGui.PushStyleVar(ImGuiStyleVar.SeparatorTextPadding, ImVec2(15, 15))
+    ImGui.PushStyleVar(ImGuiStyleVar.SeparatorTextAlign, ImVec2(0.05, 0.5))
+    ImGui.SeparatorText("Button Master Integration")
+    ImGui.PopStyleVar(2)
+
+    ImGui.Spacing()
+
+    if bmRunning then
+        ImGui.TextColored(Globals.Constants.BasicColors.Green, "%s ButtonMaster is running.", Icons.MD_CHECK_CIRCLE)
+    else
+        ImGui.TextColored(Globals.Constants.BasicColors.Red, "%s ButtonMaster is not running. Start it with /lua run buttonmaster to import.", Icons.MD_ERROR)
+    end
+
+    ImGui.Spacing()
+
+    ImGui.SeparatorText("Character Names")
+    if ImGui.Button(Icons.MD_SEARCH .. " Auto Detect##bmautodetect") then
+        local detectedCount = ButtonMaster.AutoDetectCharacterNames()
+        self:AddDBToast(string.format("Auto detected %d of %d character names.", detectedCount, #ButtonMaster.SourceCharacters), Globals.Constants.Colors.Green)
+    end
+    Ui.Tooltip("Fill in character names from RGMercs peers on this server with a matching class.")
+
+    if ImGui.BeginTable("##bmcharnames", 3, bit32.bor(ImGuiTableFlags.Borders, ImGuiTableFlags.RowBg)) then
+        ImGui.TableSetupColumn("Replace", ImGuiTableColumnFlags.WidthFixed, 120)
+        ImGui.TableSetupColumn("Class", ImGuiTableColumnFlags.WidthFixed)
+        ImGui.TableSetupColumn("With", ImGuiTableColumnFlags.WidthStretch)
+        ImGui.TableHeadersRow()
+
+        local characterNames = ButtonMaster.GetCharacterNames()
+        for _, character in ipairs(ButtonMaster.SourceCharacters) do
+            ImGui.TableNextRow()
+            ImGui.TableNextColumn()
+            ImGui.AlignTextToFramePadding()
+            ImGui.Text(character.Label)
+            ImGui.TableNextColumn()
+            ImGui.Text(table.concat(character.Classes, "|"))
+            ImGui.TableNextColumn()
+            ImGui.SetNextItemWidth(-1)
+            local editedName = ImGui.InputTextWithHint("##bmname" .. character.Name, character.Name,
+                                                       self.bmNameEdits[character.Name] or characterNames[character.Name] or "")
+            if ImGui.IsItemDeactivatedAfterEdit() then
+                ButtonMaster.SetCharacterName(character.Name, editedName)
+            end
+            self.bmNameEdits[character.Name] = ImGui.IsItemActive() and editedName or nil
+        end
+        ImGui.EndTable()
+    end
+
+    ImGui.Spacing()
+
+    ImGui.SeparatorText("Button Sets")
+    ImGui.AlignTextToFramePadding()
+    ImGui.Text("Set:")
+    ImGui.SameLine()
+    ImGui.SetNextItemWidth(230)
+    local newSetIdx, setChanged = Ui.SearchableCombo("bmset", self.bmSetIdx, setNames)
+    if setChanged then
+        self.bmSetIdx         = newSetIdx
+        self.bmSelectedButton = nil
+    end
+    local setName = setNames[self.bmSetIdx]
+
+    ImGui.SameLine()
+    ImGui.BeginDisabled(not bmRunning)
+    if ImGui.Button(Icons.MD_FILE_DOWNLOAD .. " Import Set##bmimportset") then
+        ButtonMaster.ImportSet(setName)
+        self:AddDBToast(string.format("Sent set '%s' to ButtonMaster.", setName), Globals.Constants.Colors.Green)
+    end
+    ImGui.EndDisabled()
+
+    ImGui.Spacing()
+
+    local buttonSize  = 50
+    local itemSpacing = ImGui.GetStyle().ItemSpacing.x
+    local columns     = math.max(1, math.floor((ImGui.GetContentRegionAvailVec().x + itemSpacing) / (buttonSize + itemSpacing)))
+    local drawList    = ImGui.GetWindowDrawList()
+    local setButtons  = ButtonMaster.GetSetButtons(setName)
+
+    for i, entry in ipairs(setButtons) do
+        local button    = entry.Button
+        local screenPos = ImGui.GetCursorScreenPosVec()
+        local cellMax   = ImVec2(screenPos.x + buttonSize, screenPos.y + buttonSize)
+
+        if button.Icon then
+            local iconAnim = (button.IconType == nil or button.IconType == "Spell") and animSpellIcons or animItems
+            iconAnim:SetTextureCell(tonumber(button.Icon) or 0)
+            drawList:AddTextureAnimation(iconAnim, screenPos, ImVec2(buttonSize, buttonSize))
+        else
+            local red, green, blue = (button.ButtonColorRGB or ""):match("(%d+),(%d+),(%d+)")
+            drawList:AddRectFilled(screenPos, cellMax,
+                                   red and IM_COL32(tonumber(red), tonumber(green), tonumber(blue), 255) or Ui.ImVec4ToColor(ImGui.GetStyleColorVec4(ImGuiCol.Button)))
+        end
+
+        if ImGui.Selectable("##bmbutton" .. entry.Key, self.bmSelectedButton == entry.Key, ImGuiSelectableFlags.None, buttonSize, buttonSize) then
+            self.bmSelectedButton = entry.Key
+        end
+        if ImGui.BeginDragDropSource() then
+            ImGui.SetDragDropPayload("RGMERCS_BUTTON", ButtonMaster.GetButtonShareCode(entry.Key))
+            ImGui.Text(button.Label)
+            ImGui.EndDragDropSource()
+        end
+        if ImGui.IsItemHovered() then
+            Ui.Tooltip(string.format("%s\n\n%s", button.Label, ButtonMaster.GetResolvedButton(entry.Key).Cmd or ""))
+        end
+
+        if button.ShowLabel ~= false then
+            local label = button.Label:gsub(" ", "\n")
+            local labelWidth, labelHeight = ImGui.CalcTextSize(label)
+            local red, green, blue = (button.TextColorRGB or ""):match("(%d+),(%d+),(%d+)")
+            drawList:PushClipRect(screenPos, cellMax, true)
+            drawList:AddText(ImVec2(screenPos.x + math.max(math.floor((buttonSize - labelWidth) / 2), 0), screenPos.y + math.floor((buttonSize - labelHeight) / 2)),
+                             IM_COL32(tonumber(red) or 255, tonumber(green) or 255, tonumber(blue) or 255, 255), label)
+            drawList:PopClipRect()
+        end
+
+        if i % columns ~= 0 and i < #setButtons then
+            ImGui.SameLine()
+        end
+    end
+
+    local selectedButton = self.bmSelectedButton and ButtonMaster.Library.Buttons[self.bmSelectedButton]
+    if selectedButton then
+        ImGui.Spacing()
+
+        ImGui.BeginDisabled(not bmRunning)
+        if ImGui.Button(Icons.MD_FILE_DOWNLOAD .. " Import Button##bmimportbutton") then
+            ButtonMaster.ImportButton(self.bmSelectedButton)
+            self:AddDBToast(string.format("Sent button '%s' to ButtonMaster.", selectedButton.Label), Globals.Constants.Colors.Green)
+        end
+        ImGui.EndDisabled()
+
+        ImGui.PushStyleColor(ImGuiCol.Text, Globals.Constants.BasicColors.Yellow)
+        ImGui.SeparatorText(selectedButton.Label)
+        ImGui.PopStyleColor()
+
+        local cmdText = ButtonMaster.GetResolvedButton(self.bmSelectedButton).Cmd or ""
+        if cmdText ~= self.bmCmdText then
+            self.bmCmdText = cmdText
+            self.bmCmdBuffer:ClearFlags(Zep.BufferFlags.ReadOnly)
+            self.bmCmdBuffer:SetText(cmdText)
+            self.bmCmdBuffer:SetFlags(Zep.BufferFlags.ReadOnly)
+        end
+        local _, lineCount = cmdText:gsub("\n", "")
+        self.bmCmdEditor:Render(ImVec2(ImGui.GetContentRegionAvailVec().x, (lineCount + 2) * ImGui.GetTextLineHeightWithSpacing()))
+    end
 end
 
 function OptionsUI:AddDBToast(message, color)

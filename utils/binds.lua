@@ -515,6 +515,26 @@ Binds.Handlers    = {
             Core.DoCmd("/squelch /dgraexecute /docommand /timed 5 /say %s", text)
         end,
     },
+    ['smartsend'] = {
+        usage = "/rgl smartsend <command>",
+        about = "Sends <command> to your raid via /dgra, your group via /dgga, or runs it yourself when solo.",
+        handler = function(...)
+            local parts = {}
+            for _, arg in ipairs({ ..., }) do
+                table.insert(parts, (arg == "" or arg:find("%s")) and string.format('"%s"', arg) or arg)
+            end
+            local command = table.concat(parts, " ")
+            if command == "" then return end
+
+            if (mq.TLO.Raid.Members() or 0) > 0 then
+                Core.DoCmd("/dgra %s", command)
+            elseif mq.TLO.Me.Grouped() then
+                Core.DoCmd("/dgga %s", command)
+            else
+                Core.DoCmd(command)
+            end
+        end,
+    },
     ['setlogfilter'] = {
         usage = "/rgl setlogfilter <filter|filter|filter|...>",
         about = "Set a Lua regex filter to match log lines against before printing (does not effect file logging).",
