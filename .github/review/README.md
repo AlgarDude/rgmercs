@@ -44,7 +44,7 @@ never runs PR code and never posts; `render-review.js` turns its structured outp
 the "Model review" section of the same sticky comment. `CONVENTIONS.md` is the rulebook
 both prompts point at.
 
-Model defaults to `claude-opus-5`; set a repository variable `PATTERN_REVIEW_MODEL` to
+Model defaults to `claude-opus-5-5`; set a repository variable `PATTERN_REVIEW_MODEL` to
 change it. The action itself declines to run for PR authors without write access, so
 fork PRs from occasional contributors get the deterministic pass only unless a maintainer
 runs the workflow on them by hand (Actions tab, Pattern Review, Run workflow, PR number).

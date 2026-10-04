@@ -35,7 +35,7 @@ on:
       review_model:
         description: "Model override (optional)"
         required: false
-        default: "claude-opus-5"
+        default: "claude-opus-5-5"
         type: string
 
 permissions:
@@ -47,7 +47,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  REVIEW_MODEL: ${{ inputs.review_model || 'claude-opus-5' }}
+  REVIEW_MODEL: ${{ inputs.review_model || 'claude-opus-5-5' }}
 
 jobs:
   review:

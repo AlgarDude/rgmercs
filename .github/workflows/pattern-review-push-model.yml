@@ -20,7 +20,7 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  REVIEW_MODEL: ${{ vars.PATTERN_REVIEW_MODEL || 'claude-opus-5' }}
+  REVIEW_MODEL: ${{ vars.PATTERN_REVIEW_MODEL || 'claude-opus-5-5' }}
 
 jobs:
   model:

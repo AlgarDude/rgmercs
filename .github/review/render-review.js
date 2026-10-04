@@ -5,7 +5,7 @@
 // refuter knocked down are kept but collapsed. When the model pass did not run,
 // writes a one-line note saying why.
 //   node .github/review/render-review.js --report review/report.md --findings review/findings.json
-//        [--verdicts review/verdicts.json] [--model claude-opus-5] [--skipped "reason"]
+//        [--verdicts review/verdicts.json] [--model claude-opus-5-5] [--skipped "reason"]
 
 const fs = require('fs');
 
