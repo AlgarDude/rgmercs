@@ -176,7 +176,7 @@ return {
             ['ShowLabel'] = true,
             ['TimerType'] = 'Seconds Timer',
             ['Label'] = 'Stick Default',
-            ['Cmd'] = '/ss /rgl set StickHow ""',
+            ['Cmd'] = '/ss /rgl set StickDistance ""\n/ss /rgl set StickArgs ""',
         },
         ['Button_280'] = {
             ['IconType'] = 'Spell',
@@ -344,7 +344,7 @@ return {
         },
         ['Button_225'] = {
             ['Cooldown'] = 0,
-            ['Cmd'] = '/dge caster /rgl set StickHow "20 behindonce !front moveback uw"\n/dge priest /rgl set StickHow "20 behindonce !front moveback uw"\n/dge melee /rgl set StickHow "20 behindonce !front moveback uw"\n/dga tank /rgl set StickHow "20 moveback uw"',
+            ['Cmd'] = '/dge caster /rgl set StickDistance 20\n/dge caster /rgl set StickArgs "behindonce !front moveback uw"\n/dge priest /rgl set StickDistance 20\n/dge priest /rgl set StickArgs "behindonce !front moveback uw"\n/dge melee /rgl set StickDistance 20\n/dge melee /rgl set StickArgs "behindonce !front moveback uw"\n/dga tank /rgl set StickDistance 20\n/dga tank /rgl set StickArgs "moveback uw"',
             ['ShowLabel'] = true,
             ['TimerType'] = 'Seconds Timer',
             ['Label'] = 'Stick 20',
