@@ -2396,6 +2396,22 @@ function Module:ShouldShrinkPet()
         mq.TLO.Me.Pet.ID() > 0 and mq.TLO.Me.Pet.Height() >= 1.9 and Casting.OkayToPetBuff()
 end
 
+--- Returns true when the cursor item's name contains the given modrod name and its clicky restores mana.
+---@param itemName string The partial modrod name to match.
+---@return boolean
+function Module:CursorHasModRod(itemName)
+    if not (mq.TLO.Cursor.Name() or ""):find(itemName, 1, true) then return false end
+
+    local cursorSpell = mq.TLO.Cursor.Clicky.Spell
+    if not cursorSpell() then return false end
+
+    for i = 1, cursorSpell.NumEffects() do
+        if cursorSpell.Attrib(i)() == 15 and (cursorSpell.Base(i)() or 0) > 0 then return true end
+    end
+
+    return false
+end
+
 --- Scans inventory for a known modrod and clicks it on self. Skips
 --- non-casters, players above ModRodManaPct mana, HP below 60%,
 --- invisible, and EMU bards.
@@ -2406,12 +2422,12 @@ function Module:ClickModRod()
     end
 
     for _, itemName in ipairs(Globals.Constants.ModRods) do
-        while mq.TLO.Cursor.Name() == itemName and (mq.TLO.Me.FreeInventory() or 0) > 0 do
+        while self:CursorHasModRod(itemName) and (mq.TLO.Me.FreeInventory() or 0) > 0 do
             Core.DoCmd("/squelch /autoinv")
             mq.delay(10)
         end
 
-        local item = mq.TLO.FindItem("=" .. itemName)
+        local item = mq.TLO.FindItem(itemName)
         if item() and item.Clicky() and mq.TLO.Me.Level() >= (item.Clicky.RequiredLevel() or 999) and item.TimerReady() == 0 then
             Casting.UseItem(item.Name(), mq.TLO.Me.ID())
             return
